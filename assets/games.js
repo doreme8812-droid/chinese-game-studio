@@ -348,6 +348,23 @@ const GAMES = [
       desc: "輸入選擇題、填空題，產生可線上作答、自動判分的練習網頁；還能列印「題目卷＋答案卷」。",
       tags: ["練習", "作業", "測驗"]
     }
+  },
+  {
+    id: "level-test",
+    file: "level-test.html",
+    en: "Chinese Level Placement Test",
+    purpose: "tool", script: "both", langs: ["mandarin"], roman: ["pinyin"],
+    emoji: "📊", accent: "#2E86DE", layout: "wide",
+    zh: {
+      title: "汉语水平自测",
+      desc: "上课前给学生做的水平摸底：听力（浏览器朗读）+ 词汇 + 语法三类题，覆盖 HSK 1–6 级，按正确率估算当前等级并给出学习建议，便于备课与分班。",
+      tags: ["水平测试", "分班", "摸底", "HSK"]
+    },
+    hant: {
+      title: "漢語水平自測",
+      desc: "上課前給學生做的水平摸底：聽力（瀏覽器朗讀）＋詞彙＋語法三類題，涵蓋 HSK 1–6 級，依正確率估算當前等級並給出學習建議，便於備課與分班。",
+      tags: ["水平測試", "分班", "摸底", "HSK"]
+    }
   }
 ];
 
@@ -370,7 +387,8 @@ const PHASES = {
   "exercise":         ["after"],
   "vocab-reading":    ["after"],
   "reading-train":    ["after"],
-  "stroke-practice":  ["after"]
+  "stroke-practice":  ["after"],
+  "level-test":       ["before"]
 };
 const PHASE_DEFS = [
   { v: "before", icon: "🎒", accent: "#2E86DE",

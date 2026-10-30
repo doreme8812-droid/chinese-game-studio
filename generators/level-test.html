@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>汉语水平自测 · Chinese Level Test</title>
+<style>
+  :root{
+    --accent:#2E86DE; --accent-d:#1B5FA8; --bg:#F4F8FC; --card:#FFFFFF;
+    --ink:#1F2A37; --muted:#6B7280; --line:#E3EAF3; --ok:#1F9D55; --warn:#E8820C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 18px 60px;}
+  .top{text-align:center;margin-bottom:22px;}
+  .top h1{font-size:26px;margin:0 0 6px;color:var(--accent-d);letter-spacing:.5px;}
+  .top p{margin:0;color:var(--muted);font-size:14px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:24px 22px;box-shadow:0 6px 22px rgba(30,70,130,.06);}
+  /* intro */
+  .modes{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;}
+  .mode{flex:1;min-width:220px;border:2px solid var(--line);border-radius:14px;padding:18px;
+    cursor:pointer;transition:.15s;background:#fff;text-align:left;}
+  .mode:hover{border-color:var(--accent);transform:translateY(-2px);}
+  .mode h3{margin:0 0 6px;color:var(--accent-d);font-size:18px;}
+  .mode small{color:var(--muted);font-size:13px;}
+  .intro-note{margin-top:16px;font-size:13px;color:var(--muted);background:#EFF5FC;
+    border-radius:10px;padding:12px 14px;}
+  /* progress */
+  .prog{height:8px;background:#E6EEF8;border-radius:99px;overflow:hidden;margin-bottom:6px;}
+  .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#5BB0F5);
+    width:0;transition:width .25s;}
+  .prog-txt{font-size:13px;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;}
+  .sec-tag{display:inline-block;font-size:12px;font-weight:600;color:#fff;background:var(--accent);
+    border-radius:99px;padding:3px 12px;margin-bottom:12px;}
+  .q-text{font-size:19px;font-weight:600;margin:4px 0 16px;}
+  .tts{display:flex;align-items:center;gap:12px;background:#EFF5FC;border-radius:12px;
+    padding:14px 16px;margin-bottom:16px;}
+  .tts button{border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;
+    border-radius:10px;padding:10px 16px;cursor:pointer;}
+  .tts button:hover{background:var(--accent-d);}
+  .tts .fallback{font-size:16px;color:var(--ink);}
+  .tts .hint{font-size:12px;color:var(--muted);}
+  .opts{display:flex;flex-direction:column;gap:12px;}
+  .opt{border:2px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;
+    font-size:16px;transition:.12s;display:flex;gap:12px;align-items:center;background:#fff;}
+  .opt:hover{border-color:var(--accent);}
+  .opt .k{width:28px;height:28px;flex:none;border-radius:8px;background:#EEF3FA;color:var(--accent-d);
+    font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .opt.sel{border-color:var(--accent);background:#EAF3FE;}
+  .opt.corr{border-color:var(--ok);background:#E9F8EF;}
+  .opt.wrong{border-color:#E2533B;background:#FDEEEA;}
+  .nav{display:flex;justify-content:flex-end;margin-top:22px;}
+  .btn{border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:600;
+    border-radius:12px;padding:12px 26px;cursor:pointer;}
+  .btn:hover{background:var(--accent-d);}
+  .btn:disabled{background:#B9C6D6;cursor:not-allowed;}
+  /* result */
+  .res-hero{text-align:center;background:linear-gradient(135deg,#2E86DE,#5BB0F5);
+    color:#fff;border-radius:16px;padding:26px 20px;margin-bottom:20px;}
+  .res-hero .lv{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0;}
+  .res-hero .desc{font-size:15px;opacity:.95;max-width:560px;margin:10px auto 0;}
+  .res-rec{background:#EAF3FE;border-left:5px solid var(--accent);border-radius:10px;
+    padding:14px 16px;font-size:15px;margin-bottom:20px;}
+  .acc{font-size:15px;margin-bottom:18px;}
+  .acc b{color:var(--accent-d);font-size:20px;}
+  .bars h3{font-size:16px;margin:0 0 14px;color:var(--accent-d);}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:14px;}
+  .bar-row .nm{width:64px;flex:none;color:var(--muted);}
+  .bar-row .track{flex:1;height:14px;background:#E6EEF8;border-radius:99px;overflow:hidden;}
+  .bar-row .track>i{display:block;height:100%;border-radius:99px;}
+  .bar-row .ct{width:54px;flex:none;text-align:right;color:var(--muted);font-size:13px;}
+  .foot-note{font-size:12px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+  .res-actions{text-align:center;margin-top:22px;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 id="appTitle">汉语水平自测</h1>
+    <p id="appSub">快速了解你的中文程度（参考 HSK 等级）</p>
+  </div>
+
+  <!-- 介绍页 -->
+  <section id="intro" class="card">
+    <div id="introBody"></div>
+    <div class="modes">
+      <button class="mode" id="modeFull">
+        <h3 id="fullTitle">完整模式</h3>
+        <small id="fullSub">30 题 · 约 8–10 分钟</small>
+      </button>
+      <button class="mode" id="modeQuick">
+        <h3 id="quickTitle">快速模式</h3>
+        <small id="quickSub">10 题 · 约 3 分钟</small>
+      </button>
+    </div>
+    <div class="intro-note" id="introNote"></div>
+  </section>
+
+  <!-- 答题页 -->
+  <section id="quiz" class="card hidden">
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="prog-txt"><span id="qCount"></span><span id="secName"></span></div>
+    <div id="qArea"></div>
+    <div class="nav"><button class="btn" id="nextBtn" disabled>下一题</button></div>
+  </section>
+
+  <!-- 结果页 -->
+  <section id="result" class="card hidden">
+    <div class="res-hero">
+      <div id="resLabel"></div>
+      <div class="lv" id="resLevel"></div>
+      <div class="desc" id="resDesc"></div>
+    </div>
+    <div class="res-rec" id="resRec"></div>
+    <div class="acc" id="resAcc"></div>
+    <div class="bars" id="resBars"></div>
+    <div class="foot-note" id="resNote"></div>
+    <div class="res-actions"><button class="btn" id="restartBtn">再测一次</button></div>
+  </section>
+</div>
+
+<script>
+/* ===================== 版本（简/繁） ===================== */
+const params = new URLSearchParams(location.search);
+let edition = params.get('ed') === 'traditional' ? 'traditional' : 'simplified';
+// 在门户 iframe 中打开时，门户不会把 ?ed 传给 iframe，故回退读取父页面版本
+try{
+  if(edition === 'simplified' && window.parent && window.parent !== window){
+    const pp = new URLSearchParams(window.parent.location.search);
+    if(pp.get('ed') === 'traditional') edition = 'traditional';
+  }
+}catch(e){}
+
+const I18N = {
+  simplified: {
+    appTitle:'汉语水平自测', appSub:'快速了解你的中文程度（参考 HSK 等级）',
+    introBody:'本测试包含<b>听力、词汇、语法</b>三类题目，覆盖 HSK 1–6 级。'+
+      '完成后会根据你的正确率估算当前水平，并给出学习建议。<br>适合上课前快速了解学生水平，便于备课与分班。',
+    fullTitle:'完整模式', fullSub:'30 题 · 约 8–10 分钟',
+    quickTitle:'快速模式', quickSub:'10 题 · 约 3 分钟',
+    introNote:'说明：听力题使用浏览器语音朗读（支持 Chrome / Edge / Safari）。本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
+    next:'下一题', seeResult:'查看结果',
+    qOf:'第 %d / %d 题',
+    listenHint:'🔊 点击播放，听完后选择正确答案',
+    noTts:'当前浏览器不支持语音播放，已显示文本供参考：',
+    replay:'重听',
+    sec_listen:'听力', sec_read:'词汇阅读', sec_grammar:'语法',
+    resLabel:'你的水平约', resAcc:'总正确率', resBars:'各级掌握情况',
+    resNote:'说明：本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
+    restart:'再测一次',
+    rec0:'建议从 HSK 1（零基础）开始系统学习，先掌握最基础的日常用语与拼音。',
+    recTop:'已达到 HSK 6 水平，可进入高阶专题、商务汉语或翻译训练。',
+    recMid:'当前约 HSK %d，建议从 HSK %d 起步，同时巩固 HSK %d。',
+    lv:{0:'入门',1:'HSK 1',2:'HSK 2',3:'HSK 3',4:'HSK 4',5:'HSK 5',6:'HSK 6'},
+    lvDesc:{
+      0:'目前还处在入门阶段，建议先掌握最基础的日常问候、数字、拼音与简单句型。',
+      1:'能理解并使用熟悉的日常用语和非常简单的句子，满足具体的交际需求。',
+      2:'能用汉语就熟悉的日常话题进行简单而直接的交流。',
+      3:'能用汉语完成生活、学习、工作中的基本交际任务，具备一定的语感。',
+      4:'能就较广泛的话题与人交流，比较流利地表达自己的见解。',
+      5:'能阅读较难的汉语材料，流利地进行口头和书面表达。',
+      6:'能轻松理解听到和读到的大部分信息，能得体、流畅地进行交际。'
+    }
+  },
+  traditional: {
+    appTitle:'漢語水平自測', appSub:'快速了解你的中文程度（參考 HSK 等級）',
+    introBody:'本測試包含<b>聽力、詞彙、語法</b>三類題目，涵蓋 HSK 1–6 級。'+
+      '完成後會根據你的正確率估算當前水平，並給出學習建議。<br>適合上課前快速了解學生水平，便於備課與分班。',
+    fullTitle:'完整模式', fullSub:'30 題 · 約 8–10 分鐘',
+    quickTitle:'快速模式', quickSub:'10 題 · 約 3 分鐘',
+    introNote:'說明：聽力題使用瀏覽器語音朗讀（支援 Chrome / Edge / Safari）。本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
+    next:'下一題', seeResult:'查看結果',
+    qOf:'第 %d / %d 題',
+    listenHint:'🔊 點擊播放，聽完後選擇正確答案',
+    noTts:'目前瀏覽器不支援語音播放，已顯示文字供參考：',
+    replay:'重聽',
+    sec_listen:'聽力', sec_read:'詞彙閱讀', sec_grammar:'語法',
+    resLabel:'你的水平約', resAcc:'總正確率', resBars:'各級掌握情況',
+    resNote:'說明：本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
+    restart:'再測一次',
+    rec0:'建議從 HSK 1（零基礎）開始系統學習，先掌握最基礎的日常用語與拼音。',
+    recTop:'已達到 HSK 6 水平，可進入高階專題、商務漢語或翻譯訓練。',
+    recMid:'當前約 HSK %d，建議從 HSK %d 起步，同時鞏固 HSK %d。',
+    lv:{0:'入門',1:'HSK 1',2:'HSK 2',3:'HSK 3',4:'HSK 4',5:'HSK 5',6:'HSK 6'},
+    lvDesc:{
+      0:'目前還處在入門階段，建議先掌握最基礎的日常問候、數字、拼音與簡單句型。',
+      1:'能理解並使用熟悉的日常用語和非常簡單的句子，滿足具體的交際需求。',
+      2:'能用漢語就熟悉的日常話題進行簡單而直接的交流。',
+      3:'能用漢語完成生活、學習、工作中的基本交際任務，具備一定的語感。',
+      4:'能就較廣泛的話題與人交流，比較流利地表達自己的見解。',
+      5:'能閱讀較難的漢語材料，流利地進行口頭和書面表達。',
+      6:'能輕鬆理解聽到和讀到的大部分資訊，能得體、流暢地進行交際。'
+    }
+  }
+};
+const T = I18N[edition];
+
+/* ===================== 题库 =====================
+   字段：sec 题型(listen/read/grammar) · lv 等级(1-6)
+         q 题干 · audio 听力朗读文本(仅listen) · opts 选项 · ans 正确项下标
+   题目内容为普通话（简体），对应 HSK 标准。 */
+const BANK = [
+  // ---- HSK 1 ----
+  {sec:'listen', lv:1, q:'听录音，这个词的意思是？', audio:'你好', opts:['你好（问候）','谢谢','对不起','再见'], ans:0},
+  {sec:'listen', lv:1, q:'听录音，选择正确的意思。', audio:'今天天气很好', opts:['今天天气不错','今天下雨了','我很累','明天见'], ans:0},
+  {sec:'read',   lv:1, q:'“谢谢”是什么意思？', opts:['表示感谢','表示道歉','表示问候','表示邀请'], ans:0},
+  {sec:'grammar',lv:1, q:'我___中国人。', opts:['是','的','在','有'], ans:0},
+  {sec:'grammar',lv:1, q:'这是___书。', opts:['一本','一个','一只','一条'], ans:0},
+
+  // ---- HSK 2 ----
+  {sec:'listen', lv:2, q:'听录音，选择正确的意思。', audio:'我每天八点去公司上班', opts:['我每天八点去工作','我八点吃早饭','我去上学','我八点睡觉'], ans:0},
+  {sec:'read',   lv:2, q:'“便宜”是什么意思？', opts:['价格低','价格高','距离远','距离近'], ans:0},
+  {sec:'grammar',lv:2, q:'他比我___高。', opts:['更','很','太','都'], ans:0},
+  {sec:'grammar',lv:2, q:'请把门关___。', opts:['上','了','过','着'], ans:0},
+  {sec:'read',   lv:2, q:'“超市”是做什么的地方？', opts:['买东西','看病','上学','取钱'], ans:0},
+
+  // ---- HSK 3 ----
+  {sec:'listen', lv:3, q:'听录音，他在周末想做什么？', audio:'周末我想和朋友一起去爬山', opts:['和朋友去爬山','一个人看书','去公司加班','去医院'], ans:0},
+  {sec:'grammar',lv:3, q:'这件事我___没听说过。', opts:['还','也','都','又'], ans:0},
+  {sec:'grammar',lv:3, q:'他___说___笑，看上去很高兴。', opts:['一边…一边…','或者…或者…','因为…所以…','虽然…但是…'], ans:0},
+  {sec:'read',   lv:3, q:'“方便”是什么意思？', opts:['便利、不麻烦','困难','很早','很晚'], ans:0},
+  {sec:'read',   lv:3, q:'“到处”是什么意思？', opts:['各个地方','某个地方','没有地方','别的地方'], ans:0},
+
+  // ---- HSK 4 ----
+  {sec:'grammar',lv:4, q:'___天气不好，我们还是去了。', opts:['虽然','因为','如果','而且'], ans:0},
+  {sec:'grammar',lv:4, q:'这个问题很复杂，我___想了很长时间才明白。', opts:['只好','难免','不禁','千万'], ans:0},
+  {sec:'read',   lv:4, q:'“毕竟”是什么意思？', opts:['终究、说到底','也许','突然','大体上'], ans:0},
+  {sec:'read',   lv:4, q:'“启发”是什么意思？', opts:['使有所领悟','使人困惑','禁止','拖延'], ans:0},
+  {sec:'grammar',lv:4, q:'他___三年了，还没找到合适的工作。', opts:['毕业','结婚','生病','退休'], ans:0},
+
+  // ---- HSK 5 ----
+  {sec:'grammar',lv:5, q:'___困难多大，我们都要坚持下去。', opts:['无论','尽管','既然','除非'], ans:0},
+  {sec:'read',   lv:5, q:'“微妙”是什么意思？', opts:['深奥而难以捉摸','非常明显','很大','很简单'], ans:0},
+  {sec:'grammar',lv:5, q:'他的话让我很有___。', opts:['感触','感动','感觉','感受'], ans:0},
+  {sec:'read',   lv:5, q:'“权衡”是什么意思？', opts:['衡量、比较得失','忽略','放弃','加快'], ans:0},
+  {sec:'grammar',lv:5, q:'这件事___大家讨论一下。', opts:['值得','难得','勇于','急于'], ans:0},
+
+  // ---- HSK 6 ----
+  {sec:'grammar',lv:6, q:'这篇论文的观点___新颖，___有些极端。', opts:['既…又…','不但…而且…','虽然…但是…','要么…要么…'], ans:0},
+  {sec:'read',   lv:6, q:'“潜移默化”是什么意思？', opts:['不知不觉中受到影响','突然改变','明显不同','被迫接受'], ans:0},
+  {sec:'grammar',lv:6, q:'面对大家的批评，他___地接受了。', opts:['坦然','茫然','贸然','森然'], ans:0},
+  {sec:'read',   lv:6, q:'“甄别”是什么意思？', opts:['审查辨别','破坏','合并','忽视'], ans:0},
+  {sec:'grammar',lv:6, q:'他___是年轻人，难免会犯错。', opts:['毕竟','或许','忽然','大致'], ans:0}
+];
+
+/* ===================== 状态 ===================== */
+let QUESTIONS = [];
+let cur = 0;
+let picks = [];   // 每题用户选的下标（null 未答）
+
+/* ===================== 语音朗读 ===================== */
+let zhVoice = null;
+function loadVoice(){
+  if(!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  zhVoice = vs.find(v => /zh|cmn|Chinese/i.test(v.lang + v.name)) || null;
+}
+if('speechSynthesis' in window){
+  loadVoice();
+  speechSynthesis.onvoiceschanged = loadVoice;
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return false;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.9;
+    if(zhVoice) u.voice = zhVoice;
+    speechSynthesis.speak(u);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ===================== 工具 ===================== */
+const $ = id => document.getElementById(id);
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function fmt(s, ...n){ return s.replace(/%d/g, () => n.shift()); }
+
+/* ===================== 渲染：介绍页 ===================== */
+function renderIntro(){
+  $('appTitle').textContent = T.appTitle;
+  $('appSub').textContent = T.appSub;
+  $('introBody').innerHTML = T.introBody;
+  $('fullTitle').textContent = T.fullTitle;
+  $('fullSub').textContent = T.fullSub;
+  $('quickTitle').textContent = T.quickTitle;
+  $('quickSub').textContent = T.quickSub;
+  $('introNote').textContent = T.introNote;
+  $('intro').classList.remove('hidden');
+  $('quiz').classList.add('hidden');
+  $('result').classList.add('hidden');
+}
+
+/* 选题：完整=全部；快速=每级随机 2 题 */
+function buildQuestions(quick){
+  let pool = BANK;
+  if(quick){
+    pool = [];
+    for(let lv=1; lv<=6; lv++){
+      const ofLv = BANK.filter(q => q.lv === lv);
+      pool = pool.concat(shuffle(ofLv).slice(0,2));
+    }
+  }
+  QUESTIONS = shuffle(pool);
+  picks = new Array(QUESTIONS.length).fill(null);
+  cur = 0;
+}
+
+/* ===================== 渲染：答题页 ===================== */
+function renderQuestion(){
+  const q = QUESTIONS[cur];
+  const total = QUESTIONS.length;
+  $('progBar').style.width = ((cur)/total*100) + '%';
+  $('qCount').textContent = fmt(T.qOf, cur+1, total);
+  const secName = q.sec==='listen'?T.sec_listen : q.sec==='read'?T.sec_read : T.sec_grammar;
+  $('secName').textContent = secName;
+
+  let html = '<span class="sec-tag">'+secName+'</span>';
+  html += '<div class="q-text">'+q.q+'</div>';
+
+  if(q.sec === 'listen'){
+    const ok = speak(q.audio);
+    html += '<div class="tts">';
+    html += '<button id="playBtn">🔊 播放</button>';
+    if(ok){
+      html += '<div><div class="hint">'+T.listenHint+'</div></div>';
+    }else{
+      html += '<div><div class="hint">'+T.noTts+'</div><div class="fallback">'+q.audio+'</div></div>';
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="opts" id="opts">';
+  const keys = ['A','B','C','D'];
+  for(let i=0;i<q.opts.length;i++){
+    const sel = picks[cur]===i ? ' sel' : '';
+    html += '<div class="opt'+sel+'" data-i="'+i+'"><span class="k">'+keys[i]+'</span><span>'+q.opts[i]+'</span></div>';
+  }
+  html += '</div>';
+
+  $('qArea').innerHTML = html;
+
+  // 绑定选项点击
+  $('opts').querySelectorAll('.opt').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const i = +el.dataset.i;
+      picks[cur] = i;
+      $('opts').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+      el.classList.add('sel');
+      $('nextBtn').disabled = false;
+    });
+  });
+
+  // 播放按钮
+  const pb = $('playBtn');
+  if(pb) pb.addEventListener('click', ()=>speak(q.audio));
+
+  // 下一题 / 查看结果
+  const last = cur === total-1;
+  $('nextBtn').textContent = last ? T.seeResult : T.next;
+  $('nextBtn').disabled = picks[cur]===null;
+  $('nextBtn').onclick = ()=>{
+    if(picks[cur]===null) return;
+    if(last){ finish(); }
+    else { cur++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+  };
+
+  if(q.sec==='listen') speak(q.audio);
+}
+
+/* ===================== 计算与结果 ===================== */
+function finish(){
+  $('progBar').style.width = '100%';
+  // 各级正确率
+  const stat = {}; for(let lv=1;lv<=6;lv++) stat[lv] = {c:0,t:0};
+  QUESTIONS.forEach((q,i)=>{ stat[q.lv].t++; if(picks[i]===q.ans) stat[q.lv].c++; });
+  let correctAll = 0;
+  QUESTIONS.forEach((q,i)=>{ if(picks[i]===q.ans) correctAll++; });
+  const total = QUESTIONS.length;
+  const acc = Math.round(correctAll/total*100);
+
+  // 估算等级：最高“掌握(>=60%)”的级别；0 表示尚未达到 HSK1
+  let est = 0;
+  for(let lv=1; lv<=6; lv++){
+    const s = stat[lv];
+    if(s.t>0 && s.c/s.t >= 0.6) est = lv; else break;
+  }
+
+  // 头部
+  $('resLabel').textContent = T.resLabel;
+  $('resLevel').textContent = T.lv[est];
+  $('resDesc').textContent = T.lvDesc[est];
+
+  // 建议
+  let rec;
+  if(est===0) rec = T.rec0;
+  else if(est===6) rec = T.recTop;
+  else rec = fmt(T.recMid, est, est+1, est);
+  $('resRec').innerHTML = '<b>'+(edition==='traditional'?'學習建議':'学习建议')+'：</b>'+rec;
+
+  // 正确率
+  $('resAcc').innerHTML = T.resAcc + '：<b>'+acc+'%</b>（'+correctAll+' / '+total+'）';
+
+  // 各级掌握条形
+  let bars = '<h3>'+T.resBars+'</h3>';
+  for(let lv=1; lv<=6; lv++){
+    const s = stat[lv];
+    const a = s.t ? Math.round(s.c/s.t*100) : 0;
+    const color = a>=60 ? 'var(--ok)' : (a>=30 ? 'var(--warn)' : '#E2533B');
+    bars += '<div class="bar-row"><span class="nm">'+(edition==='traditional'?'HSK ':'HSK ')+lv+'</span>'+
+      '<span class="track"><i style="width:'+a+'%;background:'+color+'"></i></span>'+
+      '<span class="ct">'+s.c+'/'+s.t+'</span></div>';
+  }
+  $('resBars').innerHTML = bars;
+  $('resNote').textContent = T.resNote;
+
+  $('intro').classList.add('hidden');
+  $('quiz').classList.add('hidden');
+  $('result').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===================== 启动 ===================== */
+$('modeFull').addEventListener('click', ()=>{ buildQuestions(false); renderQuestion();
+  $('intro').classList.add('hidden'); $('quiz').classList.remove('hidden'); });
+$('modeQuick').addEventListener('click', ()=>{ buildQuestions(true); renderQuestion();
+  $('intro').classList.add('hidden'); $('quiz').classList.remove('hidden'); });
+$('restartBtn').addEventListener('click', renderIntro);
+
+renderIntro();
+</script>
+</body>
+</html>
