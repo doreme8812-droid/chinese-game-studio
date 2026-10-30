@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# 编辑器 / 系统
+*.log
+*.swp
+*~
+
+# 构建产物（白板等外部构建输出，体积大且不应进版本库）
+node_modules/
+dist/
+.cache/
+
+# 本地临时
+.tmp/
