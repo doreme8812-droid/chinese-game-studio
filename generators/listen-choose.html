@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>听音选字生成器 - Listen and Choose Generator</title>
+<style id="kd-kids-theme">
+/* 儿童类生成器统一风格 - 由中文游戏工坊注入（外壳统一：圆润中文字体 + 标题品牌色；玩法区与对错配色不动） */
+:root{
+  --kd-primary:#FF7A45;
+  --kd-primary-d:#E85C2A;
+}
+body{
+  font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+h1,.title,.brand-title,.app-title,header h1,.header-title,.app-header h1{
+  color:var(--kd-primary-d) !important;
+}
+</style>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #FFF7ED; color: #7c2d12;
+            font-family: 'Varela Round','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; }
+        .topbar { display:flex; align-items:center; justify-content:space-between;
+            padding:12px 20px; background:#fff; border-bottom:2px solid #fed7aa; position:sticky; top:0; z-index:50; }
+        .brand { display:flex; align-items:center; gap:8px; font-weight:bold; color:#ea580c; font-size:1.1rem; }
+        .tag { background:#ffedd5; color:#c2410c; font-size:.8rem; padding:4px 12px; border-radius:999px; font-weight:bold; }
+        .wrap { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:24px; }
+        @media (max-width:820px){ .wrap{ grid-template-columns:1fr; } }
+        .panel { background:#fff; border-radius:20px; padding:22px; border:2px solid #fed7aa; box-shadow:0 6px 0 #fed7aa; }
+        .panel h2 { margin:0 0 16px; font-size:1.25rem; color:#ea580c; display:flex; align-items:center; gap:8px; }
+        label { display:block; font-weight:bold; font-size:.9rem; color:#9a3412; margin:14px 0 6px; }
+        input[type=text], textarea, input[type=number] { width:100%; border:2px solid #fed7aa; border-radius:12px; padding:10px 12px;
+            font-family:inherit; font-size:1rem; color:#7c2d12; background:#fffdf9; outline:none; }
+        textarea { resize:vertical; min-height:150px; line-height:1.5; }
+        input:focus, textarea:focus { border-color:#fb923c; }
+        .hint { font-size:.8rem; color:#b45309; margin-top:4px; }
+        .hint.warn { color:#dc2626; font-weight:bold; }
+        .seg { display:flex; gap:8px; }
+        .seg button { flex:1; padding:10px; border-radius:12px; border:2px solid #fed7aa; background:#fffdf9;
+            font-family:inherit; font-weight:bold; font-size:1rem; color:#9a3412; cursor:pointer; }
+        .seg button.on { background:#fb923c; color:#fff; border-color:#c2410c; }
+        .switchline { display:flex; align-items:center; gap:10px; margin:14px 0; }
+        .switch { position:relative; width:52px; height:30px; flex:0 0 auto; }
+        .switch input { opacity:0; width:0; height:0; }
+        .slider { position:absolute; inset:0; background:#fed7aa; border-radius:999px; transition:.2s; cursor:pointer; }
+        .slider::before { content:""; position:absolute; width:24px; height:24px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+        .switch input:checked + .slider { background:#34d399; }
+        .switch input:checked + .slider::before { transform:translateX(22px); }
+        .lab { font-weight:bold; font-size:.95rem; color:#9a3412; }
+        .use { background:#fffbeb; border:2px dashed #fcd34d; border-radius:14px; padding:14px; font-size:.85rem; color:#92400e; line-height:1.6; }
+        .use b { color:#b45309; }
+        .btn { border:none; border-radius:14px; padding:14px; font-family:inherit; font-weight:bold; font-size:1.05rem;
+            cursor:pointer; background:#22c55e; color:#fff; box-shadow:0 4px 0 #15803d; width:100%; }
+        .btn:active { transform:translateY(2px); box-shadow:0 2px 0 #15803d; }
+        .btn.ghost { background:#fff; color:#ea580c; border:2px solid #fb923c; box-shadow:0 4px 0 #fed7aa; margin-top:10px; }
+        .actions { margin-top:20px; }
+        /* 预览 */
+        .pv-box { background:#fffdf9; border:2px solid #fed7aa; border-radius:16px; padding:16px; text-align:center; }
+        .pv-spk { font-size:3rem; }
+        .pv-opts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+        .pv-opt { border:2px solid #fed7aa; border-radius:12px; padding:12px; font-weight:bold; color:#9a3412; background:#fff; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand"><span>🐼</span> Chinese with Dora</div>
+        <div class="tag">听音选字生成器</div>
+    </div>
+
+    <div class="wrap">
+        <div class="panel">
+            <h2>⚙️ 基础设置</h2>
+            <label>游戏标题</label>
+            <input type="text" id="title" value="听一听，选一选">
+
+            <label>词语列表（每行一个；可写「词｜英文提示」）</label>
+            <textarea id="words" placeholder="例如：&#10;苹果｜apple&#10;学校｜school&#10;老师｜teacher&#10;朋友｜friend"></textarea>
+            <div class="hint" id="wordHint"></div>
+
+            <label>每题选项数</label>
+            <div class="seg" id="optSeg">
+                <button data-n="2">2</button>
+                <button data-n="3">3</button>
+                <button data-n="4" class="on">4</button>
+            </div>
+
+            <label>本轮题数（0 = 全部）</label>
+            <input type="number" id="rounds" value="10" min="0" max="200">
+            <div class="hint">留 0 或超过词数则用完所有词。</div>
+
+            <div class="switchline">
+                <label class="switch"><input type="checkbox" id="hintOn"><span class="slider"></span></label>
+                <span class="lab">答完显示英文提示（需填了「｜英文」）</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>👀 实时预览</h2>
+            <div id="preview"></div>
+            <div class="use">
+                <b>怎么用：</b><br>
+                1. 填入要练听力的词（至少 4 个，选项数才够）；<br>
+                2. 下载 .html 发给学生；<br>
+                3. 学生点「开始」→ 网页朗读一个词 → 从选项里选出来。<br>
+                <b>注意：</b>靠设备自带的中文语音朗读，需联网/系统装有中文语音。
+            </div>
+            <div class="actions">
+                <button class="btn" id="download">⬇️ 生成独立游戏文件（HTML）</button>
+                <button class="btn ghost" id="reset">🗑️ 清空词语</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function $(id){ return document.getElementById(id); }
+        function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+        function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+        // 解析：每行 "词" 或 "词|提示"
+        function parseItems(raw){
+            return raw.split(/[\n;；]/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length>0; })
+                .map(function(line){
+                    var p = line.split(/[|｜]/);
+                    return { w: (p[0]||'').trim(), h: (p[1]||'').trim() };
+                }).filter(function(o){ return o.w.length>0; });
+        }
+
+        var optCount = 4;
+
+        function renderPreview(){
+            var items = parseItems($('words').value);
+            var pv = $('preview');
+            var h = $('wordHint');
+            if(items.length === 0){
+                pv.innerHTML = '<div class="pv-box" style="color:#b45309;padding:40px 0;">填写词语后这里会出现题目</div>';
+                h.className='hint'; h.textContent='建议至少 4 个词，最好 10 个以上。';
+                return;
+            }
+            var need = optCount;
+            if(items.length < need){
+                h.className='hint warn';
+                h.textContent = '需要至少 ' + need + ' 个词才能凑够 ' + need + ' 个选项，当前只有 ' + items.length + ' 个。';
+            } else {
+                h.className='hint';
+                h.textContent = '已填 ' + items.length + ' 个词。';
+            }
+            var sample = shuffle(items.slice()).slice(0, Math.min(optCount, items.length));
+            var html = '<div class="pv-box"><div class="pv-spk">🔊</div><div style="color:#9a3412;font-size:.9rem;">（朗读：' + escapeHtml(sample[0].w) + '）</div><div class="pv-opts">';
+            sample.forEach(function(o,i){ html += '<div class="pv-opt">' + escapeHtml(o.w) + '</div>'; });
+            html += '</div></div>';
+            pv.innerHTML = html;
+        }
+
+        function buildStudentHTML(cfg){
+            var css = [
+                "*{box-sizing:border-box;}",
+                "body{margin:0;font-family:'Varela Round','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:#FFF7ED;color:#7c2d12;}",
+                ".app{max-width:560px;margin:0 auto;padding:18px;text-align:center;}",
+                "h1{color:#ea580c;font-size:1.6rem;margin:6px 0 2px;}",
+                ".bar{color:#b45309;font-size:.9rem;font-weight:bold;margin-bottom:10px;}",
+                ".card{background:#fff;border:2px solid #fed7aa;border-radius:18px;padding:20px;box-shadow:0 6px 0 #fed7aa;}",
+                ".spk{border:none;border-radius:50%;width:110px;height:110px;font-size:3rem;cursor:pointer;background:#fb923c;color:#fff;box-shadow:0 6px 0 #c2410c;margin-bottom:8px;}",
+                ".spk:active{transform:translateY(3px);box-shadow:0 3px 0 #c2410c;}",
+                ".tip{color:#9a3412;font-size:.95rem;margin-bottom:12px;}",
+                ".opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}",
+                ".opt{border:2px solid #fed7aa;border-radius:14px;padding:16px 10px;font-family:inherit;font-weight:bold;font-size:1.35rem;color:#9a3412;background:#fffdf9;cursor:pointer;}",
+                ".opt:active{transform:translateY(2px);}",
+                ".opt.right{background:#34d399;color:#065f46;border-color:#15803d;}",
+                ".opt.wrong{background:#fca5a5;color:#7f1d1d;border-color:#b91c1c;}",
+                ".fb{margin-top:14px;font-weight:bold;font-size:1.05rem;min-height:26px;}",
+                ".fb.ok{color:#15803d;} .fb.no{color:#b91c1c;}",
+                ".hintline{color:#9a3412;font-size:.9rem;margin-top:6px;}",
+                ".btn{border:none;border-radius:14px;padding:12px 24px;font-family:inherit;font-weight:bold;font-size:1rem;cursor:pointer;background:#22c55e;color:#fff;box-shadow:0 4px 0 #15803d;margin-top:12px;}",
+                ".btn:active{transform:translateY(2px);box-shadow:0 2px 0 #15803d;}",
+                ".start{position:fixed;inset:0;background:#FFF7ED;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;}",
+                ".start h2{color:#ea580c;font-size:1.5rem;margin:0 0 6px;}",
+                ".start p{color:#9a3412;margin:0 0 8px;font-size:.95rem;}",
+                ".end{display:none;}.end.show{display:block;}",
+                ".warn{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:10px;padding:8px 12px;font-size:.85rem;margin-bottom:10px;}"
+            ].join('');
+
+            var js = [
+                "var CFG = " + JSON.stringify(cfg) + ";",
+                "var items = CFG.items;",
+                "var optN = Math.min(CFG.optCount, items.length);",
+                "var qs = shuffle(items.slice());",
+                "if(CFG.roundCount > 0 && CFG.roundCount < qs.length) qs = qs.slice(0, CFG.roundCount);",
+                "var qi = 0, score = 0, answered = false;",
+                "function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }",
+                "var TTS = ('speechSynthesis' in window);",
+                "function speak(t){ if(!TTS) return; window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.lang='zh-CN'; window.speechSynthesis.speak(u); }",
+                "function el(id){ return document.getElementById(id); }",
+                "function ask(){",
+                "  answered=false;",
+                "  var cur=qs[qi];",
+                "  el('idx').textContent=(qi+1); el('total').textContent=qs.length; el('score').textContent=score;",
+                "  el('fb').textContent=''; el('fb').className='fb'; el('hintline').textContent='';",
+                "  var others=items.filter(function(o){ return o.w!==cur.w; });",
+                "  var picks=shuffle(others).slice(0, optN-1);",
+                "  var opts=shuffle(picks.concat([cur]));",
+                "  var box=el('opts'); box.innerHTML='';",
+                "  opts.forEach(function(o){",
+                "    var b=document.createElement('button'); b.className='opt'; b.textContent=o.w;",
+                "    b.onclick=function(){",
+                "      if(answered) return; answered=true;",
+                "      var all=box.children;",
+                "      for(var i=0;i<all.length;i++){ if(all[i].textContent===cur.w) all[i].className='opt right'; }",
+                "      if(o.w===cur.w){ score++; el('score').textContent=score; el('fb').textContent='✅ 对啦！'; el('fb').className='fb ok'; }",
+                "      else { b.className='opt wrong'; el('fb').textContent='❌ 正确答案是：'+cur.w; el('fb').className='fb no'; }",
+                "      if(CFG.hintOn && cur.h){ el('hintline').textContent=cur.h; }",
+                "      if(o.w===cur.w){ setTimeout(next, 900); }",
+                "      else { var nb=el('nextBtn'); nb.style.display='inline-block'; }",
+                "    };",
+                "    box.appendChild(b);",
+                "  });",
+                "  el('nextBtn').style.display='none';",
+                "  speak(cur.w);",
+                "}",
+                "function next(){ if(qi < qs.length-1){ qi++; ask(); } else { finish(); } }",
+                "function finish(){",
+                "  el('stage').style.display='none';",
+                "  var e=el('end'); e.className='end show';",
+                "  el('final').textContent=score+' / '+qs.length;",
+                "}",
+                "el('play').onclick=function(){ speak(qs[qi].w); };",
+                "el('nextBtn').onclick=function(){ next(); };",
+                "el('again').onclick=function(){ qi=0; score=0; el('end').className='end'; el('stage').style.display='block'; shuffle(qs); ask(); };",
+                "el('go').onclick=function(){ el('start').style.display='none'; ask(); };",
+                "if(!TTS){ el('warnbox').style.display='block'; }"
+            ].join('\n');
+
+            return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8">\n' +
+                '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+                '  <title>' + escapeHtml(cfg.title) + ' - 听音选字</title>\n' +
+                '  <style>' + css + '</style>\n</head>\n<body>\n' +
+                '  <div class="app">\n' +
+                '    <h1>' + escapeHtml(cfg.title) + '</h1>\n' +
+                '    <div id="warnbox" class="warn" style="display:none;">⚠️ 此设备不支持语音朗读，将无法听到发音。</div>\n' +
+                '    <div class="bar">第 <span id="idx">1</span>/<span id="total">0</span> 题 · 得分 <span id="score">0</span></div>\n' +
+                '    <div class="card" id="stage">\n' +
+                '      <button class="spk" id="play">🔊</button>\n' +
+                '      <div class="tip">点喇叭再听一次，然后选出正确的词</div>\n' +
+                '      <div class="opts" id="opts"></div>\n' +
+                '      <div class="fb" id="fb"></div>\n' +
+                '      <div class="hintline" id="hintline"></div>\n' +
+                '      <button class="btn" id="nextBtn" style="display:none;">下一题 →</button>\n' +
+                '    </div>\n' +
+                '    <div class="end card" id="end">\n' +
+                '      <h2 style="color:#ea580c;margin:0 0 8px;">🎉 完成啦！</h2>\n' +
+                '      <p style="font-size:1.4rem;font-weight:bold;margin:6px 0;">得分 <span id="final">0</span></p>\n' +
+                '      <button class="btn" id="again">🔄 再来一轮</button>\n' +
+                '    </div>\n' +
+                '  </div>\n' +
+                '  <div class="start" id="start">\n' +
+                '    <h2>🎧 ' + escapeHtml(cfg.title) + '</h2>\n' +
+                '    <p>听发音，选出正确的词</p>\n' +
+                '    <button class="btn" id="go">开始练习</button>\n' +
+                '  </div>\n' +
+                '  <script>' + js + '<\/script>\n</body>\n</html>';
+        }
+
+        function getConfig(){
+            return {
+                title: $('title').value.trim() || '听一听，选一选',
+                items: parseItems($('words').value),
+                optCount: optCount,
+                roundCount: parseInt($('rounds').value, 10) || 0,
+                hintOn: $('hintOn').checked
+            };
+        }
+
+        function download(){
+            var cfg = getConfig();
+            var blob = new Blob([buildStudentHTML(cfg)], { type:'text/html;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = (cfg.title || '听力') + '_听音选字.html';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        ['title','words','rounds','hintOn'].forEach(function(id){
+            var el = $(id);
+            el.addEventListener('input', function(){ if(id==='words'||id==='rounds') renderPreview(); });
+            el.addEventListener('change', renderPreview);
+        });
+        $('optSeg').addEventListener('click', function(e){
+            var b = e.target.closest('button'); if(!b) return;
+            optCount = parseInt(b.dataset.n, 10);
+            Array.prototype.forEach.call(this.children, function(x){ x.classList.remove('on'); });
+            b.classList.add('on');
+            renderPreview();
+        });
+        $('download').addEventListener('click', download);
+        $('reset').addEventListener('click', function(){ $('words').value=''; renderPreview(); });
+        renderPreview();
+    </script>
+</body>
+</html>

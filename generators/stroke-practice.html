@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>汉字笔画练习 | Chinese Stroke Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Hanzi Writer 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f4f8;
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .handwriting-font {
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+
+        /* 米字格背景 CSS */
+        .mizige-bg {
+            background-color: #fff;
+            background-image: 
+                linear-gradient(90deg, transparent 49.5%, #e53e3e 49.5%, #e53e3e 50.5%, transparent 50.5%),
+                linear-gradient(0deg, transparent 49.5%, #e53e3e 49.5%, #e53e3e 50.5%, transparent 50.5%),
+                linear-gradient(45deg, transparent 49.5%, #e53e3e 49.5%, #e53e3e 50.5%, transparent 50.5%),
+                linear-gradient(-45deg, transparent 49.5%, #e53e3e 49.5%, #e53e3e 50.5%, transparent 50.5%);
+            background-size: 100% 100%;
+            border: 4px solid #e53e3e;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 隐藏滚动条但允许滚动 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 针对学生版的样式注入点 */
+        /* STUDENT_STYLE_HOOK */
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <!-- 顶部导航 -->
+    <header class="bg-white shadow-sm p-4 z-10 flex justify-between items-center shrink-0">
+        <h1 class="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <span class="text-red-600 text-3xl">✍️</span> 汉字笔画练习
+        </h1>
+        <button id="settingsBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg transition text-sm font-medium flex items-center gap-2">
+            ⚙️ 设置/添加汉字
+        </button>
+    </header>
+
+    <!-- 主体内容 -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4 relative w-full max-w-4xl mx-auto">
+        
+        <!-- 游戏界面 (默认隐藏，点击开始后显示) -->
+        <div id="gameContainer" class="w-full flex flex-col items-center hidden transition-opacity duration-500 opacity-0">
+            <!-- 进度条 -->
+            <div class="w-full max-w-md mb-6 flex justify-between items-center text-sm text-gray-500 font-medium">
+                <span>当前进度: <span id="progressText" class="text-red-600 font-bold text-lg">1</span> / <span id="totalText">5</span></span>
+                <!-- 状态提示标签 -->
+                <span id="phaseBadge" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">观察阶段</span>
+            </div>
+
+            <!-- 游戏区域容器 -->
+            <div class="flex flex-col md:flex-row items-center gap-8 w-full justify-center">
+                
+                <!-- 左侧：写字板 -->
+                <div class="relative group">
+                    <div id="character-target-div" class="mizige-bg w-[300px] h-[300px] md:w-[400px] md:h-[400px] cursor-crosshair rounded-sm relative bg-white transition-all duration-300">
+                        <!-- HanziWriter 将在这里渲染 -->
+                    </div>
+                    
+                    <!-- 提示覆盖层 (加载中) -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-20 rounded-sm">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                            <span class="text-gray-500 text-sm">加载字形中...</span>
+                        </div>
+                    </div>
+
+                    <div class="absolute -bottom-10 w-full text-center text-gray-400 text-sm h-6">
+                        <span id="instructionText" class="transition-all duration-300">请仔细观察笔顺动画</span>
+                    </div>
+                </div>
+
+                <!-- 右侧：信息与控制面板 -->
+                <div id="infoPanel" class="w-full md:w-64 bg-white p-6 rounded-xl shadow-lg border border-gray-100 transition-all duration-500 flex flex-col items-center text-center h-[350px] justify-between relative overflow-hidden">
+                    
+                    <!-- 装饰背景 -->
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-400"></div>
+
+                    <!-- 内容区域 -->
+                    <div class="flex-1 flex flex-col items-center justify-center w-full">
+                        <!-- 成功图标 (仅在完成时显示) -->
+                        <div id="successIcon" class="hidden text-green-500 text-6xl mb-2 animate-bounce">🎉</div>
+                        
+                        <!-- 拼音和解释 (观察阶段/完成阶段显示) -->
+                        <div id="meaningContent" class="transition-opacity duration-300">
+                            <h2 class="text-4xl font-bold mb-2 text-gray-800 font-serif" id="resultChar">字</h2>
+                            <p class="text-2xl text-red-600 font-medium mb-4" id="resultPinyin">pīn yīn</p>
+                            
+                            <div class="w-full bg-gray-50 p-3 rounded-lg text-left border border-gray-100">
+                                <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">组词 / 释义</p>
+                                <p class="text-gray-700 font-medium text-sm leading-relaxed" id="resultMeaning">词组示例</p>
+                            </div>
+                        </div>
+
+                        <!-- 书写阶段占位符 -->
+                        <div id="writingPlaceholder" class="hidden flex flex-col items-center justify-center h-full text-gray-300">
+                            <div class="text-6xl mb-2">✍️</div>
+                            <p>请在左侧描红</p>
+                            <p class="text-xs mt-2">（默写模式：释义已隐藏）</p>
+                        </div>
+                    </div>
+
+                    <!-- 按钮区域 -->
+                    <div class="w-full mt-4">
+                        <!-- 阶段1按钮：开始写字 -->
+                        <button id="startWriteBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
+                            <span>我记住了，开始描红</span> 
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        </button>
+
+                        <!-- 阶段3按钮：下一个 -->
+                        <button id="nextBtn" class="hidden w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
+                            <span>下一个字</span> 
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </button>
+                        
+                        <button id="retryBtn" class="hidden mt-2 text-gray-400 hover:text-gray-600 text-xs underline w-full">再练一次这个字</button>
+                        <button id="replayAnimBtn" class="mt-2 text-blue-400 hover:text-blue-600 text-xs flex items-center justify-center gap-1 w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            重播演示
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 欢迎页 (Welcome Screen) -->
+        <div id="welcomeScreen" class="absolute inset-0 bg-white z-40 flex flex-col items-center justify-center text-center p-8 transition-transform duration-500">
+            <div class="mb-8 transform hover:scale-105 transition duration-500">
+                <span class="text-8xl block mb-4">📝</span>
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2 tracking-tight">汉字笔画练习</h1>
+                <div class="h-1 w-24 bg-red-500 mx-auto rounded-full"></div>
+            </div>
+            <p class="text-gray-500 text-lg mb-10 max-w-md">
+                跟着动画学习笔顺，然后在米字格中练习描红。<br>
+                准备好开始了吗？
+            </p>
+            <button id="startGameBtn" class="bg-red-600 hover:bg-red-700 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:shadow-xl transform transition hover:-translate-y-1 active:translate-y-0 flex items-center gap-3">
+                开始练习 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </button>
+            <p class="absolute bottom-8 text-gray-400 text-xs">Recommended for Desktop & Tablet</p>
+        </div>
+
+        <!-- 通关页 (Final Screen) -->
+        <div id="finalScreen" class="absolute inset-0 bg-gradient-to-br from-red-50 to-white z-40 hidden flex flex-col items-center justify-center text-center p-8">
+            <div class="text-6xl mb-6 animate-bounce">🏆</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">恭喜你！</h2>
+            <p class="text-xl text-gray-600 mb-8">你已经完成了所有的汉字练习。</p>
+            
+            <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 mb-8 max-w-sm w-full">
+                <p class="text-gray-500 text-sm uppercase mb-2">本次练习成果</p>
+                <div class="flex justify-between items-end border-b border-gray-100 pb-2 mb-2">
+                    <span class="text-gray-600">练习字数</span>
+                    <span class="text-2xl font-bold text-red-600" id="finalCount">0</span>
+                </div>
+                <div class="text-center mt-4">
+                    <span class="text-4xl">⭐⭐⭐⭐⭐</span>
+                </div>
+            </div>
+
+            <button id="restartBtn" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-8 rounded-lg shadow-md transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                再练一次
+            </button>
+        </div>
+
+    </main>
+
+    <!-- 设置模态框 -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800">设置 / 导出</h3>
+                <button id="closeSettings" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                
+                <!-- 选项卡 -->
+                <div class="flex border-b border-gray-200 mb-4">
+                    <button id="tabEdit" class="py-2 px-4 text-red-600 border-b-2 border-red-600 font-medium text-sm">编辑内容</button>
+                    <button id="tabExport" class="py-2 px-4 text-gray-500 hover:text-gray-700 font-medium text-sm">导出给学生</button>
+                </div>
+
+                <!-- 内容编辑区域 -->
+                <div id="contentEdit">
+                    <p class="text-sm text-gray-500 mb-2">请输入汉字列表，格式为：<br> <span class="font-mono bg-gray-100 px-1">汉字, 拼音, 词组/解释</span> (每行一个)</p>
+                    <textarea id="dataInput" class="w-full h-48 border border-gray-300 rounded-lg p-3 font-mono text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none" placeholder="我, wǒ, 我们 (We)&#10;爱, ài, 喜爱 (Love)"></textarea>
+                    
+                    <div class="mt-4">
+                        <label class="block text-xs text-gray-500 mb-1">书写难度 (严谨度)</label>
+                        <input type="range" id="difficultyRange" min="0" max="3" step="1" value="1" class="w-full accent-red-600">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>简单</span>
+                            <span>严格</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end gap-3 flex-wrap">
+                        <button id="resetDefaultBtn" class="px-3 py-2 text-gray-400 hover:text-gray-600 text-xs">恢复默认</button>
+                        <!-- 新增的直接导出按钮 -->
+                        <button id="directExportBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm transition flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            直接导出学生包
+                        </button>
+                        <button id="saveSettingsBtn" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium shadow-sm transition">保存并练习</button>
+                    </div>
+                </div>
+
+                <!-- 导出区域 -->
+                <div id="contentExport" class="hidden">
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
+                        <h4 class="font-bold text-blue-800 text-sm mb-1">如何使用？</h4>
+                        <p class="text-xs text-blue-600">你可以生成一个独立的 HTML 文件。把这个文件发给学生，他们不需要上网配置，打开就是你刚才设置好的内容。</p>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-6">
+                        <input type="checkbox" id="lockSettingsCheck" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500" checked>
+                        <label for="lockSettingsCheck" class="text-sm text-gray-700 select-none">
+                            学生版隐藏“设置”按钮 (推荐)
+                            <p class="text-xs text-gray-400">防止学生误触修改练习内容</p>
+                        </label>
+                    </div>
+
+                    <button id="exportBtn" class="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold shadow-md transition flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        生成并下载学生包
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心配置数据开始 ---
+        /* CONFIG_START */
+        const defaultData = [
+            { char: '我', pinyin: 'wǒ', meaning: '我们，自我 (Me/I)' },
+            { char: '喜', pinyin: 'xǐ', meaning: '喜欢，欢喜 (Like/Happy)' },
+            { char: '欢', pinyin: 'huān', meaning: '欢乐，欢迎 (Happy/Welcome)' },
+            { char: '中', pinyin: 'zhōng', meaning: '中国，中间 (Middle/China)' },
+            { char: '文', pinyin: 'wén', meaning: '文字，文化 (Culture/Text)' }
+        ];
+        const defaultDifficulty = 1; // 0=简单, 1=标准, 2=严格, 3=超严
+        /* CONFIG_END */
+        // --- 核心配置数据结束 ---
+
+        // 是否为学生版模式 (STUDENT MODE START)
+        /* STUDENT_MODE_MARKER */
+        const isStudentMode = false;
+        // (STUDENT MODE END)
+
+        // --- 状态管理 ---
+        let practiceData = [...defaultData];
+        let currentIndex = 0;
+        let writer = null;
+        let isComplete = false;
+        // 状态: 'WELCOME', 'PREVIEW', 'WRITING', 'RESULT'
+        let currentPhase = 'WELCOME'; 
+
+        // --- DOM 元素 ---
+        const els = {
+            gameContainer: document.getElementById('gameContainer'),
+            welcomeScreen: document.getElementById('welcomeScreen'),
+            finalScreen: document.getElementById('finalScreen'),
+            startGameBtn: document.getElementById('startGameBtn'),
+            restartBtn: document.getElementById('restartBtn'),
+            
+            targetDiv: document.getElementById('character-target-div'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            
+            infoPanel: document.getElementById('infoPanel'),
+            meaningContent: document.getElementById('meaningContent'),
+            writingPlaceholder: document.getElementById('writingPlaceholder'),
+            
+            resultChar: document.getElementById('resultChar'),
+            resultPinyin: document.getElementById('resultPinyin'),
+            resultMeaning: document.getElementById('resultMeaning'),
+            
+            startWriteBtn: document.getElementById('startWriteBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            retryBtn: document.getElementById('retryBtn'),
+            replayAnimBtn: document.getElementById('replayAnimBtn'),
+            successIcon: document.getElementById('successIcon'),
+            
+            progressText: document.getElementById('progressText'),
+            totalText: document.getElementById('totalText'),
+            phaseBadge: document.getElementById('phaseBadge'),
+            instructionText: document.getElementById('instructionText'),
+            
+            settingsBtn: document.getElementById('settingsBtn'),
+            settingsModal: document.getElementById('settingsModal'),
+            closeSettings: document.getElementById('closeSettings'),
+            saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+            resetDefaultBtn: document.getElementById('resetDefaultBtn'),
+            dataInput: document.getElementById('dataInput'),
+            difficultyRange: document.getElementById('difficultyRange'),
+            
+            tabEdit: document.getElementById('tabEdit'),
+            tabExport: document.getElementById('tabExport'),
+            contentEdit: document.getElementById('contentEdit'),
+            contentExport: document.getElementById('contentExport'),
+            exportBtn: document.getElementById('exportBtn'),
+            directExportBtn: document.getElementById('directExportBtn'),
+            lockSettingsCheck: document.getElementById('lockSettingsCheck'),
+            finalCount: document.getElementById('finalCount')
+        };
+
+        // --- 初始化 ---
+        function init() {
+            if (isStudentMode) {
+                // 学生模式：强制使用导出的数据和难度
+                practiceData = [...defaultData];
+                // 确保学生模式下设置按钮隐藏（以防CSS加载延迟）
+                if (els.settingsBtn) els.settingsBtn.style.display = 'none';
+                
+                // 学生模式下，UI Slider 也应该同步更新（虽然它不可见）
+                if (els.difficultyRange) els.difficultyRange.value = defaultDifficulty;
+            } else {
+                // 老师模式：尝试读取本地缓存
+                const saved = localStorage.getItem('hanziData');
+                if (saved) {
+                    parseInputToData(saved, false);
+                } else {
+                    practiceData = [...defaultData];
+                }
+            }
+            
+            updateProgressUI();
+            els.dataInput.value = dataToString(practiceData);
+        }
+
+        // --- 游戏流程控制 ---
+
+        els.startGameBtn.addEventListener('click', () => {
+            // 隐藏欢迎页，显示游戏区
+            els.welcomeScreen.style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                els.welcomeScreen.classList.add('hidden');
+                els.gameContainer.classList.remove('hidden');
+                // 微小延迟让 display:block 生效后再加 opacity
+                setTimeout(() => els.gameContainer.classList.remove('opacity-0'), 50);
+                loadCharacter(0);
+            }, 500);
+        });
+
+        els.restartBtn.addEventListener('click', () => {
+            els.finalScreen.classList.add('hidden');
+            els.welcomeScreen.classList.remove('hidden');
+            setTimeout(() => {
+                els.welcomeScreen.style.transform = 'translateY(0)';
+            }, 50);
+            currentIndex = 0;
+        });
+
+        // --- 核心逻辑：加载汉字 (PREVIEW 阶段) ---
+        function loadCharacter(index) {
+            // 安全清理：确保旧的 writer 实例被清理，防止内存泄漏或多重绑定
+            if (writer) {
+                try {
+                    writer.cancelQuiz();
+                    // HanziWriter 没有官方的 destroy 方法，但清理 DOM 和引用即可
+                } catch(e) { console.log('Writer cleanup minor error', e); }
+                writer = null;
+            }
+
+            if (index >= practiceData.length) {
+                showFinalScreen();
+                return;
+            }
+
+            const currentData = practiceData[index];
+            currentPhase = 'PREVIEW';
+            isComplete = false;
+            
+            // 界面重置
+            updateProgressUI();
+            els.loadingOverlay.style.display = 'flex';
+            els.targetDiv.innerHTML = ''; // 清理 DOM
+            
+            // 设置右侧面板：显示学习内容，隐藏成功按钮
+            els.meaningContent.classList.remove('hidden', 'opacity-0');
+            els.writingPlaceholder.classList.add('hidden');
+            els.successIcon.classList.add('hidden');
+            
+            els.startWriteBtn.classList.remove('hidden');
+            els.nextBtn.classList.add('hidden');
+            els.retryBtn.classList.add('hidden');
+            els.replayAnimBtn.classList.remove('hidden');
+            
+            // 填充内容
+            els.resultChar.innerText = currentData.char;
+            els.resultPinyin.innerText = currentData.pinyin;
+            els.resultMeaning.innerText = currentData.meaning;
+
+            els.phaseBadge.innerText = "观察演示";
+            els.phaseBadge.className = "bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold";
+            els.instructionText.innerText = "正在加载演示...";
+            els.instructionText.className = "text-gray-400";
+
+            // 创建 Writer
+            const width = window.innerWidth < 768 ? 300 : 400;
+            writer = HanziWriter.create('character-target-div', currentData.char, {
+                width: width,
+                height: width,
+                padding: 20,
+                showOutline: true,
+                strokeAnimationSpeed: 1.5, // 演示稍微快一点
+                delayBetweenStrokes: 150,
+                strokeColor: '#333333',
+                outlineColor: '#DDDDDD',
+                drawingWidth: 20,
+                showCharacter: false, // 初始不显示黑字
+                showHintAfterMisses: 3,
+                highlightOnComplete: true,
+                lenient: true,
+            });
+
+            // 监测加载完成
+            const checkLoad = setInterval(() => {
+                const svg = els.targetDiv.querySelector('svg');
+                if (svg) {
+                    clearInterval(checkLoad);
+                    els.loadingOverlay.style.display = 'none';
+                    
+                    // 自动开始演示
+                    els.instructionText.innerText = "请仔细观察笔顺动画";
+                    writer.animateCharacter();
+                }
+            }, 100);
+        }
+
+        // --- 核心逻辑：开始书写 (WRITING 阶段) ---
+        els.startWriteBtn.addEventListener('click', () => {
+            currentPhase = 'WRITING';
+            
+            // 界面调整：隐藏学习内容，准备测试
+            // 淡出学习内容
+            els.meaningContent.classList.add('opacity-0'); 
+            setTimeout(() => {
+                els.meaningContent.classList.add('hidden');
+                els.writingPlaceholder.classList.remove('hidden');
+            }, 300);
+
+            els.startWriteBtn.classList.add('hidden');
+            els.replayAnimBtn.classList.add('hidden'); // 写字时不能看动画了
+            
+            els.phaseBadge.innerText = "记忆书写";
+            els.phaseBadge.className = "bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold";
+            els.instructionText.innerText = "请凭记忆描红";
+            els.instructionText.className = "text-gray-600 font-bold";
+
+            // Writer 进入测验模式
+            writer.cancelQuiz(); 
+            writer.hideCharacter(); // 隐藏演示的黑色笔画，只留轮廓
+            
+            // 重新进入 Quiz
+            // 确定难度
+            // 如果是学生模式，优先使用注入的 defaultDifficulty
+            // 否则使用滑块的值
+            const difficultyVal = isStudentMode ? defaultDifficulty : parseInt(els.difficultyRange.value);
+            
+            // 严谨度映射: 0: 简单(1.5), 1: 标准(1.0), 2: 严格(0.8), 3: 超严(0.5)
+            const leniencyMap = [1.5, 1.0, 0.8, 0.5]; 
+            const currentLeniency = leniencyMap[difficultyVal] || 1.0;
+
+            writer.quiz({
+                leniency: currentLeniency, // 应用难度设置
+                onMistake: (strokeData) => {
+                    els.instructionText.innerText = "笔顺不对，请重试";
+                    els.instructionText.className = "text-red-500 animate-pulse font-bold";
+                    setTimeout(() => {
+                        if (currentPhase === 'WRITING') {
+                            els.instructionText.innerText = "请凭记忆描红";
+                            els.instructionText.className = "text-gray-600 font-bold";
+                        }
+                    }, 1000);
+                },
+                onComplete: (summaryData) => {
+                    handleCharacterComplete();
+                }
+            });
+        });
+
+        // --- 核心逻辑：完成 (RESULT 阶段) ---
+        function handleCharacterComplete() {
+            currentPhase = 'RESULT';
+            isComplete = true;
+
+            // 界面反馈
+            els.instructionText.innerText = "太棒了！完成！";
+            els.instructionText.className = "text-green-600 font-bold";
+            
+            // 恢复显示详细信息
+            els.writingPlaceholder.classList.add('hidden');
+            els.meaningContent.classList.remove('hidden');
+            // 强制重绘后再 remove opacity 以触发 transition
+            void els.meaningContent.offsetWidth; 
+            els.meaningContent.classList.remove('opacity-0');
+
+            els.successIcon.classList.remove('hidden');
+            
+            // 按钮
+            els.nextBtn.classList.remove('hidden');
+            els.retryBtn.classList.remove('hidden');
+
+            els.phaseBadge.innerText = "完成";
+            els.phaseBadge.className = "bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold";
+
+            // 播放完成动画
+            writer.animateCharacter();
+        }
+
+        // --- 辅助功能 ---
+        els.replayAnimBtn.addEventListener('click', () => {
+             writer.animateCharacter();
+        });
+
+        els.nextBtn.addEventListener('click', () => {
+            currentIndex++;
+            loadCharacter(currentIndex);
+        });
+
+        els.retryBtn.addEventListener('click', () => {
+            loadCharacter(currentIndex);
+        });
+
+        function showFinalScreen() {
+            els.gameContainer.classList.add('hidden');
+            els.finalScreen.classList.remove('hidden');
+            els.finalCount.innerText = practiceData.length;
+        }
+
+        function updateProgressUI() {
+            els.progressText.innerText = currentIndex + 1;
+            els.totalText.innerText = practiceData.length;
+        }
+
+        function dataToString(dataArray) {
+            return dataArray.map(item => `${item.char}, ${item.pinyin}, ${item.meaning}`).join('\n');
+        }
+
+        // 拆分解析逻辑，方便直接导出调用
+        function parseTextToData(text) {
+            if (!text.trim()) return [];
+            const lines = text.split('\n');
+            const newData = [];
+            lines.forEach(line => {
+                const parts = line.split(/[,，]/);
+                if (parts.length >= 1) {
+                    const char = parts[0].trim();
+                    if (char) {
+                        newData.push({
+                            char: char.charAt(0),
+                            pinyin: parts[1] ? parts[1].trim() : '',
+                            meaning: parts[2] ? parts[2].trim() : ''
+                        });
+                    }
+                }
+            });
+            return newData;
+        }
+
+        function parseInputToData(text, saveToStorage = true) {
+            const newData = parseTextToData(text);
+            if (newData.length > 0) {
+                practiceData = newData;
+                if (saveToStorage && !isStudentMode) {
+                    try {
+                        localStorage.setItem('hanziData', text);
+                    } catch (e) {
+                        console.warn("Storage quota exceeded or error, not saving to local storage.");
+                        alert("注意：内容过多，无法保存到本地缓存，但本次练习依然有效。建议减少字数以确保下次自动加载。");
+                    }
+                }
+            }
+        }
+
+        // --- 设置面板相关 ---
+        els.settingsBtn.addEventListener('click', () => els.settingsModal.classList.remove('hidden'));
+        els.closeSettings.addEventListener('click', () => els.settingsModal.classList.add('hidden'));
+
+        function switchTab(tab) {
+            if (tab === 'edit') {
+                els.tabEdit.classList.add('text-red-600', 'border-b-2', 'border-red-600');
+                els.tabEdit.classList.remove('text-gray-500');
+                els.tabExport.classList.remove('text-red-600', 'border-b-2', 'border-red-600');
+                els.tabExport.classList.add('text-gray-500');
+                els.contentEdit.classList.remove('hidden');
+                els.contentExport.classList.add('hidden');
+            } else {
+                els.tabExport.classList.add('text-red-600', 'border-b-2', 'border-red-600');
+                els.tabExport.classList.remove('text-gray-500');
+                els.tabEdit.classList.remove('text-red-600', 'border-b-2', 'border-red-600');
+                els.tabEdit.classList.add('text-gray-500');
+                els.contentExport.classList.remove('hidden');
+                els.contentEdit.classList.add('hidden');
+            }
+        }
+        els.tabEdit.addEventListener('click', () => switchTab('edit'));
+        els.tabExport.addEventListener('click', () => switchTab('export'));
+
+        // 保存并练习 (常规流程)
+        els.saveSettingsBtn.addEventListener('click', () => {
+            const text = els.dataInput.value;
+            parseInputToData(text, true);
+            els.settingsModal.classList.add('hidden');
+            alert("设置已保存！将返回欢迎页重新开始。");
+            location.reload(); 
+        });
+
+        els.resetDefaultBtn.addEventListener('click', () => {
+            if(confirm('恢复默认会覆盖当前内容，确定吗？')) {
+                els.dataInput.value = dataToString(defaultData);
+            }
+        });
+
+        // 统一的导出功能逻辑
+        function generateAndDownloadPackage(dataToExport, difficultyToExport, shouldLock) {
+            let htmlContent = document.documentElement.outerHTML;
+            
+            // 修正: 使用更健壮的匹配模式
+            const configRegex = /\/\* CONFIG_START \*\/[\s\S]*?\/\* CONFIG_END \*\//;
+            
+            // 使用压缩的 JSON，防止大文本内存溢出
+            const currentDataStr = JSON.stringify(dataToExport);
+            
+            // 构建新的配置块，同时注入数据和严谨度
+            const newConfigBlock = `/* CONFIG_START */
+        const defaultData = ${currentDataStr};
+        const defaultDifficulty = ${difficultyToExport};
+        /* CONFIG_END */`;
+            
+            if (!configRegex.test(htmlContent)) {
+                alert("导出错误：无法定位配置文件块，请刷新页面后重试。");
+                return;
+            }
+
+            htmlContent = htmlContent.replace(configRegex, newConfigBlock);
+            
+            // 注入学生模式标志
+            const modeRegex = /\/\* STUDENT_MODE_MARKER \*\/[\s\S]*?\/\/ \(STUDENT MODE END\)/;
+            const newModeBlock = `/* STUDENT_MODE_MARKER */
+        const isStudentMode = true;
+        // (STUDENT MODE END)`;
+            htmlContent = htmlContent.replace(modeRegex, newModeBlock);
+            
+            if (shouldLock) {
+                const styleHook = '/* STUDENT_STYLE_HOOK */';
+                const hideStyle = '#settingsBtn { display: none !important; }';
+                htmlContent = htmlContent.replace(styleHook, hideStyle);
+            }
+            
+            // 强制关闭设置弹窗 (防止导出时弹窗是打开状态)
+            const modalOpenPattern = /id="settingsModal" class="[^"]*"/;
+            const modalClosedString = 'id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4"';
+            htmlContent = htmlContent.replace(modalOpenPattern, modalClosedString);
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '汉字练习_学生版.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Tab页里的常规导出按钮
+        els.exportBtn.addEventListener('click', () => {
+            // 获取当前难度
+            const currentDifficulty = parseInt(els.difficultyRange.value);
+            generateAndDownloadPackage(practiceData, currentDifficulty, els.lockSettingsCheck.checked);
+        });
+
+        // 编辑页里的直接导出按钮 (新功能)
+        els.directExportBtn.addEventListener('click', () => {
+            const text = els.dataInput.value;
+            const parsedData = parseTextToData(text);
+            
+            if (parsedData.length === 0) {
+                alert("输入框为空或格式不正确，无法导出！\n请确保每行格式为：汉字, 拼音, 解释");
+                return;
+            }
+
+            // 获取当前滑块的难度值
+            const currentDifficulty = parseInt(els.difficultyRange.value);
+
+            // 直接导出时，默认锁定设置（因为是给学生的包）
+            generateAndDownloadPackage(parsedData, currentDifficulty, true);
+        });
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (!els.gameContainer.classList.contains('hidden')) {
+                    loadCharacter(currentIndex);
+                }
+            }, 300);
+        });
+
+        init();
+    </script>
+</body>
+</html>

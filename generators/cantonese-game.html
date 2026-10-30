@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>粵語小學堂 - 遊戲生成器 (老師版)</title>
+<style id="kd-kids-theme">
+/* 儿童类生成器统一风格 - 由中文游戏工坊注入（外壳统一：圆润中文字体 + 标题品牌色；玩法区与对错配色不动） */
+:root{
+  --kd-primary:#FF7A45;
+  --kd-primary-d:#E85C2A;
+}
+body{
+  font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+h1,.title,.brand-title,.app-title,header h1,.header-title,.app-header h1{
+  color:var(--kd-primary-d) !important;
+}
+</style>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Google Fonts -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .animate-bounce-in { animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-spin-slow { animation: spin 3s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
+</head>
+<body class="bg-yellow-50 min-h-screen text-gray-800">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- 圖標組件 (Icons) ---
+    const IconVolume = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>;
+    const IconCheck = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"></polyline></svg>;
+    const IconArrowRight = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+    const IconSettings = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
+    const IconEdit = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>;
+    const IconPlay = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>;
+    const IconRefresh = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>;
+    const IconTrophy = ({className, size=120}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>;
+    const IconStar = ({className, size=40}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+    const IconDownload = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>;
+    const IconWand = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path><path d="m14 7 3 3"></path><path d="M5 6v4"></path><path d="M19 14v4"></path><path d="M10 2v2"></path><path d="M7 8H3"></path><path d="M21 16h-4"></path><path d="M11 3H9"></path></svg>;
+    const IconSparkles = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>;
+    const IconRocket = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>;
+
+    // --- 默認數據 (Default Data) ---
+    const DEFAULT_VOCAB = [
+      { id: 1, char: "蘋果", jyutping: "ping4 gwo2", english: "Apple", prompt: "I like to eat apples.", answer: "我鍾意食蘋果" },
+      { id: 2, char: "學校", jyutping: "hok6 haau6", english: "School", prompt: "I go to school by bus.", answer: "我搭巴士去學校" },
+      { id: 3, char: "朋友", jyutping: "pang4 jau5", english: "Friend", prompt: "He is my good friend.", answer: "佢係我嘅好朋友" },
+      { id: 4, char: "快樂", jyutping: "faai3 lok6", english: "Happy", prompt: "Birthdays make me happy.", answer: "生日令我好快樂" },
+      { id: 5, char: "多謝", jyutping: "do1 ze6", english: "Thank you", prompt: "Thank you for your help.", answer: "多謝你嘅幫忙" }
+    ];
+
+    // --- 干擾字庫 (Distractor Levels) ---
+    const DISTRACTOR_LEVELS = {
+      1: "山高的人個大上下在有手很隻小孩家也我指五兩十來是女媽爸馬朋友去這不你們鳥天地花朵四草到說好甚麼飛看裏起要男明兔白書本會吃和水幾沒走都出回了太他嗎長愛喝可想見給玩就把樹頭耳快得子多又妹雨誰門貓開老紅邊那",
+      2: "只住笑著過她自己風還對跑真氣心雲羊果聽呀叫青像陽唱歌能雞跳兒樣色身吧聲魚後弟片哥葉姐為狗面搖問呢中前進東河空做西用力從口早公找路美晚星坐請園興最知道學比春點綠國以方洗亮月圓黃旗今哭別火照怕師放光時生日",
+      3: "樂蝴蝶麗蟲輕讓蛙田爬忙黑條毛成臉橋木車牛奶工農外帶候打燕石船動喜歡香更鴨腳幫屋每間哪尾巴話娃漂畫房怎鼠捉向嘴數閃海睡被拉站藍正啊金然滿才塊肉跟謝沙窗親啦應該雪眼睛現越常衣穿如新冬落變發望趕事洞婆覺年",
+      4: "姑娘字寫故烏鴉傘件悄經群飄瓜掉遠認半張等伯原追林菜壞種肚病飯全舞拍傷機告訴因所停電買慢教送旁急再先直答蜜蜂採許連夜希搬當雀枝吹彎座分定刀拿桌咬豬狼牙流安哈猴非桃秋冷梨鞋背包記行救次讀終於處晴久蛋母米物",
+      5: "校同運場班筆名球汗螞蟻累服少午音期遊戲奇怪拾熱短作假節父禮祖雙掃叔抱勤感已相夏泳姨表功燈昨關難結甜市街些城醫村清院潔鬧店低滾合除左抹椅右推勞曬醒危險紙離信重近各平餓糖粒刷痛皮血踢破伸忽死抓極味藏苦握歲"
+    };
+
+    // --- 顏色主題 (Macaron Palette) ---
+    const COLORS = {
+      bg: "bg-yellow-50",
+      primary: "bg-pink-300",
+      secondary: "bg-blue-300",
+      accent: "bg-green-300",
+      highlight: "bg-purple-300",
+      text: "text-gray-800",
+      border: "border-gray-900"
+    };
+
+    const BORDER_STYLE = "border-4 border-gray-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]";
+    const BUTTON_STYLE = `px-6 py-3 font-bold transition-all active:translate-y-1 active:shadow-none ${BORDER_STYLE}`;
+
+    // --- 語音合成工具 (TTS) ---
+    const speakCantonese = (text) => {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const cantoneseVoice = voices.find(v => v.lang === 'zh-HK');
+      if (cantoneseVoice) {
+        utterance.voice = cantoneseVoice;
+      }
+      utterance.lang = 'zh-HK';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const validateSentence = (input, target, reference) => {
+        if (!input.includes(target)) return { valid: false, msg: `請使用「${target}」造句` };
+        if (!reference) {
+            if (input.length < target.length + 2) return { valid: false, msg: "句子太短了，多寫一點吧！" };
+            return { valid: true };
+        }
+        const cleanInput = input.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
+        const cleanRef = reference.replace(/[^\u4e00-\u9fa5a-zA-Z]/g, '');
+        let matchCount = 0;
+        for (let char of cleanRef) { if (cleanInput.includes(char)) matchCount++; }
+        const coverage = matchCount / cleanRef.length;
+        if (coverage < 0.5) return { valid: false, msg: "意思不太準確，請參考提示再試試" };
+        if (Math.abs(cleanInput.length - cleanRef.length) > cleanRef.length * 0.8 && cleanInput.length < cleanRef.length) {
+             return { valid: false, msg: "句子結構好像有點怪，太短了" };
+        }
+        return { valid: true };
+    };
+
+    const autoDetectLevel = (words) => {
+      let totalLevel = 0;
+      let countedChars = 0;
+      words.forEach(word => {
+        for (let char of word.char) {
+          let found = false;
+          for (let level = 1; level <= 5; level++) {
+            if (DISTRACTOR_LEVELS[level].includes(char)) {
+              totalLevel += level;
+              countedChars++;
+              found = true;
+              break;
+            }
+          }
+        }
+      });
+      if (countedChars === 0) return 1;
+      return Math.max(1, Math.min(5, Math.round(totalLevel / countedChars)));
+    };
+
+    // --- 生成學生版 HTML 邏輯 ---
+    const generateStudentHTML = (vocabList) => {
+      const vocabJson = JSON.stringify(vocabList);
+      const distractorJson = JSON.stringify(DISTRACTOR_LEVELS);
+      const colorsJson = JSON.stringify(COLORS);
+      const borderStyleVal = BORDER_STYLE;
+
+      const parts = [
+        `<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>粵語小學堂 - 學生練習</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"><\/script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"><\/script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .animate-bounce-in { animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-spin-slow { animation: spin 3s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+  </style>
+</head>
+<body class="bg-yellow-50 min-h-screen text-gray-800">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const FULL_VOCAB_LIST = ${vocabJson};
+    const DISTRACTOR_LEVELS = ${distractorJson};
+    const COLORS = ${colorsJson};
+    const BORDER_STYLE = "${borderStyleVal}";
+    const BUTTON_STYLE = \`px-6 py-3 font-bold transition-all active:translate-y-1 active:shadow-none \${BORDER_STYLE}\`;
+
+    const speakCantonese = (text) => {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const cantoneseVoice = voices.find(v => v.lang === 'zh-HK');
+      if (cantoneseVoice) utterance.voice = cantoneseVoice;
+      utterance.lang = 'zh-HK';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const autoDetectLevel = (words) => {
+      let totalLevel = 0;
+      let countedChars = 0;
+      words.forEach(word => {
+        for (let char of word.char) {
+          let found = false;
+          for (let level = 1; level <= 5; level++) {
+            if (DISTRACTOR_LEVELS[level].includes(char)) {
+              totalLevel += level;
+              countedChars++;
+              found = true;
+              break;
+            }
+          }
+        }
+      });
+      if (countedChars === 0) return 1;
+      return Math.max(1, Math.min(5, Math.round(totalLevel / countedChars)));
+    };
+
+    const generateGrid = (words) => {
+      const level = autoDetectLevel(words);
+      const size = 10;
+      const grid = Array(size).fill(null).map(() => Array(size).fill(''));
+      
+      words.forEach(wordObj => {
+        let placed = false;
+        let attempts = 0;
+        const word = wordObj.char;
+        if (!word) return;
+
+        while (!placed && attempts < 500) { // Increased attempts
+          const dir = Math.floor(Math.random() * 2); 
+          const r = Math.floor(Math.random() * size);
+          const c = Math.floor(Math.random() * size);
+          let fits = true;
+          for (let i = 0; i < word.length; i++) {
+            let nr = r, nc = c;
+            if (dir === 0) nc += i;
+            if (dir === 1) nr += i;
+            if (nr >= size || nc >= size || (grid[nr][nc] !== '' && grid[nr][nc] !== word[i])) {
+              fits = false; break;
+            }
+          }
+          if (fits) {
+            for (let i = 0; i < word.length; i++) {
+              let nr = r, nc = c;
+              if (dir === 0) nc += i;
+              if (dir === 1) nr += i;
+              grid[nr][nc] = word[i];
+            }
+            placed = true;
+          }
+          attempts++;
+        }
+      });
+
+      const distractorString = DISTRACTOR_LEVELS[level].replace(/\\s/g, '');
+      let distractorPool = distractorString.split('').sort(() => 0.5 - Math.random());
+      if (distractorPool.length === 0) {
+         const allTargetChars = words.map(w => w.char).join('');
+         distractorPool = (allTargetChars.length > 0 ? allTargetChars : "粵語").split('');
+      }
+
+      let poolIndex = 0;
+      for(let r=0; r<size; r++){
+        for(let c=0; c<size; c++){
+          if(grid[r][c] === '') {
+            grid[r][c] = distractorPool[poolIndex % distractorPool.length];
+            poolIndex++;
+            if (poolIndex >= distractorPool.length) {
+               distractorPool.sort(() => 0.5 - Math.random());
+               poolIndex = 0;
+            }
+          }
+        }
+      }
+      return grid;
+    };
+
+    const validateSentence = (input, target, reference) => {
+        if (!input.includes(target)) return { valid: false, msg: \`請使用「\${target}」造句\` };
+        if (!reference) {
+            if (input.length < target.length + 2) return { valid: false, msg: "句子太短了，多寫一點吧！" };
+            return { valid: true };
+        }
+        const cleanInput = input.replace(/[^\\u4e00-\\u9fa5a-zA-Z]/g, '');
+        const cleanRef = reference.replace(/[^\\u4e00-\\u9fa5a-zA-Z]/g, '');
+        let matchCount = 0;
+        for (let char of cleanRef) { if (cleanInput.includes(char)) matchCount++; }
+        const coverage = matchCount / cleanRef.length;
+        if (coverage < 0.5) return { valid: false, msg: "意思不太準確，請參考提示再試試" };
+        if (Math.abs(cleanInput.length - cleanRef.length) > cleanRef.length * 0.8 && cleanInput.length < cleanRef.length) {
+             return { valid: false, msg: "句子結構好像有點怪，太短了" };
+        }
+        return { valid: true };
+    };`,
+
+    `
+    const IconVolume = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>;
+    const IconCheck = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"></polyline></svg>;
+    const IconArrowRight = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+    const IconTrophy = ({className, size=120}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>;
+    const IconStar = ({className, size=40}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>;
+    const IconRefresh = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path></svg>;
+    const IconSparkles = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>;
+    const IconRocket = ({className, size=24}) => <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>;
+
+    const GameApp = () => {
+      const [view, setView] = useState('welcome');
+      const [gameLevel, setGameLevel] = useState(1);
+      const [showTransition, setShowTransition] = useState(false);
+      const [activeVocab, setActiveVocab] = useState([]);
+      const [gridData, setGridData] = useState([]);
+      const [foundWords, setFoundWords] = useState([]);
+      const [foundCells, setFoundCells] = useState([]);
+      const [selectedCells, setSelectedCells] = useState([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [dialogueIndex, setDialogueIndex] = useState(0);
+      const [dialogueInput, setDialogueInput] = useState("");
+      const [dialogueFeedback, setDialogueFeedback] = useState(null);
+
+      useEffect(() => { startNewRound(); }, []);
+      
+      const startNewRound = () => {
+        const roundWords = FULL_VOCAB_LIST.length > 10 
+          ? [...FULL_VOCAB_LIST].sort(() => 0.5 - Math.random()).slice(0, 10)
+          : FULL_VOCAB_LIST;
+        
+        setActiveVocab(roundWords);
+        setGridData(generateGrid(roundWords));
+        setFoundWords([]); setFoundCells([]); setSelectedCells([]);
+        setGameLevel(1); setQuizIndex(0); setDialogueIndex(0);
+        setDialogueInput(""); setDialogueFeedback(null); setShowTransition(false);
+        // Do not reset view to 'welcome' here, keeps user in loop if they press restart
+      };
+
+      useEffect(() => {
+        if (gameLevel === 4 && !showTransition && view === 'game') {
+          speakCantonese("通關成功，你真係好叻呀！");
+        }
+      }, [gameLevel, showTransition, view]);
+
+      const handleStart = () => {
+        setView('game');
+        speakCantonese("準備好未？開始啦！");
+      };
+
+      const handleRestart = () => {
+        startNewRound();
+        setView('welcome'); // Go back to welcome screen on restart for clear start
+      };
+
+      const nextLevel = () => { setShowTransition(false); setGameLevel(prev => prev + 1); };
+      const triggerTransition = () => { setTimeout(() => { setShowTransition(true); }, 1000); };
+
+      const handleCellClick = (r, c) => {
+        const cellId = \`\${r}-\${c}\`;
+        if (selectedCells.includes(cellId)) { setSelectedCells(selectedCells.filter(id => id !== cellId)); return; }
+        const newSelection = [...selectedCells, cellId];
+        setSelectedCells(newSelection);
+        const selectedChars = newSelection.map(id => {
+          const [row, col] = id.split('-').map(Number); return gridData[row][col];
+        }).join('');
+        const matchedWord = activeVocab.find(w => w.char === selectedChars);
+        if (matchedWord && !foundWords.includes(matchedWord.char)) {
+          setFoundWords([...foundWords, matchedWord.char]);
+          setFoundCells([...foundCells, ...newSelection]);
+          setSelectedCells([]);
+          speakCantonese(matchedWord.char);
+          if (foundWords.length + 1 === activeVocab.length) { triggerTransition(); }
+        }
+      };
+
+      const handleQuizAnswer = (selectedEnglish) => {
+        const currentWord = activeVocab[quizIndex];
+        speakCantonese(currentWord.char);
+        if (selectedEnglish === currentWord.english) {
+          if (quizIndex + 1 < activeVocab.length) { setTimeout(() => setQuizIndex(quizIndex + 1), 500); }
+          else { triggerTransition(); }
+        } else { speakCantonese("再試一次"); }
+      };
+
+      const handleDialogueSubmit = () => {
+        const currentWord = activeVocab[dialogueIndex];
+        const check = validateSentence(dialogueInput, currentWord.char, currentWord.answer);
+        if (check.valid) {
+          setDialogueFeedback("correct"); speakCantonese(dialogueInput);
+          setTimeout(() => {
+            setDialogueFeedback(null); setDialogueInput("");
+            if (dialogueIndex + 1 < activeVocab.length) { setDialogueIndex(dialogueIndex + 1); }
+            else { triggerTransition(); }
+          }, 2000);
+        } else {
+          setDialogueFeedback("wrong"); speakCantonese(check.msg || \`請使用 \${currentWord.char}\`);
+        }
+      };
+
+      const renderWelcome = () => (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-bounce-in">
+           <div className="mb-8 relative">
+              <IconRocket className="text-pink-400 w-32 h-32 animate-pulse-slow filter drop-shadow-xl" />
+              <IconSparkles className="text-yellow-400 w-12 h-12 absolute -top-2 -right-4 animate-spin-slow" />
+           </div>
+           <h1 className="text-5xl font-black text-gray-900 mb-6 tracking-wider">粵語大冒險</h1>
+           <p className="text-2xl text-gray-600 mb-12 font-bold">準備好接受挑戰了嗎？</p>
+           <button onClick={handleStart} className={\`\${COLORS.accent} \${BUTTON_STYLE} text-2xl w-64 flex items-center justify-center gap-3 hover:scale-105 transform duration-200\`}>
+             開始冒險 <IconArrowRight />
+           </button>
+        </div>
+      );
+
+      const renderTransition = () => (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center animate-fade-in p-4">
+          <div className="bg-white p-8 rounded-3xl text-center border-4 border-gray-900 shadow-2xl max-w-md w-full relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-200 to-blue-300"></div>
+             <IconSparkles className="w-16 h-16 mx-auto mb-4 text-yellow-400 animate-spin-slow" />
+             <h2 className="text-3xl sm:text-4xl font-black text-gray-800 mb-4">恭喜過關！</h2>
+             <p className="text-xl font-bold text-gray-600 mb-8">做得好！準備好進入下一關了嗎？</p>
+             <button onClick={nextLevel} className={\`\${COLORS.accent} \${BUTTON_STYLE} w-full text-xl flex items-center justify-center gap-2\`}>
+               進入下一關 <IconArrowRight className="w-6 h-6"/>
+             </button>
+          </div>
+        </div>
+      );
+
+      const renderLevel1 = () => (
+        <div className="flex flex-col items-center w-full max-w-6xl mx-auto">
+          <div className={\`\${COLORS.secondary} \${BORDER_STYLE} px-6 py-2 mb-6 flex items-center gap-3\`}>
+            <span className="text-2xl font-black">第一關：找字大冒險</span>
+            <span className="bg-white px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
+              {foundWords.length} / {activeVocab.length}
+            </span>
+          </div>
+          <div className="flex flex-col md:flex-row gap-8 items-start justify-center w-full">
+            {/* Grid Area */}
+            <div className="flex-shrink-0 bg-white p-4 rounded-xl border-4 border-gray-900 shadow-lg mx-auto">
+              <div className="grid grid-cols-10 gap-1 sm:gap-2 select-none">
+                {gridData.map((row, r) => (
+                  row.map((char, c) => {
+                    const cellId = \`\${r}-\${c}\`;
+                    const isSelected = selectedCells.includes(cellId);
+                    const isFound = foundCells.includes(cellId);
+                    
+                    let cellStyle = 'bg-gray-50 hover:bg-gray-100'; 
+                    if (isFound) cellStyle = 'bg-green-500 text-white border-green-600'; 
+                    if (isSelected) cellStyle = 'bg-yellow-400 text-black border-yellow-500 scale-95 shadow-inner'; // Changed to Yellow, scale down
+
+                    return (
+                      <div key={cellId} onClick={() => handleCellClick(r, c)}
+                        className={\`w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center text-base sm:text-xl font-bold rounded-md cursor-pointer transition-all duration-150 border-2 border-gray-200 \${cellStyle}\`}>
+                        {char}
+                      </div>
+                    );
+                  })
+                ))}
+              </div>
+            </div>
+            {/* List Area */}
+            <div className="flex-grow w-full md:w-auto md:max-w-xs">
+              <div className="bg-white p-5 rounded-xl border-4 border-gray-900 shadow-sm h-full">
+                 <h3 className="font-black text-xl mb-4 text-center text-gray-700 border-b-2 border-gray-100 pb-2">目標詞語</h3>
+                 <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
+                    {activeVocab.map((word, idx) => (
+                      <div key={idx} className={\`p-3 rounded-xl border-2 border-gray-900 flex items-center justify-between transition-all \${foundWords.includes(word.char) ? 'bg-green-300 opacity-60 scale-95' : 'bg-white shadow-sm'}\`}>
+                        <span className="font-bold text-lg">{word.char}</span>
+                        {foundWords.includes(word.char) && <IconCheck size={20}/>}
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderLevel2 = () => {
+        if (!activeVocab.length) return null;
+        const currentWord = activeVocab[quizIndex];
+        const otherCandidates = activeVocab.filter(w => w.english !== currentWord.english);
+        const safeOthers = otherCandidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+        while (safeOthers.length < 3 && activeVocab.length < 4) break; 
+        const options = [currentWord, ...safeOthers].sort(() => 0.5 - Math.random());
+        return (
+          <div className="flex flex-col items-center max-w-2xl mx-auto w-full">
+            <div className={\`\${COLORS.highlight} \${BORDER_STYLE} px-6 py-2 mb-6\`}>
+               <span className="text-2xl font-black">第二關：意思配對</span>
+            </div>
+            <div className="w-full bg-white border-4 border-gray-900 rounded-3xl p-8 mb-8 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-4 bg-gray-200">
+                <div className="h-full bg-green-400 transition-all duration-500" style={{width: \`\${(quizIndex / activeVocab.length) * 100}%\`}} />
+              </div>
+              <div className="mt-8 mb-4">
+                <span className="text-6xl font-black text-gray-800 block mb-2">{currentWord.char}</span>
+                <span className="text-xl text-gray-500 font-bold font-mono">{currentWord.jyutping}</span>
+              </div>
+              <button onClick={() => speakCantonese(currentWord.char)} className="mx-auto bg-gray-100 rounded-full p-3 hover:bg-gray-200 transition-colors">
+                <IconVolume size={24} />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+              {options.map((opt, idx) => (
+                <button key={idx} onClick={() => handleQuizAnswer(opt.english)} className={\`\${BUTTON_STYLE} \${COLORS.bg} hover:bg-yellow-200 text-lg\`}>
+                  {opt.english}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const renderLevel3 = () => {
+        if (!activeVocab.length) return null;
+        const currentWord = activeVocab[dialogueIndex];
+        return (
+          <div className="flex flex-col items-center max-w-2xl mx-auto w-full">
+            <div className={\`\${COLORS.accent} \${BORDER_STYLE} px-6 py-2 mb-6\`}>
+               <span className="text-2xl font-black">第三關：造句翻譯</span>
+            </div>
+            <div className="w-full bg-white border-4 border-gray-900 rounded-3xl p-6 min-h-[400px] flex flex-col justify-between relative shadow-lg">
+              <div className="flex gap-4 items-start mb-8">
+                <div className="w-12 h-12 rounded-full bg-blue-500 border-2 border-black flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div className="bg-blue-100 border-2 border-black p-4 rounded-2xl rounded-tl-none relative w-full">
+                   <p className="font-bold text-lg mb-2">請用「<span className="text-pink-600">{currentWord.char}</span>」寫出如下句子：</p>
+                   <div className="bg-white p-3 rounded-lg border-2 border-blue-200 font-bold text-gray-700 text-lg">
+                     {currentWord.prompt}
+                   </div>
+                </div>
+              </div>
+              <div className="mt-auto">
+                 {dialogueFeedback === "wrong" && (
+                    <div className="mb-2 text-red-500 font-bold bg-red-50 p-2 rounded border border-red-200 text-center animate-pulse">
+                      {feedbackMsg || \`記得使用「\${currentWord.char}」翻譯喔！\`}
+                    </div>
+                 )}
+                 {dialogueFeedback === "correct" && (
+                    <div className="mb-2 text-green-600 font-bold bg-green-50 p-2 rounded border border-green-200 text-center flex items-center justify-center gap-2">
+                      <IconStar className="fill-current text-yellow-400"/> 好棒！Excellent!
+                    </div>
+                 )}
+                <div className="flex gap-2">
+                   <input type="text" value={dialogueInput} onChange={(e) => setDialogueInput(e.target.value)}
+                     placeholder={\`請輸入包含「\${currentWord.char}」的句子...\`}
+                     className="flex-grow border-4 border-gray-900 rounded-xl p-3 text-lg font-bold outline-none focus:border-pink-400 transition-colors"
+                     onKeyPress={(e) => e.key === 'Enter' && handleDialogueSubmit()}
+                   />
+                   <button onClick={handleDialogueSubmit} className={\`\${COLORS.primary} \${BUTTON_STYLE} px-4 py-0\`}>
+                     <IconArrowRight />
+                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderVictory = () => {
+        return (
+        <div className="text-center animate-bounce-in relative">
+           <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+              {[...Array(50)].map((_, i) => (
+                <div key={i} className="absolute w-4 h-4 rounded-sm"
+                  style={{
+                    left: \`\${Math.random() * 100}%\`,
+                    top: '-20px',
+                    backgroundColor: ['#FFC0CB', '#FFD700', '#87CEEB', '#90EE90', '#FF69B4'][Math.floor(Math.random() * 5)],
+                    animation: \`fall \${Math.random() * 3 + 2}s linear infinite\`,
+                    animationDelay: \`\${Math.random() * 5}s\`
+                  }}
+                />
+              ))}
+              <style>{\`@keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }\`}</style>
+           </div>
+           <div className="relative z-10 bg-white/90 p-8 sm:p-12 rounded-3xl border-4 border-gray-900 shadow-xl backdrop-blur-sm max-w-2xl mx-auto mt-10">
+             <div className="mb-8 relative inline-block">
+                <IconTrophy className="text-yellow-400 fill-current drop-shadow-lg" size={120} />
+                <IconStar className="text-pink-400 fill-current absolute -top-2 -right-4 animate-spin-slow" size={40} />
+                <IconStar className="text-blue-400 fill-current absolute bottom-0 -left-6 animate-pulse" size={30} />
+             </div>
+             <h2 className="text-6xl font-black text-gray-900 mb-6 tracking-tight">通關成功！</h2>
+             <p className="text-3xl font-bold text-gray-600 mb-10">你真係好叻呀！<br/><span className="text-xl text-gray-400 mt-2 block">(You are amazing!)</span></p>
+             <div className="flex gap-4 justify-center flex-wrap">
+               <button onClick={handleRestart} className={\`\${COLORS.accent} \${BUTTON_STYLE} flex gap-2 items-center text-xl\`}>
+                 <IconRefresh /> 再玩一次
+               </button>
+             </div>
+           </div>
+        </div>
+        );
+      };
+
+      return (
+        <div className="max-w-4xl mx-auto p-4">
+          <div className="flex justify-center mb-6">
+            <div className="font-black text-xl tracking-widest text-gray-400">粵語小學堂</div>
+          </div>
+          {view === 'welcome' && renderWelcome()}
+          {showTransition && renderTransition()}
+          {view === 'game' && !showTransition && (
+             <>
+                {gameLevel === 1 && renderLevel1()}
+                {gameLevel === 2 && renderLevel2()}
+                {gameLevel === 3 && renderLevel3()}
+                {gameLevel === 4 && renderVictory()}
+             </>
+          )}
+          <div className="mt-12 mb-4 text-center text-gray-400 font-bold text-sm tracking-widest font-sans">
+            Chinese with Dora | Dora 老师
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<GameApp />);
+  <\/script>
+</body>
+</html>`
+      ];
+
+      return parts.join('');
+    };
+
+    // --- Main App Component ---
+    const App = () => {
+      const [mode, setMode] = useState('editor'); 
+      const [vocabList, setVocabList] = useState(DEFAULT_VOCAB);
+      const [rawInput, setRawInput] = useState(() => {
+        return DEFAULT_VOCAB.map(v => `${v.char} | ${v.jyutping} | ${v.english} | ${v.prompt} | ${v.answer}`).join('\n');
+      });
+      const [detectedLevel, setDetectedLevel] = useState(1);
+      
+      const [view, setView] = useState('welcome');
+      const [gameLevel, setGameLevel] = useState(1);
+      const [showTransition, setShowTransition] = useState(false);
+      const [activeVocab, setActiveVocab] = useState([]);
+      const [gridData, setGridData] = useState([]);
+      const [foundWords, setFoundWords] = useState([]);
+      const [foundCells, setFoundCells] = useState([]);
+      const [selectedCells, setSelectedCells] = useState([]);
+      const [quizIndex, setQuizIndex] = useState(0);
+      const [dialogueIndex, setDialogueIndex] = useState(0);
+      const [dialogueInput, setDialogueInput] = useState("");
+      const [dialogueFeedback, setDialogueFeedback] = useState(null);
+      const [feedbackMsg, setFeedbackMsg] = useState("");
+
+      const parseRawInput = (text) => {
+        const lines = text.split('\n');
+        const newVocab = [];
+        const seenChars = new Set();
+        lines.forEach((line, idx) => {
+          const parts = line.split('|').map(s => s.trim());
+          if (parts.length >= 4 && parts[0]) {
+            if (!seenChars.has(parts[0])) {
+               seenChars.add(parts[0]);
+               newVocab.push({
+                 id: idx,
+                 char: parts[0],
+                 jyutping: parts[1] || "",
+                 english: parts[2] || "",
+                 prompt: parts[3] || "",
+                 answer: parts[4] || "" 
+               });
+            }
+          }
+        });
+        return newVocab;
+      };
+
+      const generateGrid = (words) => {
+        const level = autoDetectLevel(words);
+        setDetectedLevel(level);
+        const size = 10;
+        const grid = Array(size).fill(null).map(() => Array(size).fill(''));
+        words.forEach(wordObj => {
+          let placed = false;
+          let attempts = 0;
+          const word = wordObj.char;
+          if (!word) return;
+          while (!placed && attempts < 500) { // Increased attempts to 500
+            const dir = Math.floor(Math.random() * 2);
+            const r = Math.floor(Math.random() * size);
+            const c = Math.floor(Math.random() * size);
+            let fits = true;
+            for (let i = 0; i < word.length; i++) {
+              let nr = r, nc = c;
+              if (dir === 0) nc += i;
+              if (dir === 1) nr += i;
+              if (nr >= size || nc >= size || (grid[nr][nc] !== '' && grid[nr][nc] !== word[i])) {
+                fits = false; break;
+              }
+            }
+            if (fits) {
+              for (let i = 0; i < word.length; i++) {
+                let nr = r, nc = c;
+                if (dir === 0) nc += i;
+                if (dir === 1) nr += i;
+                grid[nr][nc] = word[i];
+              }
+              placed = true;
+            }
+            attempts++;
+          }
+        });
+        const distractorString = DISTRACTOR_LEVELS[level].replace(/\s/g, '');
+        let distractorPool = distractorString.split('').sort(() => 0.5 - Math.random());
+        if (distractorPool.length === 0) {
+           const allTargetChars = words.map(w => w.char).join('');
+           distractorPool = (allTargetChars.length > 0 ? allTargetChars : "粵語").split('');
+        }
+        let poolIndex = 0;
+        for(let r=0; r<size; r++){
+          for(let c=0; c<size; c++){
+            if(grid[r][c] === '') {
+              grid[r][c] = distractorPool[poolIndex % distractorPool.length];
+              poolIndex++;
+              if (poolIndex >= distractorPool.length) {
+                 distractorPool.sort(() => 0.5 - Math.random());
+                 poolIndex = 0;
+              }
+            }
+          }
+        }
+        return grid;
+      };
+
+      const startNewRound = () => {
+        // Randomly select 10 words if list is larger than 10
+        // Use parsed vocab from current state or default if in editor
+        const sourceList = mode === 'editor' ? parseRawInput(rawInput) : vocabList;
+        
+        const roundWords = sourceList.length > 10 
+          ? [...sourceList].sort(() => 0.5 - Math.random()).slice(0, 10)
+          : sourceList;
+
+        setActiveVocab(roundWords);
+        setGridData(generateGrid(roundWords));
+        setFoundWords([]); setFoundCells([]); setSelectedCells([]);
+        setGameLevel(1); setQuizIndex(0); setDialogueIndex(0);
+        setDialogueInput(""); setDialogueFeedback(null); setShowTransition(false);
+      };
+
+      const startGame = () => {
+        const parsedList = parseRawInput(rawInput);
+        if (parsedList.length === 0) {
+          alert("請至少輸入一個有效的詞彙 (格式: 中文 | 拼音 | 英文 | 提示)");
+          return;
+        }
+        setVocabList(parsedList);
+        startNewRound(); // Logic handles selection
+        setMode('game'); 
+        setView('welcome'); // Start with welcome screen
+      };
+
+      const handleStart = () => {
+        setView('game');
+        speakCantonese("準備好未？開始啦！");
+      };
+
+      const handleRestart = () => {
+        startNewRound();
+        setView('welcome');
+      };
+
+      const downloadGame = () => {
+        const parsedList = parseRawInput(rawInput);
+        if (parsedList.length === 0) {
+          alert("請至少輸入一個有效的詞彙");
+          return;
+        }
+        const htmlContent = generateStudentHTML(parsedList);
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cantonese_game_student.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      const triggerTransition = () => { setTimeout(() => { setShowTransition(true); }, 1000); };
+      const nextLevel = () => { setShowTransition(false); setGameLevel(prev => prev + 1); };
+
+      const handleCellClick = (r, c) => {
+        const cellId = `${r}-${c}`;
+        if (selectedCells.includes(cellId)) { setSelectedCells(selectedCells.filter(id => id !== cellId)); return; }
+        const newSelection = [...selectedCells, cellId];
+        setSelectedCells(newSelection);
+        const selectedChars = newSelection.map(id => {
+          const [row, col] = id.split('-').map(Number); return gridData[row][col];
+        }).join('');
+        const matchedWord = activeVocab.find(w => w.char === selectedChars);
+        if (matchedWord && !foundWords.includes(matchedWord.char)) {
+          setFoundWords([...foundWords, matchedWord.char]);
+          setFoundCells([...foundCells, ...newSelection]);
+          setSelectedCells([]);
+          speakCantonese(matchedWord.char);
+          if (foundWords.length + 1 === activeVocab.length) { triggerTransition(); }
+        }
+      };
+
+      const handleQuizAnswer = (selectedEnglish) => {
+        const currentWord = activeVocab[quizIndex];
+        speakCantonese(currentWord.char);
+        if (selectedEnglish === currentWord.english) {
+          if (quizIndex + 1 < activeVocab.length) { setTimeout(() => setQuizIndex(quizIndex + 1), 500); }
+          else { triggerTransition(); }
+        } else { speakCantonese("再試一次"); }
+      };
+
+      const handleDialogueSubmit = () => {
+        const currentWord = activeVocab[dialogueIndex];
+        const check = validateSentence(dialogueInput, currentWord.char, currentWord.answer);
+        if (check.valid) {
+          setDialogueFeedback("correct"); setFeedbackMsg(""); speakCantonese(dialogueInput);
+          setTimeout(() => {
+            setDialogueFeedback(null); setDialogueInput("");
+            if (dialogueIndex + 1 < activeVocab.length) { setDialogueIndex(dialogueIndex + 1); }
+            else { triggerTransition(); }
+          }, 2000);
+        } else {
+          setDialogueFeedback("wrong"); setFeedbackMsg(check.msg); speakCantonese(check.msg);
+        }
+      };
+
+      useEffect(() => {
+        if (gameLevel === 4 && !showTransition && mode === 'game' && view === 'game') {
+          speakCantonese("通關成功，你真係好叻呀！");
+        }
+      }, [gameLevel, showTransition, mode, view]);
+
+      // Renders
+      const renderTransition = () => (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center animate-fade-in p-4">
+          <div className="bg-white p-8 rounded-3xl text-center border-4 border-gray-900 shadow-2xl max-w-md w-full relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-300 via-yellow-200 to-blue-300"></div>
+             <IconSparkles className="w-16 h-16 mx-auto mb-4 text-yellow-400 animate-spin-slow" />
+             <h2 className="text-3xl sm:text-4xl font-black text-gray-800 mb-4">恭喜過關！</h2>
+             <p className="text-xl font-bold text-gray-600 mb-8">做得好！準備好進入下一關了嗎？</p>
+             <button onClick={nextLevel} className={`${COLORS.accent} ${BUTTON_STYLE} w-full text-xl flex items-center justify-center gap-2`}>
+               進入下一關 <IconArrowRight className="w-6 h-6"/>
+             </button>
+          </div>
+        </div>
+      );
+
+      const renderWelcome = () => (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-bounce-in">
+           <div className="mb-8 relative">
+              <IconRocket className="text-pink-400 w-32 h-32 animate-pulse-slow filter drop-shadow-xl" />
+              <IconSparkles className="text-yellow-400 w-12 h-12 absolute -top-2 -right-4 animate-spin-slow" />
+           </div>
+           <h1 className="text-5xl font-black text-gray-900 mb-6 tracking-wider">粵語大冒險</h1>
+           <p className="text-2xl text-gray-600 mb-12 font-bold">準備好接受挑戰了嗎？</p>
+           <button onClick={handleStart} className={`${COLORS.accent} ${BUTTON_STYLE} text-2xl w-64 flex items-center justify-center gap-3 hover:scale-105 transform duration-200`}>
+             開始冒險 <IconArrowRight />
+           </button>
+        </div>
+      );
+
+      const renderEditor = () => {
+        const previewList = parseRawInput(rawInput);
+        const previewLevel = autoDetectLevel(previewList);
+        return (
+        <div className="max-w-4xl mx-auto p-4">
+          <div className={`${COLORS.primary} ${BORDER_STYLE} p-6 sm:p-8 mb-8`}>
+            <h1 className="text-3xl font-black mb-4 flex items-center gap-2">
+              <IconSettings className="w-8 h-8"/> 遊戲生成器設置
+            </h1>
+            <div className="bg-white p-4 rounded-xl border-4 border-gray-900 mb-6">
+              <div className="flex items-center gap-2 mb-2 text-gray-700 font-bold">
+                <IconEdit size={20}/> 
+                <span>批量輸入 (Bulk Input)</span>
+              </div>
+              <p className="text-sm text-gray-500 mb-2">
+                請輸入資料，每行一個詞彙。格式：<br/>
+                <code className="bg-gray-100 px-1 rounded">中文詞彙 | 粵拼 | 英文意思 | 英文句子 (造句題) | 中文參考答案</code>
+              </p>
+              <textarea
+                value={rawInput}
+                onChange={(e) => setRawInput(e.target.value)}
+                className="w-full h-48 p-4 border-2 border-gray-300 rounded-lg font-mono text-sm leading-relaxed focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none resize-y"
+                placeholder="蘋果 | ping4 gwo2 | Apple | I like to eat apples. | 我鍾意食蘋果"
+              />
+            </div>
+            <div className="mb-6 overflow-hidden rounded-xl border-4 border-gray-900 bg-white">
+               <div className="bg-gray-100 p-3 font-bold border-b-2 border-gray-200 flex justify-between items-center">
+                 <div className="flex items-center gap-4">
+                    <span>預覽 ({previewList.length} 個詞彙)</span>
+                    {previewList.length > 0 && (
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full border border-purple-200 flex items-center gap-1">
+                            <IconWand size={12}/> 系統判定難度: Level {previewLevel}
+                        </span>
+                    )}
+                 </div>
+                 <span className="text-xs text-gray-500 font-normal hidden sm:inline">系統會自動過濾重複詞彙及格式錯誤的行</span>
+               </div>
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left text-sm">
+                   <thead>
+                     <tr className="bg-yellow-50 border-b-2 border-gray-100">
+                       <th className="p-2 pl-4">中文</th>
+                       <th className="p-2">粵拼</th>
+                       <th className="p-2">英文</th>
+                       <th className="p-2">題目</th>
+                       <th className="p-2">參考答案 (用於檢測)</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {previewList.length > 0 ? (
+                       previewList.map((item, idx) => (
+                         <tr key={idx} className="border-b border-gray-100 last:border-0 hover:bg-pink-50">
+                           <td className="p-2 pl-4 font-bold">{item.char}</td>
+                           <td className="p-2 font-mono text-gray-600">{item.jyutping}</td>
+                           <td className="p-2">{item.english}</td>
+                           <td className="p-2 text-gray-500 truncate max-w-[150px]">{item.prompt}</td>
+                           <td className="p-2 text-gray-500 truncate max-w-[150px]">{item.answer}</td>
+                         </tr>
+                       ))
+                     ) : (
+                       <tr>
+                         <td colSpan={5} className="p-4 text-center text-gray-400 italic">
+                           暫無有效數據，請在上方輸入框輸入...
+                         </td>
+                       </tr>
+                     )}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <button onClick={startGame} disabled={previewList.length === 0} className={`${COLORS.accent} text-xl w-64 ${BUTTON_STYLE} flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}>
+                <IconPlay className="fill-current"/> 預覽遊戲
+              </button>
+              <button onClick={downloadGame} disabled={previewList.length === 0} className={`${COLORS.secondary} text-xl w-64 ${BUTTON_STYLE} flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}>
+                <IconDownload className="fill-current"/> 下載學生版遊戲
+              </button>
+            </div>
+          </div>
+        </div>
+        );
+      };
+
+      const renderLevel1 = () => (
+        <div className="flex flex-col items-center w-full max-w-6xl mx-auto">
+          <div className={`${COLORS.secondary} ${BORDER_STYLE} px-6 py-2 mb-6 flex items-center gap-3`}>
+            <span className="text-2xl font-black">第一關：找字大冒險</span>
+            <span className="bg-white px-3 py-1 rounded-full text-sm font-bold border-2 border-black">
+              {foundWords.length} / {activeVocab.length}
+            </span>
+          </div>
+          <div className="flex flex-col md:flex-row gap-8 items-start justify-center w-full">
+            {/* Grid Area */}
+            <div className="flex-shrink-0 bg-white p-4 rounded-xl border-4 border-gray-900 shadow-lg mx-auto">
+              <div className="grid grid-cols-10 gap-1 sm:gap-2 select-none">
+                {gridData.map((row, r) => (
+                  row.map((char, c) => {
+                    const cellId = `${r}-${c}`;
+                    const isSelected = selectedCells.includes(cellId);
+                    const isFound = foundCells.includes(cellId);
+                    
+                    let cellStyle = 'bg-gray-50 hover:bg-gray-100'; 
+                    if (isFound) cellStyle = 'bg-green-500 text-white border-green-600'; 
+                    if (isSelected) cellStyle = 'bg-yellow-400 text-black border-yellow-500 scale-95 shadow-inner'; // Corrected style
+
+                    return (
+                      <div key={cellId} onClick={() => handleCellClick(r, c)}
+                        className={`w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center text-base sm:text-xl font-bold rounded-md cursor-pointer transition-all duration-150 border-2 border-gray-200 ${cellStyle}`}>
+                        {char}
+                      </div>
+                    );
+                  })
+                ))}
+              </div>
+            </div>
+            {/* List Area */}
+            <div className="flex-grow w-full md:w-auto md:max-w-xs">
+              <div className="bg-white p-5 rounded-xl border-4 border-gray-900 shadow-sm h-full">
+                 <h3 className="font-black text-xl mb-4 text-center text-gray-700 border-b-2 border-gray-100 pb-2">目標詞語</h3>
+                 <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
+                    {activeVocab.map((word, idx) => (
+                      <div key={idx} className={`p-3 rounded-xl border-2 border-gray-900 flex items-center justify-between transition-all ${foundWords.includes(word.char) ? 'bg-green-300 opacity-60 scale-95' : 'bg-white shadow-sm'}`}>
+                        <span className="font-bold text-lg">{word.char}</span>
+                        {foundWords.includes(word.char) && <IconCheck size={20}/>}
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderLevel2 = () => {
+        if (!activeVocab.length) return null;
+        const currentWord = activeVocab[quizIndex];
+        const otherCandidates = activeVocab.filter(w => w.english !== currentWord.english);
+        const safeOthers = otherCandidates.sort(() => 0.5 - Math.random()).slice(0, 3);
+        while (safeOthers.length < 3 && activeVocab.length < 4) break; 
+        const options = [currentWord, ...safeOthers].sort(() => 0.5 - Math.random());
+        return (
+          <div className="flex flex-col items-center max-w-2xl mx-auto w-full">
+            <div className={`${COLORS.highlight} ${BORDER_STYLE} px-6 py-2 mb-6`}>
+               <span className="text-2xl font-black">第二關：意思配對</span>
+            </div>
+            <div className="w-full bg-white border-4 border-gray-900 rounded-3xl p-8 mb-8 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-4 bg-gray-200">
+                <div className="h-full bg-green-400 transition-all duration-500" style={{width: `${(quizIndex / activeVocab.length) * 100}%`}} />
+              </div>
+              <div className="mt-8 mb-4">
+                <span className="text-6xl font-black text-gray-800 block mb-2">{currentWord.char}</span>
+                <span className="text-xl text-gray-500 font-bold font-mono">{currentWord.jyutping}</span>
+              </div>
+              <button onClick={() => speakCantonese(currentWord.char)} className="mx-auto bg-gray-100 rounded-full p-3 hover:bg-gray-200 transition-colors">
+                <IconVolume size={24} />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+              {options.map((opt, idx) => (
+                <button key={idx} onClick={() => handleQuizAnswer(opt.english)} className={`${BUTTON_STYLE} ${COLORS.bg} hover:bg-yellow-200 text-lg`}>
+                  {opt.english}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const renderLevel3 = () => {
+        if (!activeVocab.length) return null;
+        const currentWord = activeVocab[dialogueIndex];
+        return (
+          <div className="flex flex-col items-center max-w-2xl mx-auto w-full">
+            <div className={`${COLORS.accent} ${BORDER_STYLE} px-6 py-2 mb-6`}>
+               <span className="text-2xl font-black">第三關：造句翻譯</span>
+            </div>
+            <div className="w-full bg-white border-4 border-gray-900 rounded-3xl p-6 min-h-[400px] flex flex-col justify-between relative shadow-lg">
+              <div className="flex gap-4 items-start mb-8">
+                <div className="w-12 h-12 rounded-full bg-blue-500 border-2 border-black flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div className="bg-blue-100 border-2 border-black p-4 rounded-2xl rounded-tl-none relative w-full">
+                   <p className="font-bold text-lg mb-2">請用「<span className="text-pink-600">{currentWord.char}</span>」寫出如下句子：</p>
+                   <div className="bg-white p-3 rounded-lg border-2 border-blue-200 font-bold text-gray-700 text-lg">
+                     {currentWord.prompt}
+                   </div>
+                </div>
+              </div>
+              <div className="mt-auto">
+                 {dialogueFeedback === "wrong" && (
+                    <div className="mb-2 text-red-500 font-bold bg-red-50 p-2 rounded border border-red-200 text-center animate-pulse">
+                      {feedbackMsg || `記得使用「${currentWord.char}」翻譯喔！`}
+                    </div>
+                 )}
+                 {dialogueFeedback === "correct" && (
+                    <div className="mb-2 text-green-600 font-bold bg-green-50 p-2 rounded border border-green-200 text-center flex items-center justify-center gap-2">
+                      <IconStar className="fill-current text-yellow-400"/> 好棒！Excellent!
+                    </div>
+                 )}
+                <div className="flex gap-2">
+                   <input type="text" value={dialogueInput} onChange={(e) => setDialogueInput(e.target.value)}
+                     placeholder={`請輸入包含「${currentWord.char}」的句子...`}
+                     className="flex-grow border-4 border-gray-900 rounded-xl p-3 text-lg font-bold outline-none focus:border-pink-400 transition-colors"
+                     onKeyPress={(e) => e.key === 'Enter' && handleDialogueSubmit()}
+                   />
+                   <button onClick={handleDialogueSubmit} className={`${COLORS.primary} ${BUTTON_STYLE} px-4 py-0`}>
+                     <IconArrowRight />
+                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderVictory = () => {
+        return (
+        <div className="text-center animate-bounce-in relative">
+           <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+              {[...Array(50)].map((_, i) => (
+                <div key={i} className="absolute w-4 h-4 rounded-sm"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: '-20px',
+                    backgroundColor: ['#FFC0CB', '#FFD700', '#87CEEB', '#90EE90', '#FF69B4'][Math.floor(Math.random() * 5)],
+                    animation: `fall ${Math.random() * 3 + 2}s linear infinite`,
+                    animationDelay: `${Math.random() * 5}s`
+                  }}
+                />
+              ))}
+              <style>{`@keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`}</style>
+           </div>
+           <div className="relative z-10 bg-white/90 p-8 sm:p-12 rounded-3xl border-4 border-gray-900 shadow-xl backdrop-blur-sm max-w-2xl mx-auto mt-10">
+             <div className="mb-8 relative inline-block">
+                <IconTrophy className="text-yellow-400 fill-current drop-shadow-lg" size={120} />
+                <IconStar className="text-pink-400 fill-current absolute -top-2 -right-4 animate-spin-slow" size={40} />
+                <IconStar className="text-blue-400 fill-current absolute bottom-0 -left-6 animate-pulse" size={30} />
+             </div>
+             <h2 className="text-6xl font-black text-gray-900 mb-6 tracking-tight">通關成功！</h2>
+             <p className="text-3xl font-bold text-gray-600 mb-10">你真係好叻呀！<br/><span className="text-xl text-gray-400 mt-2 block">(You are amazing!)</span></p>
+             <div className="flex gap-4 justify-center flex-wrap">
+               <button onClick={handleRestart} className={`${COLORS.accent} ${BUTTON_STYLE} flex gap-2 items-center text-xl`}>
+                 <IconRefresh /> 再玩一次
+               </button>
+               <button onClick={() => setMode('editor')} className={`${COLORS.secondary} ${BUTTON_STYLE} flex gap-2 items-center text-xl`}>
+                 <IconEdit /> 編輯內容
+               </button>
+             </div>
+           </div>
+        </div>
+        );
+      };
+
+      return (
+        <div className={`min-h-screen ${COLORS.bg} font-sans text-gray-800 p-4`}>
+          {mode === 'game' && (
+            <div className="flex justify-between items-center max-w-4xl mx-auto mb-6">
+              <button onClick={() => setMode('editor')} className="p-2 bg-white rounded-full border-2 border-black hover:bg-gray-100">
+                <IconSettings size={20}/>
+              </button>
+              <div className="font-black text-xl tracking-widest text-gray-400">粵語小學堂</div>
+              <div className="w-10"></div>
+            </div>
+          )}
+          {mode === 'editor' && renderEditor()}
+          {mode === 'game' && (
+            <div className="max-w-4xl mx-auto">
+              {view === 'welcome' && renderWelcome()}
+              {showTransition && renderTransition()}
+              {view === 'game' && !showTransition && (
+                <>
+                   {gameLevel === 1 && renderLevel1()}
+                   {gameLevel === 2 && renderLevel2()}
+                   {gameLevel === 3 && renderLevel3()}
+                   {gameLevel === 4 && renderVictory()}
+                </>
+              )}
+            </div>
+          )}
+          <div className="mt-12 mb-4 text-center text-gray-400 font-bold text-sm tracking-widest font-sans">
+            Chinese with Dora | Dora 老师
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

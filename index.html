@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中文教学工具库 · 对外汉语课堂互动工具</title>
+  <meta name="description" content="对外汉语老师自主生成课堂游戏与互动工具的网站：选类型、输词句、一键生成可下载的学生版网页游戏。支持简体 / 繁体两个入口版。" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo">🎮</div>
+      <div class="brand-text">
+        <h1 id="ui-siteName">中文教学工具库</h1>
+        <p id="ui-tagline">对外汉语课堂互动游戏与教学工具</p>
+      </div>
+      <div style="flex:1"></div>
+      <div class="edition-switch">
+        <button id="ed-simple">简体版</button>
+        <button id="ed-trad">繁体版</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h2 id="ui-heroTitle">挑一个工具，输几个词，就能上课</h2>
+    <p id="ui-heroText"></p>
+    <div class="hero-stats">
+      <div class="stat"><b id="stat-total">0</b><span id="ui-statTools"></span></div>
+      <div class="stat"><b id="stat-gen">0</b><span id="ui-statGen"></span></div>
+      <div class="stat"><b id="ui-statLang"></b><span>双语支持</span></div>
+    </div>
+  </section>
+
+  <!-- 控制条 -->
+  <section class="controls">
+    <div class="search">
+      <span class="ico">🔎</span>
+      <input id="search" type="text" placeholder="" />
+    </div>
+    <div class="ed-hint" id="ui-edHint"></div>
+    <div class="filter-row">
+      <span class="filter-label" id="lb-purpose"></span>
+      <span class="chips" id="f-purpose"></span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label" id="lb-script"></span>
+      <span class="chips" id="f-script"></span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label" id="lb-lang"></span>
+      <span class="chips" id="f-lang"></span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label" id="lb-roman"></span>
+      <span class="chips" id="f-roman"></span>
+    </div>
+    <div class="share-row">
+      <button class="chip" id="copy-link">复制本页链接</button>
+    </div>
+  </section>
+
+  <!-- 工具区：默认按「课堂前/中/后」三段色块展示；筛选或搜索时切换为平铺结果 -->
+  <main id="main"></main>
+
+  <!-- 弹窗 -->
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="m-emoji" id="m-emoji">🎮</span>
+        <div>
+          <div class="m-title" id="m-title">标题</div>
+          <div class="m-sub" id="m-sub">副标题</div>
+        </div>
+        <div class="spacer"></div>
+        <a class="icon-btn" id="m-open" target="_blank" rel="noopener">新标签打开 ↗</a>
+        <a class="icon-btn" id="m-download" download>下载工具文件</a>
+        <button class="icon-btn primary" id="m-close">关闭 ✕</button>
+      </div>
+      <div class="modal-frame-wrap" id="m-frame-wrap">
+        <iframe id="m-frame" title="tool" src="about:blank" allow="fullscreen; clipboard-read; clipboard-write"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p id="ui-footer"></p>
+    <p style="margin-top:6px; opacity:.7;">由 <b>Chinese with Dora</b> 出品</p>
+  </footer>
+
+  <script src="assets/games.js"></script>
+  <script>
+    // ---------- 状态 ----------
+    // edition: 入口版（simplified 简体版 / traditional 繁体版）
+    // 版本只影响界面文案与默认可见字形，工具数据始终只有一份
+    const LS_KEY = 'gs_edition';
+    const params = new URLSearchParams(location.search);
+    let edition = params.get('ed') === 'traditional' ? 'traditional'
+      : (params.get('ed') === 'simplified' ? 'simplified'
+      : (localStorage.getItem(LS_KEY) === 'traditional' ? 'traditional' : 'simplified'));
+
+    const S = {
+      purpose: params.get('purpose') || 'all',
+      script: params.get('script') || 'all',
+      lang: params.get('lang') || 'all',
+      roman: params.get('roman') || 'all',
+      q: params.get('q') || ''
+    };
+
+    const grid = document.getElementById('main');
+    const searchEl = document.getElementById('search');
+
+    // 当前版本下该用的文案块（zh 简体 / hant 繁体）
+    const txtOf = g => (edition === 'traditional' ? g.hant : g.zh);
+    const U = () => UI[edition];
+
+    function langText(g) {
+      const Uu = U();
+      if (g.langs.length > 1) return Uu.langBoth;
+      return g.langs[0] === 'mandarin' ? Uu.langMandarin : Uu.langCantonese;
+    }
+    // 单文件生成器用 file，多文件应用（如白板）用 path
+    const srcOf = g => g.path || ('generators/' + g.file);
+
+    // ---------- 版本基础可见性 ----------
+    // 简体版不出现纯繁体工具（如粤语通关），繁体版不出现纯简体工具
+    function editionVisible(g) {
+      return edition === 'simplified' ? g.script !== 'traditional' : g.script !== 'simplified';
+    }
+    // 字形选项随版本变化
+    function scriptOpts() {
+      return edition === 'simplified'
+        ? SCRIPT_OPTS.filter(o => o.v !== 'traditional')
+        : SCRIPT_OPTS.filter(o => o.v !== 'simplified');
+    }
+
+    // ---------- 筛选 ----------
+    function matches(g) {
+      if (!editionVisible(g)) return false;
+      if (S.purpose !== 'all' && g.purpose !== S.purpose) return false;
+      if (S.script !== 'all' && g.script !== S.script) return false;
+      if (S.lang !== 'all' && !(g.langs || []).includes(S.lang)) return false;
+      if (S.roman !== 'all' && !(g.roman || []).includes(S.roman)) return false;
+      if (S.q) {
+        const t = txtOf(g);
+        const hay = (t.title + ' ' + g.en + ' ' + t.desc + ' ' + t.tags.join(' ')).toLowerCase();
+        if (!hay.includes(S.q.toLowerCase())) return false;
+      }
+      return true;
+    }
+
+    // ---------- URL（可分享的筛选链接） ----------
+    function updateURL() {
+      const p = new URLSearchParams();
+      p.set('ed', edition);
+      if (S.purpose !== 'all') p.set('purpose', S.purpose);
+      if (S.script !== 'all') p.set('script', S.script);
+      if (S.lang !== 'all') p.set('lang', S.lang);
+      if (S.roman !== 'all') p.set('roman', S.roman);
+      if (S.q) p.set('q', S.q);
+      history.replaceState(null, '', location.pathname + '?' + p.toString());
+    }
+
+    // ---------- 渲染 ----------
+    function renderFilterRow(elId, opts, cur, key) {
+      const el = document.getElementById(elId);
+      el.innerHTML = '';
+      opts.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'chip' + (o.v === cur ? ' active' : '');
+        b.textContent = edition === 'traditional' ? o.hant : o.zh;
+        b.onclick = () => { S[key] = o.v; updateURL(); renderAll(); };
+        el.appendChild(b);
+      });
+    }
+
+    function renderFilters() {
+      renderFilterRow('f-purpose', PURPOSES, S.purpose, 'purpose');
+      renderFilterRow('f-script', scriptOpts(), S.script, 'script');
+      renderFilterRow('f-lang', LANG_OPTS, S.lang, 'lang');
+      renderFilterRow('f-roman', ROMAN_OPTS, S.roman, 'roman');
+    }
+
+    // 是否处于「筛选/搜索」状态（是 → 平铺结果；否 → 按教学阶段分块）
+    function hasActiveFilters() {
+      return S.purpose !== 'all' || S.script !== 'all' || S.lang !== 'all' || S.roman !== 'all' || !!S.q;
+    }
+
+    function cardEl(g) {
+      const t = txtOf(g);
+      const Uu = U();
+      const typeTag = g.purpose === 'generator' ? Uu.typeGen : (g.purpose === 'tool' ? Uu.typeTool : Uu.typeGame);
+      const typeCls = g.purpose === 'generator' ? 'type-gen' : (g.purpose === 'tool' ? 'type-tool' : 'type-game');
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-top" style="background:${g.accent}1a;">
+          <span class="emoji">${g.emoji}</span>
+          <span class="type-tag ${typeCls}">${typeTag}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-title">${t.title}<span class="en">${g.en}</span></div>
+          <div class="card-desc">${t.desc}</div>
+          <div class="tags">
+            <span class="tag lang">${langText(g)}</span>
+            ${t.tags.map(s => `<span class="tag">${s}</span>`).join('')}
+          </div>
+        </div>`;
+      card.onclick = () => openModal(g);
+      return card;
+    }
+
+    function cardsGrid(list) {
+      const grid = document.createElement('div');
+      grid.className = 'grid tight';
+      list.forEach(g => grid.appendChild(cardEl(g)));
+      return grid;
+    }
+
+    function render() {
+      const list = GAMES.filter(matches);
+      const Uu = U();
+      grid.innerHTML = '';
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty">' + Uu.empty + '</div>';
+        return;
+      }
+
+      // 筛选 / 搜索：平铺结果
+      if (hasActiveFilters()) {
+        const head = document.createElement('div');
+        head.className = 'flat-head';
+        head.textContent = Uu.filterResult.replace('%d', list.length);
+        grid.appendChild(head);
+        grid.appendChild(cardsGrid(list));
+        return;
+      }
+
+      // 默认：按教学阶段三段色块
+      PHASE_DEFS.forEach(pd => {
+        const items = list.filter(g => (PHASES[g.id] || []).includes(pd.v));
+        if (!items.length) return;
+        const def = edition === 'traditional' ? pd.hant : pd.zh;
+        const sec = document.createElement('section');
+        sec.className = 'phase';
+        sec.style.setProperty('--ph', pd.accent);
+        sec.style.background = pd.accent + '0d';
+        sec.style.borderColor = pd.accent + '30';
+        sec.innerHTML = `
+          <div class="phase-head">
+            <span class="ph-icon">${pd.icon}</span>
+            <div>
+              <div class="ph-name">${def.name}</div>
+              <div class="ph-desc">${def.desc}</div>
+            </div>
+            <span class="ph-count">${items.length}</span>
+          </div>`;
+        sec.appendChild(cardsGrid(items));
+        grid.appendChild(sec);
+      });
+    }
+
+    function renderStats() {
+      const visible = GAMES.filter(editionVisible);
+      document.getElementById('stat-total').textContent = visible.length;
+      document.getElementById('stat-gen').textContent = visible.filter(g => g.purpose === 'generator').length;
+    }
+
+    function applyI18N() {
+      const Uu = U();
+      document.title = Uu.siteName + ' · ' + Uu.tagline;
+      document.getElementById('ui-siteName').textContent = Uu.siteName;
+      document.getElementById('ui-tagline').textContent = Uu.tagline;
+      document.getElementById('ui-heroTitle').textContent = Uu.heroTitle;
+      document.getElementById('ui-heroText').textContent = Uu.heroText;
+      document.getElementById('ui-statTools').textContent = Uu.statTools;
+      document.getElementById('ui-statGen').textContent = Uu.statGen;
+      document.getElementById('ui-statLang').textContent = Uu.statLang;
+      document.getElementById('ui-edHint').textContent = Uu.edHint;
+      document.getElementById('ui-footer').textContent = Uu.footer;
+      document.getElementById('lb-purpose').textContent = Uu.labelPurpose;
+      document.getElementById('lb-script').textContent = Uu.labelScript;
+      document.getElementById('lb-lang').textContent = Uu.labelLang;
+      document.getElementById('lb-roman').textContent = Uu.labelRoman;
+      document.getElementById('ed-simple').textContent = Uu.edSimple;
+      document.getElementById('ed-trad').textContent = Uu.edTraditional;
+      document.getElementById('m-open').textContent = Uu.newTab;
+      document.getElementById('m-download').textContent = Uu.download;
+      document.getElementById('m-close').textContent = Uu.close;
+      document.getElementById('copy-link').textContent = Uu.copyLink;
+      searchEl.placeholder = Uu.search;
+      document.getElementById('ed-simple').classList.toggle('active', edition === 'simplified');
+      document.getElementById('ed-trad').classList.toggle('active', edition === 'traditional');
+    }
+
+    function renderAll() { applyI18N(); renderFilters(); render(); renderStats(); }
+
+    // ---------- 版本切换 ----------
+    function setEdition(ed) {
+      if (edition === ed) return;
+      edition = ed;
+      localStorage.setItem(LS_KEY, ed);
+      S.script = 'all'; // 字形选项随版本变化，重置避免空结果
+      updateURL();
+      renderAll();
+    }
+    document.getElementById('ed-simple').onclick = () => setEdition('simplified');
+    document.getElementById('ed-trad').onclick = () => setEdition('traditional');
+
+    // ---------- 弹窗 ----------
+    const modal = document.getElementById('modal');
+    const frame = document.getElementById('m-frame');
+    const frameWrap = document.getElementById('m-frame-wrap');
+
+    function openModal(g) {
+      const Uu = U();
+      const t = txtOf(g);
+      document.getElementById('m-emoji').textContent = g.emoji;
+      document.getElementById('m-title').textContent = t.title;
+      document.getElementById('m-sub').textContent = g.en + ' · ' + langText(g) + ' · ' +
+        (g.purpose === 'generator' ? Uu.subGen : (g.purpose === 'tool' ? Uu.subTool : Uu.subGame));
+      frameWrap.className = 'modal-frame-wrap' + (g.layout === 'phone' ? ' phone' : '');
+      document.querySelector('.modal-box').classList.toggle('xl', g.purpose === 'tool');
+      const src = srcOf(g);
+      frame.src = src;
+      document.getElementById('m-open').href = src;
+      // 多文件应用（课堂工具）下载单个 HTML 无法运行，隐藏下载按钮
+      const dlBtn = document.getElementById('m-download');
+      if (g.purpose === 'tool') {
+        dlBtn.style.display = 'none';
+      } else {
+        dlBtn.style.display = '';
+        dlBtn.href = src;
+      }
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+      modal.classList.remove('open');
+      frame.src = 'about:blank';
+      document.body.style.overflow = '';
+    }
+    document.getElementById('m-close').onclick = closeModal;
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ---------- 搜索 ----------
+    searchEl.addEventListener('input', e => { S.q = e.target.value.trim(); updateURL(); render(); });
+
+    // ---------- 复制分享链接 ----------
+    document.getElementById('copy-link').onclick = function () {
+      const Uu = U();
+      const url = location.href;
+      const done = () => {
+        this.textContent = Uu.copied;
+        setTimeout(() => { this.textContent = Uu.copyLink; }, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done));
+      } else {
+        fallbackCopy(url, done);
+      }
+    };
+    function fallbackCopy(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); cb(); } catch (e) { prompt('请手动复制此链接：', text); }
+      document.body.removeChild(ta);
+    }
+
+    // ---------- 启动 ----------
+    searchEl.value = S.q;
+    updateURL();
+    renderAll();
+  </script>
+</body>
+</html>

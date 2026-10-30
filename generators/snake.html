@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵动贪吃蛇：通用版 / Snake Game Generator</title>
+<style id="kd-kids-theme">
+/* 儿童类生成器统一风格 - 由中文游戏工坊注入（外壳统一：圆润中文字体 + 标题品牌色；玩法区与对错配色不动） */
+:root{
+  --kd-primary:#FF7A45;
+  --kd-primary-d:#E85C2A;
+}
+body{
+  font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+h1,.title,.brand-title,.app-title,header h1,.header-title,.app-header h1{
+  color:var(--kd-primary-d) !important;
+}
+</style>
+
+    <script src="https://unpkg.com/pinyin-pro@3.18.2/dist/index.js"></script>
+    <style>
+        :root {
+            --bg-color: #a5d6a7;
+            --ui-bg: rgba(255, 255, 255, 0.95);
+            --primary-color: #2e7d32;
+            --text-color: #1b5e20;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "Heiti SC", "STXihei", "华文细黑", sans-serif;
+            background-color: #e8f5e9;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* --- 游戏区域 --- */
+        #game-stage {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.2) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px);
+            background-size: 50px 50px;
+        }
+
+        #top-ui {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 800px; background: var(--ui-bg);
+            padding: 15px 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; z-index: 10;
+        }
+
+        .ui-header {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; font-size: 1.1rem; font-weight: bold;
+        }
+
+        /* 新增：头部按钮组 */
+        .header-btn-group {
+            display: flex; gap: 10px;
+        }
+
+        #target-sentence { font-size: 1.2rem; color: #558b2f; margin-bottom: 10px; min-height: 1.2em; text-align: center;}
+        
+        #collected-bar {
+            display: flex; gap: 8px; min-height: 50px; background: rgba(0,0,0,0.05);
+            width: 100%; border-radius: 8px; padding: 5px;
+            align-items: center; justify-content: center; flex-wrap: wrap;
+        }
+
+        .collected-word {
+            background: white; padding: 5px 12px; border-radius: 15px; border: 2px solid #81c784;
+            color: #2e7d32; font-weight: bold; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column; align-items: center; line-height: 1.1;
+        }
+        .cw-char { font-size: 1.1rem; } .cw-rom { font-size: 0.7rem; color: #666; }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+        #game-canvas { display: block; width: 100%; height: 100%; }
+
+        /* 页脚署名 */
+        #game-footer {
+            position: absolute; bottom: 15px; width: 100%; text-align: center;
+            color: #1b5e20; font-weight: bold; font-size: 1rem; pointer-events: none;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.6); z-index: 5;
+            font-family: "Comic Sans MS", "Microsoft YaHei", sans-serif;
+        }
+
+        /* --- 老师设置面板 --- */
+        #setup-panel {
+            display: flex; /* 默认显示 */
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 90%; max-width: 900px;
+            z-index: 100; flex-direction: column; gap: 15px;
+            max-height: 90vh; overflow-y: auto; border: 4px solid var(--primary-color);
+        }
+
+        .config-row { display: flex; gap: 15px; align-items: center; background: #f1f8e9; padding: 10px; border-radius: 8px; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; flex-grow: 1; }
+        .input-col { display: flex; flex-direction: column; }
+        .input-col label { font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #33691e; }
+        textarea { height: 150px; border: 2px solid #c5e1a5; border-radius: 8px; padding: 8px; resize: none; font-family: inherit;}
+        textarea:focus { border-color: var(--primary-color); outline: none; }
+
+        /* --- 学生开始封面 --- */
+        #student-start-screen {
+            display: none; /* 默认隐藏，学生模式下显示 */
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #e8f5e9; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 300;
+        }
+        .start-card {
+            background: white; padding: 40px; border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; width: 80%;
+        }
+
+        /* --- 按钮 --- */
+        .btn-primary {
+            background-color: var(--primary-color); color: white; border: none;
+            padding: 12px 30px; border-radius: 30px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #1b5e20; transition: transform 0.1s;
+        }
+        .btn-primary:active { transform: translateY(4px); box-shadow: none; }
+        
+        .btn-export {
+            background-color: #ff9800; color: white; border: none;
+            padding: 12px 30px; border-radius: 30px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #e65100; transition: transform 0.1s;
+        }
+        .btn-export:active { transform: translateY(4px); box-shadow: none; }
+
+        /* 小型导出按钮 (用于预览页) */
+        .btn-export-small {
+            background-color: #ff9800; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 0 #e65100;
+            font-size: 0.9rem;
+        }
+        .btn-export-small:active { transform: translateY(2px); box-shadow: none; }
+
+        .btn-secondary {
+            background-color: #78909c; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 0 #546e7a;
+        }
+        .btn-secondary:active { transform: translateY(2px); box-shadow: none; }
+
+        /* --- 通用 --- */
+        #toast {
+            position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 12px 30px;
+            border-radius: 30px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 2000;
+            font-size: 1.1rem; text-align: center;
+        }
+        #toast.show { opacity: 1; }
+
+        #end-screen {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; z-index: 200; width: 80%; max-width: 400px;
+        }
+        
+        #fireworks-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 150; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">提示 / Tip</div>
+    <canvas id="fireworks-canvas"></canvas>
+
+    <!-- 老师设置面板 (ROLE = teacher 时显示) -->
+    <div id="setup-panel">
+        <h2 style="margin:0; text-align:center; color:#2e7d32;">🐍 贪吃蛇：题目编辑器 (老师版)</h2>
+        <div class="config-row">
+            <div>
+                <label>选择语言：</label>
+                <select id="lang-select" onchange="updateOptions()">
+                    <option value="mandarin">汉语 (普通话)</option>
+                    <option value="cantonese">粤语 (广东话)</option>
+                </select>
+            </div>
+            <div style="flex-grow:1; text-align:right;">
+                <button class="btn-secondary" onclick="fillExample()">填入范例</button>
+            </div>
+        </div>
+        <div class="input-grid">
+            <div class="input-col">
+                <label id="lbl-zh">1. 中文词语 (空格分开)</label>
+                <textarea id="input-zh"></textarea>
+            </div>
+            <div class="input-col">
+                <label id="lbl-rom">2. 拼音 (空格分开)</label>
+                <textarea id="input-rom"></textarea>
+            </div>
+            <div class="input-col">
+                <label>3. 英文意思 (每行一句)</label>
+                <textarea id="input-en"></textarea>
+            </div>
+        </div>
+        <div style="display:flex; justify-content: center; gap: 20px;">
+            <button class="btn-primary" onclick="teacherPreviewGame()">课堂演示 (预览)</button>
+            <button class="btn-export" onclick="exportStudentFile()">📥 导出学生作业文件</button>
+        </div>
+        <p style="text-align:center; color:#666; font-size:0.9rem; margin:0;">
+            点击“导出”后，将生成的 .html 文件发给学生即可。<br>学生版为中英双语界面，包含自动随机抽题功能。
+        </p>
+    </div>
+
+    <!-- 学生开始封面 (ROLE = student 时显示) -->
+    <div id="student-start-screen">
+        <div class="start-card">
+            <h1 style="color:#2e7d32; margin-bottom: 10px;">🐍 灵动贪吃蛇 <br><span style="font-size:0.7em; color:#558b2f;">Snake Game: Practice</span></h1>
+            <p style="color:#558b2f; margin-bottom: 30px; line-height: 1.5;">
+                请点击下方按钮开始练习<br>Click the button to start<br>
+                <span style="font-size:0.9em; color:#777;">(每次随机抽取 10 题 / 10 random questions)</span>
+            </p>
+            <button class="btn-primary" onclick="startStudentGame()">开始挑战 / Start</button>
+        </div>
+    </div>
+
+    <!-- 游戏舞台 -->
+    <div id="game-stage">
+        <div id="top-ui">
+            <div class="ui-header">
+                <div>
+                    <div id="score-box">🍎 进度 / Progress: <span id="progress-val">1/10</span></div>
+                    <div id="score-text">得分 / Score: <span id="score-val">0</span></div>
+                </div>
+                <!-- 按钮组 -->
+                <div class="header-btn-group">
+                    <!-- 仅老师模式下可见的导出按钮 -->
+                    <button id="btn-preview-export" class="btn-export-small" onclick="exportStudentFile()">📥 导出 / Export</button>
+                    <button class="btn-secondary" onclick="handleExit()" style="font-size:0.9rem;">退出 / Exit</button>
+                </div>
+            </div>
+            <div id="target-sentence"></div>
+            <div id="collected-bar"></div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="game-footer">Chinese with Dora | Dora 老师</div>
+    </div>
+
+    <!-- 结算 -->
+    <div id="end-screen">
+        <h2 style="font-size: 2rem; margin-bottom: 0; color:#2e7d32;">🎉 挑战成功！<br><span style="font-size:0.6em;">Challenge Complete!</span></h2>
+        <p style="margin: 15px 0;">本次得分 / Final Score</p>
+        <div style="font-size: 4rem; color: #ef5350; margin: 10px 0; font-weight: bold;" id="end-score">0</div>
+        <button class="btn-primary" onclick="location.reload()">再来一次 / Play Again</button>
+    </div>
+
+    <script>
+        // ==========================================
+        //  === 配置中心 (核心逻辑) ===
+        // ==========================================
+        
+        // 这里的配置会被“导出”功能自动替换
+        /* CONFIG_START */
+        var GAME_MODE = 'teacher'; // 'teacher' 或 'student'
+        var PRELOADED_DATA = null; // 学生模式下这里会有数据
+        /* CONFIG_END */
+
+        // --- 运行时变量 ---
+        let levels = [];
+        let allWordsPool = [];
+        let currentLevel = null;
+        let levelIdx = 0;
+        let score = 0;
+        let apples = [];
+        let snake = null;
+        let animationId = null;
+        let canvas, ctx, canvasWidth, canvasHeight;
+        let collectedWords = [];
+
+        // --- 初始化 ---
+        window.onload = function() {
+            if (GAME_MODE === 'student' && PRELOADED_DATA) {
+                // 学生模式：直接显示开始封面，隐藏设置面板
+                document.getElementById('setup-panel').style.display = 'none';
+                document.getElementById('student-start-screen').style.display = 'flex';
+                // 隐藏预览页的导出按钮
+                document.getElementById('btn-preview-export').style.display = 'none';
+            } else {
+                // 老师模式：显示设置面板
+                document.getElementById('setup-panel').style.display = 'flex';
+                // 显示预览页的导出按钮
+                document.getElementById('btn-preview-export').style.display = 'inline-block';
+                updateOptions(); // 初始化选项
+            }
+        };
+
+        // --- 退出逻辑 ---
+        function handleExit() {
+            if (GAME_MODE === 'student') {
+                location.reload();
+            } else {
+                // 老师模式：返回设置面板，不刷新页面，保留数据
+                cancelAnimationFrame(animationId);
+                document.getElementById('game-stage').style.display = 'none';
+                document.getElementById('setup-panel').style.display = 'flex';
+                document.getElementById('end-screen').style.display = 'none';
+                stopFireworks();
+            }
+        }
+
+        // --- 老师功能：导出学生文件 ---
+        function exportStudentFile() {
+            const data = getInputs();
+            if (!data) return;
+
+            // 1. 获取当前页面的完整源代码
+            let htmlContent = document.documentElement.outerHTML;
+            
+            // 2. 添加 DOCTYPE (outerHTML 不包含)
+            htmlContent = '<!DOCTYPE html>' + htmlContent;
+
+            // 3. 构建新的配置字符串
+            const newConfig = `
+        var GAME_MODE = 'student';
+        var PRELOADED_DATA = ${JSON.stringify(data)};
+            `;
+
+            // 4. 使用正则替换配置部分
+            // 注意：这里匹配 /* CONFIG_START */ 到 /* CONFIG_END */ 之间的内容
+            const regex = /\/\* CONFIG_START \*\/([\s\S]*?)\/\* CONFIG_END \*\//;
+            
+            if (htmlContent.match(regex)) {
+                htmlContent = htmlContent.replace(regex, `/* CONFIG_START */${newConfig}/* CONFIG_END */`);
+                
+                // 5. 触发下载
+                const blob = new Blob([htmlContent], {type: 'text/html'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '贪吃蛇_学生作业.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast("文件已生成！请发送给学生。\nFile generated!");
+            } else {
+                alert("生成失败：找不到配置标记。请勿修改源代码中的注释标记。");
+            }
+        }
+
+        // --- 老师功能：获取输入数据 ---
+        function getInputs() {
+            // 在预览界面点击导出时，可能 input 元素被隐藏了，但值还在
+            const zh = document.getElementById('input-zh').value.trim();
+            const rom = document.getElementById('input-rom').value.trim();
+            const en = document.getElementById('input-en').value.trim();
+            const lang = document.getElementById('lang-select').value;
+
+            if (!zh) { showToast("请输入题目内容"); return null; }
+
+            const zLines = zh.split('\n');
+            const rLines = rom ? rom.split('\n') : [];
+            const eLines = en.split('\n');
+            
+            const questions = [];
+
+            for(let i=0; i<zLines.length; i++) {
+                if(!zLines[i].trim()) continue;
+                
+                const words = zLines[i].trim().split(/\s+/);
+                let pinyins = [];
+                
+                // 如果是老师预览/导出，在这里就生成好拼音，避免学生端需要联网
+                if(lang === 'mandarin' && (!rLines[i] || !rLines[i].trim())) {
+                    if(window.pinyinPro) {
+                        pinyins = words.map(w => window.pinyinPro.pinyin(w));
+                    } else {
+                        pinyins = words.map(()=>'');
+                    }
+                } else {
+                    pinyins = (rLines[i]||'').trim().split(/\s+/);
+                }
+
+                questions.push({
+                    zh: words,
+                    rom: pinyins,
+                    en: eLines[i] || ''
+                });
+            }
+            
+            return { questions: questions, lang: lang };
+        }
+
+        // --- 老师功能：预览 ---
+        function teacherPreviewGame() {
+            const data = getInputs();
+            if(!data) return;
+            initGameEngine(data.questions, false); // false = 不随机只取10题，老师预览全部
+        }
+
+        // --- 学生功能：开始游戏 ---
+        function startStudentGame() {
+            if (!PRELOADED_DATA) return;
+            initGameEngine(PRELOADED_DATA.questions, true); // true = 随机取10题
+        }
+
+        // --- 游戏引擎核心 ---
+        function initGameEngine(rawQuestions, isRandomSession) {
+            // 1. 构建关卡和词库
+            levels = [];
+            allWordsPool = [];
+
+            rawQuestions.forEach(q => {
+                const items = q.zh.map((w, i) => ({ char: w, rom: q.rom[i]||'', id: i }));
+                // 加入全局词库用于干扰
+                items.forEach(it => allWordsPool.push({ char: it.char, rom: it.rom }));
+                
+                levels.push({ items: items, en: q.en });
+            });
+
+            // 2. 如果是学生模式，随机抽10题；老师模式预览全部
+            if (isRandomSession) {
+                levels.sort(() => Math.random() - 0.5);
+                levels = levels.slice(0, 10);
+            }
+
+            if(levels.length === 0) return;
+
+            // 3. UI 切换
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('student-start-screen').style.display = 'none';
+            document.getElementById('game-stage').style.display = 'block';
+
+            // 4. 启动 Canvas
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            window.addEventListener('resize', resizeCanvas);
+            canvas.addEventListener('mousedown', handleInput);
+            canvas.addEventListener('touchstart', handleInput, {passive: false});
+            
+            resizeCanvas();
+            score = 0;
+            levelIdx = 0;
+            startLevel();
+            gameLoop();
+        }
+
+        function resizeCanvas() {
+            canvasWidth = window.innerWidth;
+            canvasHeight = window.innerHeight;
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+        }
+
+        function startLevel() {
+            if(levelIdx >= levels.length) {
+                endGameSession();
+                return;
+            }
+
+            currentLevel = levels[levelIdx];
+            document.getElementById('target-sentence').innerText = currentLevel.en;
+            document.getElementById('collected-bar').innerHTML = '';
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('progress-val').innerText = `${levelIdx + 1}/${levels.length}`;
+            collectedWords = [];
+
+            apples = [];
+            
+            // 1. 正确词
+            currentLevel.items.forEach(item => spawnApple(item, false));
+
+            // 2. 干扰词 (从词库选，排除当前句子的字)
+            const currentChars = currentLevel.items.map(i => i.char);
+            const candidates = allWordsPool.filter(w => !currentChars.includes(w.char));
+            candidates.sort(() => Math.random() - 0.5);
+            
+            // 数量控制：至少3个，或者句子长度的一半
+            const distractorCount = Math.max(3, Math.floor(currentLevel.items.length / 2));
+            for(let i=0; i<Math.min(distractorCount, candidates.length); i++) {
+                spawnApple(candidates[i], true);
+            }
+
+            snake = new Snake(canvasWidth/2, canvasHeight - 100);
+        }
+
+        function spawnApple(data, isDistractor) {
+            const margin = 80; 
+            const topMargin = 260; // 避开顶部 UI
+            let valid = false; let attempts = 0;
+            while(!valid && attempts < 100) {
+                const x = margin + Math.random() * (canvasWidth - margin*2);
+                const y = topMargin + Math.random() * (canvasHeight - topMargin - margin - 40); // 避开底部 footer
+                
+                if (y < topMargin) { attempts++; continue; } // double check
+
+                let overlap = false;
+                for(let existing of apples) {
+                    if(Math.hypot(existing.x - x, existing.y - y) < 80) { overlap = true; break; }
+                }
+                if(!overlap) {
+                    apples.push(new Apple(x, y, data, isDistractor));
+                    valid = true;
+                }
+                attempts++;
+            }
+        }
+
+        function handleInput(e) {
+            e.preventDefault();
+            if(snake.moving) return;
+            let clickX, clickY;
+            if(e.type === 'touchstart') {
+                clickX = e.touches[0].clientX; clickY = e.touches[0].clientY;
+            } else {
+                clickX = e.clientX; clickY = e.clientY;
+            }
+            let clickedApple = null;
+            for(let a of apples) {
+                if(Math.hypot(a.x - clickX, a.y - clickY) < 40) { clickedApple = a; break; }
+            }
+            if(clickedApple) {
+                if(clickedApple.isDistractor) {
+                    snake.shake(); showToast("词语错误 / Wrong Word!");
+                } else {
+                    const nextId = collectedWords.length;
+                    if(clickedApple.data.id === nextId) snake.setTarget(clickedApple);
+                    else { snake.shake(); showToast("顺序错误 / Wrong Order!"); }
+                }
+            }
+        }
+
+        // --- 游戏对象类 ---
+        class Snake {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.angle = -Math.PI/2;
+                this.target = null; this.speed = 9; this.moving = false;
+                this.segments = []; this.numSegments = 15; this.segmentSpacing = 8;
+                for(let i=0; i<this.numSegments; i++) this.segments.push({x: x, y: y + i*this.segmentSpacing});
+                this.shakeTimer = 0;
+            }
+            setTarget(apple) { this.target = apple; this.moving = true; }
+            shake() { this.shakeTimer = 20; }
+            update() {
+                if(this.shakeTimer > 0) { this.shakeTimer--; this.x += Math.sin(this.shakeTimer) * 5; return; }
+                if(this.moving && this.target) {
+                    const dx = this.target.x - this.x; const dy = this.target.y - this.y;
+                    const dist = Math.hypot(dx, dy); this.angle = Math.atan2(dy, dx);
+                    if(dist < this.speed) { this.x = this.target.x; this.y = this.target.y; this.eat(this.target); }
+                    else { this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed; }
+                }
+                let prev = {x: this.x, y: this.y};
+                for(let i=0; i<this.segments.length; i++) {
+                    let seg = this.segments[i];
+                    const dx = seg.x - prev.x; const dy = seg.y - prev.y;
+                    const dist = Math.hypot(dx, dy); const angle = Math.atan2(dy, dx);
+                    if(dist > this.segmentSpacing) {
+                        seg.x = prev.x + Math.cos(angle) * this.segmentSpacing;
+                        seg.y = prev.y + Math.sin(angle) * this.segmentSpacing;
+                    }
+                    prev = seg;
+                }
+            }
+            eat(apple) {
+                this.moving = false; this.target = null;
+                const idx = apples.indexOf(apple);
+                if(idx > -1) apples.splice(idx, 1);
+                addWordToUI(apple.data);
+                collectedWords.push(apple.data);
+                this.segments.push({x: this.segments[this.segments.length-1].x, y: this.segments[this.segments.length-1].y});
+                if(collectedWords.length === currentLevel.items.length) {
+                    score += 10;
+                    setTimeout(() => { levelIdx++; startLevel(); }, 1000);
+                }
+            }
+            draw(ctx) {
+                for(let i=this.segments.length-1; i>=0; i--) {
+                    const s = this.segments[i]; ctx.beginPath();
+                    const size = 18 - (i/this.segments.length)*8;
+                    ctx.arc(s.x, s.y, size, 0, Math.PI*2);
+                    ctx.fillStyle = i % 2 === 0 ? '#4caf50' : '#81c784'; ctx.fill();
+                    ctx.strokeStyle = '#2e7d32'; ctx.stroke();
+                }
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+                ctx.beginPath(); ctx.ellipse(5, 0, 22, 18, 0, 0, Math.PI*2);
+                ctx.fillStyle = '#4caf50'; ctx.fill(); ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(12, -8, 6, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(12, 8, 6, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(14, -8, 2, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(14, 8, 2, 0, Math.PI*2); ctx.fill();
+                if(this.moving && Math.floor(Date.now()/100)%2===0) {
+                    ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(35, 0); ctx.lineTo(40, -3);
+                    ctx.moveTo(35, 0); ctx.lineTo(40, 3); ctx.strokeStyle = '#e53935'; ctx.stroke();
+                }
+                ctx.restore();
+            }
+        }
+
+        class Apple {
+            constructor(x, y, data, isDistractor) {
+                this.x = x; this.y = y; this.data = data; 
+                this.isDistractor = isDistractor;
+                this.wobbleOffset = Math.random() * 100;
+            }
+            draw(ctx) {
+                const floatY = Math.sin((Date.now()/500) + this.wobbleOffset) * 3;
+                const r = 32;
+                ctx.beginPath(); ctx.ellipse(this.x, this.y + r + 5, r/1.5, r/4, 0, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(0,0,0,0.1)'; ctx.fill();
+                ctx.save(); ctx.translate(this.x, this.y + floatY);
+                ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2);
+                // 干扰项颜色也是红色，强制学生阅读文字
+                ctx.fillStyle = '#ef5350'; 
+                ctx.fill(); ctx.strokeStyle = '#c62828'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.beginPath(); ctx.arc(-10, -10, 6, 0, Math.PI*2); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+                ctx.beginPath(); ctx.ellipse(5, -r, 10, 5, -Math.PI/4, 0, Math.PI*2); ctx.fillStyle = '#66bb6a'; ctx.fill();
+                ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.font = 'bold 24px "STXihei"'; ctx.fillText(this.data.char, 0, -5);
+                ctx.fillStyle = '#ffebee'; ctx.font = '12px "STXihei"'; ctx.fillText(this.data.rom, 0, 14);
+                ctx.restore();
+            }
+        }
+
+        // --- 辅助函数 ---
+        function addWordToUI(data) {
+            const bar = document.getElementById('collected-bar');
+            const el = document.createElement('div'); el.className = 'collected-word';
+            el.innerHTML = `<span class="cw-char">${data.char}</span><span class="cw-rom">${data.rom}</span>`;
+            bar.appendChild(el);
+        }
+
+        function gameLoop() {
+            if(!ctx) return;
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            apples.forEach(a => a.draw(ctx));
+            if(snake) { snake.update(); snake.draw(ctx); }
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        function endGameSession() {
+            cancelAnimationFrame(animationId);
+            document.getElementById('end-score').innerText = score;
+            document.getElementById('end-screen').style.display = 'block';
+            startFireworks();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function updateOptions() {
+            const lang = document.getElementById('lang-select').value;
+            const lblZh = document.getElementById('lbl-zh');
+            const lblRom = document.getElementById('lbl-rom');
+            const inZh = document.getElementById('input-zh');
+            const inRom = document.getElementById('input-rom');
+
+            if(lang === 'mandarin') {
+                lblZh.innerText = "1. 普通话词语 (空格分开)";
+                lblRom.innerText = "2. 拼音 (留空则自动生成)";
+                inZh.placeholder = "我 喜欢 吃 苹果\n蛇 在 草地 上";
+                inRom.placeholder = "自动生成...";
+            } else {
+                lblZh.innerText = "1. 粤语词语 (空格分开)";
+                lblRom.innerText = "2. 粤拼 (对应词语)";
+                inZh.placeholder = "我 锺意 食 苹果\n条 蛇 喺 草地 上";
+                inRom.placeholder = "ngo5 zung1ji3 sik6 ping4gwo2\ntiu4 se4 hai2 cou2dei6 soeng6";
+            }
+        }
+
+        function fillExample() {
+            const lang = document.getElementById('lang-select').value;
+            document.getElementById('input-zh').value = lang==='mandarin' ? "我 喜欢 吃 苹果\n蛇 在 草地 上" : "我 锺意 食 苹果\n条 蛇 喺 草地 上";
+            document.getElementById('input-rom').value = lang==='mandarin' ? "" : "ngo5 zung1ji3 sik6 ping4gwo2\ntiu4 se4 hai2 cou2dei6 soeng6";
+            document.getElementById('input-en').value = "I like eating apples\nThe snake is on the grass";
+        }
+
+        function startFireworks() {
+            const fc = document.getElementById('fireworks-canvas'); fc.style.display = 'block';
+            const fctx = fc.getContext('2d'); fc.width = window.innerWidth; fc.height = window.innerHeight;
+            let particles = [];
+            function createP(x,y,c){ return {x,y,c,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,a:1}; }
+            function loop() {
+                if(fc.style.display==='none') return;
+                fctx.globalCompositeOperation = 'destination-out'; fctx.fillStyle = 'rgba(0,0,0,0.1)'; fctx.fillRect(0,0,fc.width,fc.height);
+                fctx.globalCompositeOperation = 'lighter';
+                if(Math.random()<0.05) {
+                    const cx=Math.random()*fc.width, cy=Math.random()*fc.height*0.6;
+                    const c = `hsl(${Math.random()*360},100%,50%)`; for(let i=0;i<50;i++) particles.push(createP(cx,cy,c));
+                }
+                for(let i=0;i<particles.length;i++){
+                    let p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.a-=0.02;
+                    fctx.fillStyle=p.c; fctx.globalAlpha=p.a; fctx.beginPath(); fctx.arc(p.x,p.y,3,0,Math.PI*2); fctx.fill();
+                    if(p.a<=0) { particles.splice(i,1); i--; }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        function stopFireworks(){ document.getElementById('fireworks-canvas').style.display='none'; }
+    </script>
+</body>
+</html>

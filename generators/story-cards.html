@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>看图说话卡片生成器</title>
+<style>
+  :root{
+    --brand:#FF7A45; --brand-d:#E85C2A; --brand-l:#FFF1EA;
+    --ink:#2d3436; --muted:#7b8a8b; --line:#e6e2dd; --bg:#FBF7F3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:24px;margin:0 0 4px;color:var(--brand-d)}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px}
+  .panel h2{font-size:15px;margin:0 0 12px;color:var(--brand-d);display:flex;align-items:center;gap:6px}
+  .row{display:flex;flex-wrap:wrap;gap:14px 18px;margin-bottom:12px}
+  .fld{display:flex;flex-direction:column;gap:5px}
+  .fld label{font-size:12.5px;color:var(--muted);font-weight:600}
+  input[type=text],textarea,select{
+    font-family:inherit;font-size:14px;color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;outline:none;
+  }
+  input[type=text]:focus,textarea:focus,select:focus{border-color:var(--brand)}
+  textarea{width:100%;min-height:150px;resize:vertical;line-height:1.7}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{
+    font-family:inherit;font-size:13px;border:0;background:#fff;padding:7px 13px;cursor:pointer;color:var(--muted);
+  }
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--brand);color:#fff;font-weight:700}
+  .hint{font-size:12.5px;color:var(--muted);line-height:1.7;margin:6px 0 0}
+  .hint b{color:var(--brand-d)}
+  .warn{font-size:12.5px;color:#c0392b;margin-top:6px;display:none}
+  .warn.show{display:block}
+
+  .prev{min-height:200px}
+  #grid{display:grid;gap:14px;margin:6px 0 4px}
+  #grid.n3{grid-template-columns:repeat(3,1fr)}
+  #grid.n5{grid-template-columns:repeat(5,1fr)}
+  #grid.n9{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:640px){
+    #grid.n3,#grid.n5,#grid.n9{grid-template-columns:repeat(2,1fr)}
+  }
+  .card{
+    background:#fff;border:2px solid var(--line);border-radius:18px;padding:14px 10px 12px;
+    text-align:center;position:relative;box-shadow:0 3px 0 rgba(0,0,0,.05);min-height:120px;
+  }
+  .card .pic{font-size:44px;line-height:1.25}
+  .card .pic img{max-width:72px;max-height:72px;object-fit:contain;border-radius:10px}
+  .card .w{font-size:25px;font-weight:700;margin-top:6px}
+  .card .p{font-size:14px;color:var(--brand-d);margin-top:3px;letter-spacing:.3px}
+  .card .nopic{
+    border:2px dashed #d9d2cb;border-radius:14px;height:78px;display:flex;align-items:center;
+    justify-content:center;font-size:26px;font-weight:700;color:var(--brand-d);padding:4px;
+  }
+  .card .nopic .p{font-size:13px;font-weight:600;margin-left:4px}
+  .card.flip{animation:flip .45s ease}
+  @keyframes flip{from{transform:rotateY(70deg) scale(.9);opacity:.2}to{transform:none;opacity:1}}
+
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .btn{
+    font-family:inherit;font-size:14px;border:0;border-radius:12px;padding:11px 20px;cursor:pointer;
+    background:var(--brand);color:#fff;font-weight:700;box-shadow:0 3px 0 var(--brand-d);
+  }
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--brand-d);border:1px solid var(--line);box-shadow:none;font-weight:600}
+  .btn.ghost:active{transform:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🖼️ 看图说话卡片生成器</h1>
+  <p class="sub">掷骰子换图 → 学生用抽到的词看图说话。内置 120+ 张图卡开箱即用，也可换成你自己的生词表。</p>
+
+  <div class="panel">
+    <h2>① 卡片从哪来</h2>
+    <div class="row">
+      <div class="fld">
+        <label>词库来源</label>
+        <div class="seg" id="segSrc">
+          <button data-v="bank" class="on">🎁 内置图库</button>
+          <button data-v="custom">✍️ 我的词表</button>
+          <button data-v="mix">🔀 两者混合</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>内置词库范围</label>
+        <select id="theme"></select>
+      </div>
+      <div class="fld">
+        <label>内置词库字形</label>
+        <div class="seg" id="segForm">
+          <button data-v="simp" class="on">简体</button>
+          <button data-v="trad">繁体</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>每张卡片</label>
+        <div class="seg" id="segN">
+          <button data-v="3">3 张</button>
+          <button data-v="5" class="on">5 张</button>
+          <button data-v="9">9 张</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="customBox" style="display:none">
+      <label style="font-size:12.5px;color:var(--muted);font-weight:600">生词表（每行一个）</label>
+      <textarea id="words" placeholder="猫&#10;苹果|píng guǒ&#10;下雨|xià yǔ|🌧️&#10;书包|shū bāo|https://example.com/bag.png"></textarea>
+      <p class="hint">
+        格式：<b>词语</b>　或　<b>词语|拼音</b>　或　<b>词语|拼音|图片</b><br>
+        · 图片可以是 emoji（🐱）或图片网址（http 开头）<br>
+        · <b>不写拼音、不写图片也可以</b>：拼音留空就不显示；图片留空会先去内置图库自动找，找不到就按下面的「无图时」显示<br>
+        · 用「词 拼音」空格隔开也认得；逗号 / 斜杠分隔也认得
+      </p>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div class="fld">
+        <label>无图时显示</label>
+        <div class="seg" id="segNoImg">
+          <button data-v="wordpy" class="on">词语 + 拼音</button>
+          <button data-v="word">仅词语</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>显示拼音</label>
+        <div class="seg" id="segPy">
+          <button data-v="1" class="on">显示</button>
+          <button data-v="0">隐藏</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>点击发音</label>
+        <div class="seg" id="segAudio">
+          <button data-v="1" class="on">开</button>
+          <button data-v="0">关</button>
+        </div>
+      </div>
+      <div class="fld">
+        <label>说话计时</label>
+        <select id="timer">
+          <option value="0">不计时</option>
+          <option value="30">30 秒</option>
+          <option value="60" selected>1 分钟</option>
+          <option value="120">2 分钟</option>
+          <option value="180">3 分钟</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:6px">
+      <div class="fld" style="flex:1;min-width:280px">
+        <label>页面标题</label>
+        <input type="text" id="title" value="看图说话" style="width:100%">
+      </div>
+      <div class="fld" style="flex:1;min-width:280px">
+        <label>说话任务提示</label>
+        <input type="text" id="prompt" value="请用抽到的词说一段话" style="width:100%">
+      </div>
+    </div>
+    <div class="warn" id="warn"></div>
+  </div>
+
+  <div class="panel prev">
+    <h2>② 预览　<span style="font-weight:400;color:var(--muted);font-size:12.5px">下面就是学生看到的样子，点「换一次」随机换卡</span></h2>
+    <div id="grid" class="n5"></div>
+    <div class="btns">
+      <button class="btn" id="roll">🎲 换一次</button>
+      <button class="btn ghost" id="dl">📥 下载学生版网页</button>
+      <button class="btn ghost" id="prt">🖨️ 打印卡片</button>
+    </div>
+    <p class="hint">下载下来的网页每个学生打开都是<b>随机不同</b>的卡片，同样零依赖、可离线、可打印。</p>
+  </div>
+</div>
+
+<script>
+/* ============ 内置图库：主题 | 简体 | 繁体 | 拼音 | 图 ============ */
+var BANK = [
+  ['动物','猫','貓','māo','🐱'],['动物','狗','狗','gǒu','🐶'],['动物','鸟','鳥','niǎo','🐦'],
+  ['动物','鱼','魚','yú','🐟'],['动物','马','馬','mǎ','🐴'],['动物','牛','牛','niú','🐮'],
+  ['动物','羊','羊','yáng','🐑'],['动物','猪','豬','zhū','🐷'],['动物','鸡','雞','jī','🐔'],
+  ['动物','鸭','鴨','yā','🦆'],['动物','兔子','兔子','tù zi','🐰'],['动物','老虎','老虎','lǎo hǔ','🐯'],
+  ['动物','大象','大象','dà xiàng','🐘'],['动物','熊猫','熊貓','xióng māo','🐼'],['动物','猴子','猴子','hóu zi','🐵'],
+  ['动物','蛇','蛇','shé','🐍'],['动物','蜜蜂','蜜蜂','mì fēng','🐝'],['动物','蝴蝶','蝴蝶','hú dié','🦋'],
+
+  ['食物','苹果','蘋果','píng guǒ','🍎'],['食物','香蕉','香蕉','xiāng jiāo','🍌'],['食物','面包','麵包','miàn bāo','🍞'],
+  ['食物','米饭','米飯','mǐ fàn','🍚'],['食物','面条','麵條','miàn tiáo','🍜'],['食物','鸡蛋','雞蛋','jī dàn','🥚'],
+  ['食物','蛋糕','蛋糕','dàn gāo','🍰'],['食物','牛奶','牛奶','niú nǎi','🥛'],['食物','咖啡','咖啡','kā fēi','☕'],
+  ['食物','茶','茶','chá','🍵'],['食物','饺子','餃子','jiǎo zi','🥟'],['食物','西瓜','西瓜','xī guā','🍉'],
+  ['食物','葡萄','葡萄','pú tao','🍇'],['食物','草莓','草莓','cǎo méi','🍓'],['食物','冰淇淋','冰淇淋','bīng qí lín','🍦'],
+
+  ['人物','老师','老師','lǎo shī','👩‍🏫'],['人物','医生','醫生','yī shēng','👨‍⚕️'],['人物','学生','學生','xué sheng','🧑‍🎓'],
+  ['人物','警察','警察','jǐng chá','👮'],['人物','厨师','廚師','chú shī','👨‍🍳'],['人物','护士','護士','hù shi','👩‍⚕️'],
+  ['人物','工人','工人','gōng rén','👷'],['人物','农民','農民','nóng mín','🧑‍🌾'],['人物','爸爸','爸爸','bà ba','👨'],
+  ['人物','妈妈','媽媽','mā ma','👩'],['人物','孩子','孩子','hái zi','🧒'],['人物','朋友','朋友','péng you','🧑‍🤝‍🧑'],
+
+  ['天气','太阳','太陽','tài yáng','☀️'],['天气','下雨','下雨','xià yǔ','🌧️'],['天气','下雪','下雪','xià xuě','❄️'],
+  ['天气','风','風','fēng','🌬️'],['天气','云','雲','yún','☁️'],['天气','彩虹','彩虹','cǎi hóng','🌈'],
+  ['天气','月亮','月亮','yuè liang','🌙'],['天气','星星','星星','xīng xing','⭐'],
+
+  ['交通','汽车','汽車','qì chē','🚗'],['交通','自行车','自行車','zì xíng chē','🚲'],['交通','飞机','飛機','fēi jī','✈️'],
+  ['交通','火车','火車','huǒ chē','🚆'],['交通','船','船','chuán','🚢'],['交通','地铁','地鐵','dì tiě','🚇'],
+  ['交通','出租车','計程車','chū zū chē','🚕'],
+
+  ['家居','房子','房子','fáng zi','🏠'],['家居','床','床','chuáng','🛏️'],['家居','椅子','椅子','yǐ zi','🪑'],
+  ['家居','沙发','沙發','shā fā','🛋️'],['家居','电视','電視','diàn shì','📺'],['家居','电脑','電腦','diàn nǎo','💻'],
+  ['家居','手机','手機','shǒu jī','📱'],['家居','书','書','shū','📖'],['家居','灯','燈','dēng','💡'],
+  ['家居','钥匙','鑰匙','yào shi','🔑'],
+
+  ['地点','学校','學校','xué xiào','🏫'],['地点','医院','醫院','yī yuàn','🏥'],['地点','商店','商店','shāng diàn','🏪'],
+  ['地点','公园','公園','gōng yuán','🏞️'],['地点','图书馆','圖書館','tú shū guǎn','📚'],
+
+  ['自然','树','樹','shù','🌳'],['自然','花','花','huā','🌸'],['自然','山','山','shān','⛰️'],
+  ['自然','海','海','hǎi','🌊'],['自然','火','火','huǒ','🔥'],['自然','石头','石頭','shí tou','🪨'],
+  ['自然','草','草','cǎo','🌿'],
+
+  ['身体','眼睛','眼睛','yǎn jing','👁️'],['身体','耳朵','耳朵','ěr duo','👂'],['身体','手','手','shǒu','✋'],
+  ['身体','脚','腳','jiǎo','🦶'],['身体','心','心','xīn','❤️'],['身体','嘴','嘴','zuǐ','👄'],
+  ['身体','鼻子','鼻子','bí zi','👃'],
+
+  ['动作','跑','跑','pǎo','🏃'],['动作','走','走','zǒu','🚶'],['动作','吃','吃','chī','🍽️'],
+  ['动作','喝','喝','hē','🥤'],['动作','睡觉','睡覺','shuì jiào','😴'],['动作','写字','寫字','xiě zì','✍️'],
+  ['动作','唱歌','唱歌','chàng gē','🎤'],['动作','跳舞','跳舞','tiào wǔ','💃'],['动作','游泳','游泳','yóu yǒng','🏊'],
+  ['动作','踢足球','踢足球','tī zú qiú','⚽'],['动作','打篮球','打籃球','dǎ lán qiú','🏀'],['动作','笑','笑','xiào','😄'],
+  ['动作','哭','哭','kū','😢'],['动作','生气','生氣','shēng qì','😠'],
+
+  ['颜色','红色','紅色','hóng sè','🔴'],['颜色','蓝色','藍色','lán sè','🔵'],['颜色','绿色','綠色','lǜ sè','🟢'],
+  ['颜色','黄色','黃色','huáng sè','🟡'],['颜色','白色','白色','bái sè','⚪'],['颜色','黑色','黑色','hēi sè','⚫'],
+
+  ['生活','钱','錢','qián','💰'],['生活','礼物','禮物','lǐ wù','🎁'],['生活','音乐','音樂','yīn yuè','🎵'],
+  ['生活','电影','電影','diàn yǐng','🎬'],['生活','相机','相機','xiàng jī','📷'],['生活','雨伞','雨傘','yǔ sǎn','☂️'],
+
+  ['衣着','衣服','衣服','yī fu','👕'],['衣着','鞋','鞋','xié','👟'],['衣着','帽子','帽子','mào zi','🧢'],
+  ['衣着','眼镜','眼鏡','yǎn jìng','👓'],
+
+  ['时间','早上','早上','zǎo shang','🌅'],['时间','晚上','晚上','wǎn shang','🌃'],['时间','今天','今天','jīn tiān','📅'],
+  ['时间','时间','時間','shí jiān','🕐'],['时间','周末','週末','zhōu mò','🎉']
+];
+
+/* ============ 状态 ============ */
+var S = { src:'bank', theme:'all', n:5, noImg:'wordpy', pinyin:1, audio:1, timer:60, form:'simp' };
+var lastPicked = [];
+
+/* ============ 工具 ============ */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function isUrl(s){ return /^(https?:\/\/|data:|\.{0,2}\/)/i.test(String(s||'')); }
+
+/* 内置图库 -> [{w,p,i}]（w 取简体或繁体，由「字形」决定） */
+function bankPool(theme){
+  var out = [], fi = (S.form === 'trad') ? 2 : 1;
+  for (var i=0;i<BANK.length;i++){
+    var b = BANK[i];
+    if (theme && theme !== 'all' && b[0] !== theme) continue;
+    out.push({ w:b[fi], w2:b[fi], p:b[3], i:b[4] });
+  }
+  return out;
+}
+
+/* 老师词表 -> [{w,p,i}]，图片留空会自动查内置图库 */
+function customPool(text){
+  var lines = String(text||'').split(/\r?\n/);
+  var out = [];
+  for (var k=0;k<lines.length;k++){
+    var raw = lines[k].trim();
+    if (!raw) continue;
+    var parts;
+    if (raw.indexOf('|') >= 0)      parts = raw.split('|');
+    else if (raw.indexOf('\t') >= 0) parts = raw.split('\t');
+    else if (raw.indexOf(',') >= 0)  parts = raw.split(',');
+    else                             parts = raw.split(/\s+/);
+
+    parts = parts.map(function(x){ return String(x||'').trim(); });
+    var w = parts[0] || '';
+    if (!w) continue;
+    var p = parts[1] || '';
+    var img = parts[2] || '';
+
+    // 如果第二段看起来是图片而不是拼音，交换（老师可能写「猫||🐱」或「猫|🐱」）
+    if (!img && p && (isUrl(p) || /^\p{Extended_Pictographic}/u.test(p))) { img = p; p = ''; }
+    if (!img) img = findBankImg(w);
+    out.push({ w:w, w2:w, p:p, i:img });
+  }
+  return out;
+}
+
+function findBankImg(word){
+  for (var i=0;i<BANK.length;i++){
+    if (BANK[i][1] === word || BANK[i][2] === word) return BANK[i][4];
+  }
+  return '';
+}
+
+function buildPool(){
+  var bank = bankPool(S.theme);
+  var cus  = customPool(document.getElementById('words').value);
+  var pool;
+  if (S.src === 'bank')        pool = bank;
+  else if (S.src === 'custom') pool = cus;
+  else                         pool = cus.concat(bank);
+  // 去重（按词）
+  var seen = {}, out = [];
+  for (var i=0;i<pool.length;i++){
+    var key = pool[i].w;
+    if (seen[key]) continue;
+    seen[key] = 1; out.push(pool[i]);
+  }
+  return out;
+}
+
+/* 随机抽 n 个不重复（pool 不足则允许重复，保证永远出满 n 张） */
+function pickN(pool, n){
+  var res = [], copy = pool.slice(), i;
+  if (copy.length === 0) return res;
+  while (res.length < n){
+    if (copy.length === 0) copy = pool.slice(); // 不够就重新洗牌允许重复
+    var idx = Math.floor(Math.random() * copy.length);
+    res.push(copy.splice(idx,1)[0]);
+  }
+  return res;
+}
+
+/* ============ 渲染 ============ */
+function cardHTML(item, cfg){
+  var py = cfg.pinyin ? (item.p || '') : '';
+  var pic;
+  if (item.i) {
+    pic = isUrl(item.i)
+      ? '<div class="pic"><img src="' + esc(item.i) + '" alt="' + esc(item.w) + '"></div>'
+      : '<div class="pic">' + esc(item.i) + '</div>';
+  } else {
+    var showPy = (cfg.noImg === 'wordpy') && py;
+    pic = '<div class="nopic"><span>' + esc(item.w) + '</span>' + (showPy ? '<span class="p">' + esc(py) + '</span>' : '') + '</div>';
+  }
+  return '<div class="card">' + pic +
+         '<div class="w">' + esc(item.w) + '</div>' +
+         (py ? '<div class="p">' + esc(py) + '</div>' : '') +
+         '</div>';
+}
+
+function renderPreview(){
+  var grid = document.getElementById('grid');
+  var pool = buildPool();
+  var warn = document.getElementById('warn');
+  var needWarn = false;
+
+  if (pool.length === 0){
+    grid.className = 'n' + S.n;
+    grid.innerHTML = '<div class="card"><div class="nopic"><span>请先输入生词</span></div></div>';
+    warn.className = 'warn show';
+    warn.textContent = '词库是空的：切到「内置图库」，或在词表里至少写一个词。';
+    lastPicked = [];
+    return;
+  }
+  if (pool.length < S.n){ needWarn = true; }
+
+  lastPicked = pickN(pool, S.n);
+  grid.className = 'n' + S.n;
+  var html = '';
+  for (var i=0;i<lastPicked.length;i++) html += cardHTML(lastPicked[i], S);
+  grid.innerHTML = html;
+
+  // 翻转动画
+  var cards = grid.querySelectorAll('.card');
+  for (var j=0;j<cards.length;j++){
+    (function(el, d){ setTimeout(function(){ el.className = 'card flip'; }, d); })(cards[j], j*45);
+  }
+
+  if (needWarn){
+    warn.className = 'warn show';
+    warn.textContent = '词库只有 ' + pool.length + ' 个词，不足 ' + S.n + ' 张，会有重复。建议多填几个词。';
+  } else {
+    warn.className = 'warn';
+  }
+}
+
+/* ============ 生成学生版 HTML ============ */
+function buildStudentHTML(cfg, pool){
+  var words = pool.map(function(x){ return { w:x.w, p:cfg.pinyin ? (x.p||'') : '', i:x.i||'' }; });
+  var title = cfg.title || '看图说话';
+  var prompt = cfg.prompt || '';
+
+  var out = [];
+  out.push('<!DOCTYPE html>');
+  out.push('<html lang="zh-CN">');
+  out.push('<head>');
+  out.push('<meta charset="UTF-8">');
+  out.push('<meta name="viewport" content="width=device-width, initial-scale=1">');
+  out.push('<title>' + esc(title) + '</title>');
+  out.push('<style>');
+  out.push('*{box-sizing:border-box}');
+  out.push('body{margin:0;background:#FBF7F3;color:#2d3436;font-family:\'Varela Round\',\'Noto Sans TC\',\'Noto Sans SC\',\'PingFang SC\',\'Microsoft YaHei\',sans-serif;padding:22px 16px 50px}');
+  out.push('.wrap{max-width:900px;margin:0 auto}');
+  out.push('h1{font-size:23px;margin:0 0 4px;color:#E85C2A;text-align:center}');
+  out.push('.prompt{text-align:center;color:#7b8a8b;font-size:15px;margin:0 0 16px}');
+  out.push('.bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin-bottom:18px}');
+  out.push('button{font-family:inherit;font-size:14px;border:0;border-radius:12px;padding:11px 20px;cursor:pointer;background:#FF7A45;color:#fff;font-weight:700;box-shadow:0 3px 0 #E85C2A}');
+  out.push('button:active{transform:translateY(2px);box-shadow:0 1px 0 #E85C2A}');
+  out.push('button.ghost{background:#fff;color:#E85C2A;border:1px solid #e6e2dd;box-shadow:none;font-weight:600}');
+  out.push('#tmr{font-size:20px;font-weight:700;color:#E85C2A;min-width:62px;text-align:center;font-variant-numeric:tabular-nums}');
+  out.push('#grid{display:grid;gap:14px;margin-bottom:14px}');
+  out.push('#grid.n3{grid-template-columns:repeat(3,1fr)}');
+  out.push('#grid.n5{grid-template-columns:repeat(5,1fr)}');
+  out.push('#grid.n9{grid-template-columns:repeat(3,1fr)}');
+  out.push('@media(max-width:640px){#grid.n3,#grid.n5,#grid.n9{grid-template-columns:repeat(2,1fr)}}');
+  out.push('.card{background:#fff;border:2px solid #e6e2dd;border-radius:18px;padding:14px 10px 12px;text-align:center;position:relative;box-shadow:0 3px 0 rgba(0,0,0,.05);min-height:120px;cursor:pointer}');
+  out.push('.card .pic{font-size:44px;line-height:1.25}');
+  out.push('.card .pic img{max-width:72px;max-height:72px;object-fit:contain;border-radius:10px}');
+  out.push('.card .w{font-size:25px;font-weight:700;margin-top:6px}');
+  out.push('.card .p{font-size:14px;color:#E85C2A;margin-top:3px}');
+  out.push('.card .nopic{border:2px dashed #d9d2cb;border-radius:14px;height:78px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#E85C2A;padding:4px;flex-direction:column}');
+  out.push('.card .nopic .p{font-size:13px;font-weight:600}');
+  out.push('.card .pin{position:absolute;top:7px;right:9px;font-size:16px;opacity:.25;transition:.15s}');
+  out.push('.card.locked{border-color:#FF7A45;background:#FFF9F5}');
+  out.push('.card.locked .pin{opacity:1}');
+  out.push('.card.flip{animation:fl .45s ease}');
+  out.push('@keyframes fl{from{transform:rotateY(70deg) scale(.9);opacity:.2}to{transform:none;opacity:1}}');
+  out.push('.tip{text-align:center;color:#9aa5a6;font-size:12.5px;margin-top:6px}');
+  out.push('.done{font-size:15px;font-weight:700;color:#c0392b}');
+  out.push('@media print{body{background:#fff}.bar,.tip{display:none}.card{break-inside:avoid;box-shadow:none}}');
+  out.push('</style>');
+  out.push('</head>');
+  out.push('<body>');
+  out.push('<div class="wrap">');
+  out.push('<h1>' + esc(title) + '</h1>');
+  out.push('<p class="prompt">' + esc(prompt) + '</p>');
+  out.push('<div class="bar">');
+  out.push('<button id="roll">🎲 换一次</button>');
+  if (cfg.timer > 0){
+    out.push('<button class="ghost" id="tbtn">⏱ 开始计时</button>');
+    out.push('<span id="tmr">--:--</span>');
+  }
+  out.push('<button class="ghost" id="pbtn">🖨️ 打印</button>');
+  out.push('</div>');
+  out.push('<div id="grid" class="n' + cfg.n + '"></div>');
+  out.push('<p class="tip">点卡片可听发音 · 点右上角 📌 可锁定这张（换一次时保留）</p>');
+  out.push('</div>');
+  out.push('<script>');
+  out.push('var WORDS = ' + JSON.stringify(words).replace(/</g, '\\u003c') + ';');
+  out.push('var CFG = ' + JSON.stringify({ n:cfg.n, noImg:cfg.noImg, audio:cfg.audio, timer:cfg.timer }).replace(/</g, '\\u003c') + ';');
+  out.push('var grid=document.getElementById("grid");');
+  out.push('var cur=[];');
+  out.push('function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}');
+  out.push('function isUrl(s){return /^(https?:\\/\\/|data:|\\.{0,2}\\/)/i.test(String(s||""));}');
+  out.push('function pick(n,pool){pool=pool||WORDS;var res=[],cp=pool.slice();if(!cp.length)return res;while(res.length<n){if(!cp.length)cp=pool.slice();res.push(cp.splice(Math.floor(Math.random()*cp.length),1)[0]);}return res;}');
+  out.push('function cardHTML(it,idx){');
+  out.push('  var py=it.p||"";');
+  out.push('  var pic;');
+  out.push('  if(it.i){pic=isUrl(it.i)?\'<div class="pic"><img src="\'+esc(it.i)+\'" alt="\'+esc(it.w)+\'"></div>\':\'<div class="pic">\'+esc(it.i)+\'</div>\';}');
+  out.push('  else{var sp=(CFG.noImg==="wordpy")&&py;pic=\'<div class="nopic"><span>\'+esc(it.w)+\'</span>\'+(sp?\'<span class="p">\'+esc(py)+\'</span>\':\'\')+\'</div>\';}');
+  out.push('  return \'<div class="card" data-i="\'+idx+\'"><span class="pin">📌</span>\'+pic+\'<div class="w">\'+esc(it.w)+\'</div>\'+(py?\'<div class="p">\'+esc(py)+\'</div>\':\'\')+\'</div>\';');
+  out.push('}');
+  out.push('function roll(){');
+  out.push('  var locked=[],i,j;');
+  out.push('  for(i=0;i<CFG.n;i++){ if(cur[i]&&cur[i].lock) locked.push({idx:i,it:cur[i]}); }');
+  out.push('  var taken={};');
+  out.push('  for(i=0;i<locked.length;i++) taken[locked[i].it.w]=1;');
+  out.push('  var avail=[];');
+  out.push('  for(i=0;i<WORDS.length;i++){ if(!taken[WORDS[i].w]) avail.push(WORDS[i]); }');
+  out.push('  var fresh=pick(CFG.n-locked.length,avail),fi=0,next=[];');
+  out.push('  for(j=0;j<CFG.n;j++){');
+  out.push('    var lk=null;');
+  out.push('    for(i=0;i<locked.length;i++){ if(locked[i].idx===j) lk=locked[i].it; }');
+  out.push('    if(lk){ next.push(lk); }');
+  out.push('    else{ var w=fresh[fi++]||{w:"",p:"",i:""}; next.push({w:w.w,p:w.p,i:w.i,lock:false}); }');
+  out.push('  }');
+  out.push('  cur=next;');
+  out.push('  var h="";for(var q=0;q<cur.length;q++){h+=cardHTML(cur[q],q);}');
+  out.push('  grid.innerHTML=h;');
+  out.push('  var cs=grid.querySelectorAll(".card");');
+  out.push('  for(var z=0;z<cs.length;z++){(function(el,d){setTimeout(function(){el.className="card flip";},d);})(cs[z],z*45);}');
+  out.push('}');
+  out.push('function speak(t){if(!CFG.audio)return;if(!("speechSynthesis" in window))return;try{var u=new SpeechSynthesisUtterance(t);u.lang="zh-CN";window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}}');
+  out.push('grid.addEventListener("click",function(e){');
+  out.push('  var c=e.target.closest(".card");if(!c)return;');
+  out.push('  var idx=parseInt(c.getAttribute("data-i"),10);');
+  out.push('  if(e.target.classList.contains("pin")){cur[idx].lock=!cur[idx].lock;c.classList.toggle("locked",cur[idx].lock);return;}');
+  out.push('  speak(cur[idx].w);');
+  out.push('});');
+  out.push('document.getElementById("roll").addEventListener("click",roll);');
+  out.push('document.getElementById("pbtn").addEventListener("click",function(){window.print();});');
+  if (cfg.timer > 0){
+    out.push('var T=CFG.timer,left=T,tid=null;');
+    out.push('function fmt(s){var m=Math.floor(s/60),x=s%60;return (m<10?"0":"")+m+":"+(x<10?"0":"")+x;}');
+    out.push('var tEl=document.getElementById("tmr"),tBtn=document.getElementById("tbtn");');
+    out.push('tEl.textContent=fmt(T);');
+    out.push('function reset(){clearInterval(tid);tid=null;left=T;tEl.textContent=fmt(T);tBtn.textContent="⏱ 开始计时";tEl.className="";}');
+    out.push('tBtn.addEventListener("click",function(){');
+    out.push('  if(tid){clearInterval(tid);tid=null;tBtn.textContent="⏱ 继续";return;}');
+    out.push('  if(left<=0){reset();return;}');
+    out.push('  tBtn.textContent="⏸ 暂停";');
+    out.push('  tid=setInterval(function(){');
+    out.push('    left--;tEl.textContent=fmt(left);');
+    out.push('    if(left<=0){clearInterval(tid);tid=null;tEl.textContent="时间到！";tEl.className="done";tBtn.textContent="↺ 重新开始";speak("时间到");}');
+    out.push('  },1000);');
+    out.push('});');
+  }
+  out.push('roll();');
+  out.push('<\/script>');
+  out.push('</body>');
+  out.push('</html>');
+  return out.join('\n');
+}
+
+/* ============ 事件 ============ */
+function segBind(id, key, cast){
+  var box = document.getElementById(id);
+  box.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    var all = box.querySelectorAll('button');
+    for (var i=0;i<all.length;i++) all[i].className = '';
+    b.className = 'on';
+    S[key] = cast ? cast(b.getAttribute('data-v')) : b.getAttribute('data-v');
+    if (key === 'src') document.getElementById('customBox').style.display = (S.src === 'bank') ? 'none' : 'block';
+    renderPreview();
+  });
+}
+segBind('segSrc','src');
+segBind('segN','n', Number);
+segBind('segNoImg','noImg');
+segBind('segForm','form');
+segBind('segPy','pinyin', Number);
+segBind('segAudio','audio', Number);
+
+document.getElementById('theme').addEventListener('change', function(){ S.theme = this.value; renderPreview(); });
+document.getElementById('words').addEventListener('input', renderPreview);
+document.getElementById('timer').addEventListener('change', function(){ S.timer = Number(this.value); });
+document.getElementById('roll').addEventListener('click', renderPreview);
+document.getElementById('prt').addEventListener('click', function(){ window.print(); });
+
+document.getElementById('dl').addEventListener('click', function(){
+  var pool = buildPool();
+  if (pool.length === 0){ alert('词库是空的：请先输入生词，或切到「内置图库」。'); return; }
+  var cfg = {
+    n:S.n, noImg:S.noImg, pinyin:S.pinyin, audio:S.audio, timer:S.timer,
+    title:(document.getElementById('title').value || '看图说话').trim(),
+    prompt:(document.getElementById('prompt').value || '').trim()
+  };
+  var html = buildStudentHTML(cfg, pool);
+  var blob = new Blob([html], { type:'text/html;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = cfg.title + '-看图说话.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+});
+
+/* 主题下拉 */
+(function(){
+  var sel = document.getElementById('theme');
+  var seen = {}, opts = ['<option value="all">全部（' + BANK.length + ' 张）</option>'];
+  for (var i=0;i<BANK.length;i++){
+    var c = BANK[i][0];
+    if (seen[c]) continue;
+    seen[c] = 1;
+    var cnt = 0;
+    for (var j=0;j<BANK.length;j++) if (BANK[j][0] === c) cnt++;
+    opts.push('<option value="' + c + '">' + c + '（' + cnt + '）</option>');
+  }
+  sel.innerHTML = opts.join('');
+})();
+
+renderPreview();
+</script>
+</body>
+</html>

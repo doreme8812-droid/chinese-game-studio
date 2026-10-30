@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对外汉语 - 汉字闯关游戏生成器</title>
+<style id="kd-kids-theme">
+/* 儿童类生成器统一风格 - 由中文游戏工坊注入（外壳统一：圆润中文字体 + 标题品牌色；玩法区与对错配色不动） */
+:root{
+  --kd-primary:#FF7A45;
+  --kd-primary-d:#E85C2A;
+}
+body{
+  font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+h1,.title,.brand-title,.app-title,header h1,.header-title,.app-header h1{
+  color:var(--kd-primary-d) !important;
+}
+</style>
+
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- 引入 Babel 用于解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- 引入 Pinyin-pro 库 -->
+    <script src="https://unpkg.com/pinyin-pro@3.18.2/dist/index.js"></script>
+
+    <style>
+        body { background-color: #FEF9C3; font-family: system-ui, -apple-system, sans-serif; }
+        .animate-bounce { animation: bounce 1s infinite; }
+        .animate-spin-slow { animation: spin 3s linear infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(-5%); } 50% { transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- SVG 字符串常量 (用于生成器注入) ---
+        const SVG_STRINGS = {
+            Trophy: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`,
+            CheckCircle: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+            Volume2: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`,
+            Loader2: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`,
+            BookOpen: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+            ArrowRight: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+            Star: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+            RefreshCw: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`
+        };
+
+        // --- React 图标组件 ---
+        const Icons = {
+            Settings: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+            Play: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+            CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            Trophy: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+            ArrowRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+            BookOpen: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>,
+            Edit3: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>,
+            Volume2: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>,
+            List: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+            Grid: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+            RefreshCw: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>,
+            Wand2: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>,
+            Loader2: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>,
+            Zap: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            Star: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+            Download: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        };
+
+        const INITIAL_VOCAB = [
+            { id: '1', character: '熊猫', pinyin: 'xióng māo', meaning: 'Panda', question: 'Do you like pandas?' },
+            { id: '2', character: '长城', pinyin: 'cháng chéng', meaning: 'Great Wall', question: 'Have you been to the Great Wall?' },
+            { id: '3', character: '饺子', pinyin: 'jiǎo zi', meaning: 'Dumplings', question: 'Do you like eating dumplings?' },
+            { id: '4', character: '喜欢', pinyin: 'xǐ huan', meaning: 'To like', question: 'What do you like?' },
+            { id: '5', character: '快乐', pinyin: 'kuài lè', meaning: 'Happy', question: 'Are you happy today?' },
+        ];
+
+        const getRandomChar = () => {
+            const chars = "的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取完举科术话米群情展";
+            return chars[Math.floor(Math.random() * chars.length)];
+        };
+
+        // --- 辅助函数：简单的本地语病检测 ---
+        const analyzeSentence = (sentence, targetWord) => {
+            const cleanSentence = sentence.trim();
+            if (!cleanSentence.includes(targetWord)) {
+                return { valid: false, msg: `句子中必须包含“${targetWord}”哦！` };
+            }
+            if (cleanSentence.length <= targetWord.length + 2) {
+                return { valid: false, msg: "句子太短了，请多写一点，让句子更完整。" };
+            }
+            const uniqueChars = new Set(cleanSentence.split('')).size;
+            if (uniqueChars < 3 || (cleanSentence.length > 5 && uniqueChars < cleanSentence.length * 0.4)) {
+                return { valid: false, msg: "句子看起来有点重复，试着说得更自然些！" };
+            }
+            return { valid: true, msg: "ok" };
+        };
+
+        // --- 页脚组件 ---
+        const Footer = () => (
+            <footer className="mt-8 text-center text-slate-400 font-bold text-sm tracking-widest uppercase opacity-80 pb-4">
+                Chinese with Dora | Dora 老师
+            </footer>
+        );
+
+        function App() {
+            const [mode, setMode] = useState('teacher');
+            const [vocabList, setVocabList] = useState(INITIAL_VOCAB);
+            const [activeVocabList, setActiveVocabList] = useState([]);
+            const [inputMethod, setInputMethod] = useState('text');
+            const [textInput, setTextInput] = useState('');
+            const [isPinyinLibLoaded, setIsPinyinLibLoaded] = useState(false);
+            const [bestVoice, setBestVoice] = useState(null);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [currentLevel, setCurrentLevel] = useState(1);
+            const [isTransitioning, setIsTransitioning] = useState(false);
+            const [isGameComplete, setIsGameComplete] = useState(false);
+            const [grid, setGrid] = useState([]);
+            const [foundWords, setFoundWords] = useState([]);
+            const [selectedCells, setSelectedCells] = useState([]);
+            const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+            const [quizFeedback, setQuizFeedback] = useState('none');
+            const [sentenceInput, setSentenceInput] = useState('');
+            const [chatHistory, setChatHistory] = useState([]);
+            const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
+            const chatEndRef = useRef(null);
+
+            useEffect(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [chatHistory]);
+
+            useEffect(() => {
+                if (window.pinyinPro) {
+                    setIsPinyinLibLoaded(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                if (!('speechSynthesis' in window)) return;
+                const lockBestVoice = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    if (voices.length === 0) return;
+                    let preferred = voices.find(v => v.name.includes('Google') && (v.name.includes('普通话') || v.name.includes('Putonghua')));
+                    if (!preferred) preferred = voices.find(v => v.name.includes('Google') && v.lang === 'zh-CN');
+                    if (!preferred) preferred = voices.find(v => v.name.includes('Ting-Ting'));
+                    if (!preferred) preferred = voices.find(v => (v.lang === 'zh-CN' || v.lang === 'zh') && !v.name.includes('Cantonese') && !v.name.includes('HK'));
+                    if (preferred) setBestVoice(preferred);
+                };
+                lockBestVoice();
+                window.speechSynthesis.onvoiceschanged = lockBestVoice;
+                return () => { window.speechSynthesis.onvoiceschanged = null; };
+            }, []);
+
+            const speakChinese = (text) => {
+                if (!text || !('speechSynthesis' in window)) return;
+                const synth = window.speechSynthesis;
+                if (synth.speaking) synth.cancel();
+                setIsPlaying(true);
+                const utterance = new SpeechSynthesisUtterance(text);
+                if (bestVoice) {
+                    utterance.voice = bestVoice;
+                    utterance.lang = bestVoice.lang;
+                } else {
+                    utterance.lang = 'zh-CN';
+                }
+                utterance.rate = 0.85;
+                utterance.onend = () => setIsPlaying(false);
+                utterance.onerror = () => setIsPlaying(false);
+                synth.speak(utterance);
+            };
+
+            useEffect(() => {
+                const formattedText = vocabList.map(v => `${v.character} | ${v.meaning}`).join('\n');
+                setTextInput(formattedText);
+            }, [vocabList.length]);
+
+            useEffect(() => {
+                if (mode === 'student' && currentLevel === 2 && !isTransitioning && !isGameComplete) {
+                    const timer = setTimeout(() => {
+                        if (activeVocabList[currentQuizIndex]) {
+                            speakChinese(activeVocabList[currentQuizIndex].character);
+                        }
+                    }, 500); 
+                    return () => clearTimeout(timer);
+                }
+            }, [currentLevel, currentQuizIndex, mode, activeVocabList, isTransitioning, isGameComplete]);
+
+            const shuffleArray = (array) => {
+                let currentIndex = array.length, randomIndex;
+                const newArray = [...array];
+                while (currentIndex !== 0) {
+                    randomIndex = Math.floor(Math.random() * currentIndex);
+                    currentIndex--;
+                    [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+                }
+                return newArray;
+            };
+
+            const generateGrid = () => {
+                const size = 10;
+                let newGrid = Array(size).fill(null).map((_, y) => 
+                    Array(size).fill(null).map((_, x) => ({
+                        char: '', x, y, isFound: false, isSelected: false
+                    }))
+                );
+                const placeWord = (word, id) => {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 100) {
+                        const direction = Math.random() > 0.5 ? 'H' : 'V';
+                        const startX = Math.floor(Math.random() * (size - (direction === 'H' ? word.length : 0)));
+                        const startY = Math.floor(Math.random() * (size - (direction === 'V' ? word.length : 0)));
+                        let canPlace = true;
+                        for (let i = 0; i < word.length; i++) {
+                            const x = direction === 'H' ? startX + i : startX;
+                            const y = direction === 'V' ? startY + i : startY;
+                            if (newGrid[y][x].char !== '') { canPlace = false; break; }
+                        }
+                        if (canPlace) {
+                            for (let i = 0; i < word.length; i++) {
+                                const x = direction === 'H' ? startX + i : startX;
+                                const y = direction === 'V' ? startY + i : startY;
+                                newGrid[y][x].char = word[i];
+                                newGrid[y][x].targetWordId = id;
+                            }
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                };
+                activeVocabList.forEach(v => placeWord(v.character, v.id));
+                for(let y=0; y<size; y++) {
+                    for(let x=0; x<size; x++) {
+                        if (newGrid[y][x].char === '') {
+                            newGrid[y][x].char = getRandomChar();
+                        }
+                    }
+                }
+                setGrid(newGrid);
+            };
+
+            const startSession = () => {
+                let sessionVocab = [];
+                if (vocabList.length > 10) {
+                    sessionVocab = shuffleArray(vocabList).slice(0, 10);
+                } else {
+                    sessionVocab = [...vocabList]; 
+                }
+                setActiveVocabList(sessionVocab);
+                setFoundWords([]);
+                setCurrentLevel(1);
+                setIsTransitioning(false);
+                setIsGameComplete(false);
+                setCurrentQuizIndex(0);
+                setCurrentDialogueIndex(0);
+                setChatHistory([]);
+                setMode('student');
+            };
+
+            const parseAndStart = () => {
+                if (inputMethod === 'text') {
+                    const lines = textInput.trim().split('\n');
+                    const newVocab = lines.map((line, index) => {
+                        let parts = line.includes('|') ? line.split('|') : line.split(/\s+/);
+                        parts = parts.map(s => s.trim()).filter(s => s);
+                        const char = parts[0] || '?';
+                        const mean = parts[1] || 'Unknown';
+                        let autoPinyin = 'pīn yīn';
+                        try {
+                            if (parts.length >= 3 && /^[a-zA-Z\s]+$/.test(parts[1])) { autoPinyin = parts[1]; }
+                            else if (window.pinyinPro) { autoPinyin = window.pinyinPro.pinyin(char, { toneType: 'symbol' }); }
+                        } catch (e) {}
+                        let autoQuestion = parts.length >= 4 ? parts[3] : parts.length >= 3 && !/^[a-zA-Z\s]+$/.test(parts[1]) ? parts[2] : '';
+                        if (!autoQuestion) autoQuestion = `请用“${char}”造句。`;
+                        return { id: (index + 1).toString(), character: char, meaning: parts.length >= 3 && /^[a-zA-Z\s]+$/.test(parts[1]) ? parts[2] : mean, pinyin: autoPinyin, question: autoQuestion };
+                    }).filter(v => v.character !== '?' && v.character !== '');
+                    
+                    if (newVocab.length === 0) { alert("请至少输入一个词汇！"); return; }
+                    setVocabList(newVocab);
+                    
+                    let sessionVocab = [];
+                    if (newVocab.length > 10) {
+                        sessionVocab = shuffleArray(newVocab).slice(0, 10);
+                    } else {
+                        sessionVocab = [...newVocab];
+                    }
+                    setActiveVocabList(sessionVocab);
+                    setFoundWords([]);
+                    setCurrentLevel(1);
+                    setIsTransitioning(false);
+                    setIsGameComplete(false);
+                    setCurrentQuizIndex(0);
+                    setCurrentDialogueIndex(0);
+                    setChatHistory([]);
+                    setMode('student');
+                } else {
+                    startSession();
+                }
+            };
+
+            useEffect(() => { 
+                if (mode === 'student' && activeVocabList.length > 0) {
+                    generateGrid(); 
+                }
+            }, [mode, activeVocabList]);
+
+            const handleLevelComplete = (nextLevel) => {
+                setIsTransitioning(true);
+                speakChinese("恭喜过关");
+            };
+
+            const proceedToNextLevel = () => {
+                setIsTransitioning(false);
+                setCurrentLevel(prev => prev + 1);
+                if (currentLevel === 1) setCurrentQuizIndex(0);
+                else if (currentLevel === 2) {
+                    setCurrentDialogueIndex(0);
+                    setChatHistory([{ role: 'ai', text: `你好！让我们来练习一下。${activeVocabList[0].question} (请用 "${activeVocabList[0].character}" 回答)` }]);
+                }
+            };
+
+            const handleGameComplete = () => {
+                setIsGameComplete(true);
+                speakChinese("太棒了！你已经完成了所有的挑战！");
+            };
+
+            const playAgain = () => {
+                startSession(); 
+            };
+
+            const downloadGameHTML = () => {
+                const jsonVocab = JSON.stringify(vocabList);
+                const htmlContent = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文生词大闯关 - Chinese with Dora</title>
+    <script src="https://cdn.tailwindcss.com"></` + `script>
+    <style>
+        body { background-color: #FEF9C3; font-family: system-ui, -apple-system, sans-serif; }
+        .animate-bounce { animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(-5%); } 50% { transform: translateY(0); } }
+        /* Disable selection for better game feel */
+        .select-none { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body class="p-6 text-slate-800 flex flex-col min-h-screen">
+    <div id="app" class="max-w-3xl mx-auto space-y-6 flex-1 w-full">
+        <!-- Header -->
+        <header class="bg-pink-300 border-4 border-slate-900 p-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-black text-white flex items-center">
+                ${SVG_STRINGS.Trophy}
+                <span class="ml-2">中文生词大闯关</span>
+            </h1>
+            <div class="text-sm font-bold bg-white px-3 py-1 rounded-full border-2 border-slate-900" id="level-indicator">Welcome</div>
+        </header>
+
+        <div id="game-container" class="bg-white p-6 rounded-3xl border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(251,207,232,1)] min-h-[400px]">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-8 text-center text-slate-400 font-bold text-sm tracking-widest uppercase opacity-80 pb-4">
+        Chinese with Dora | Dora 老师
+    </footer>
+
+    <script>
+        const fullVocabList = ${jsonVocab}; // Store all words
+        let vocabList = []; // This will store the active 10 words
+        let currentLevel = 0; // 0 = Start Screen
+        let foundWords = [];
+        let currentQuizIndex = 0;
+        let dialogueIndex = 0;
+        let synth = window.speechSynthesis;
+        let bestVoice = null;
+        let grid = [];
+        let selectedCells = []; // Track user selections in Level 1
+
+        function initVoice() {
+            const voices = synth.getVoices();
+            let preferred = voices.find(v => v.name.includes('Google') && (v.name.includes('普通话') || v.name.includes('Putonghua')));
+            if (!preferred) preferred = voices.find(v => v.name.includes('Google') && v.lang === 'zh-CN');
+            if (!preferred) preferred = voices.find(v => v.name.includes('Ting-Ting'));
+            if (!preferred) preferred = voices.find(v => (v.lang === 'zh-CN' || v.lang === 'zh') && !v.name.includes('Cantonese') && !v.name.includes('HK'));
+            if(preferred) bestVoice = preferred;
+        }
+        if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = initVoice;
+        initVoice();
+
+        function speak(text) {
+            if (!synth) return;
+            synth.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            if(bestVoice) { u.voice = bestVoice; u.lang = bestVoice.lang; } else { u.lang = 'zh-CN'; }
+            u.rate = 0.85;
+            synth.speak(u);
+        }
+
+        // --- Shuffle and Pick 10 ---
+        function startSession() {
+            if (fullVocabList.length > 10) {
+                const shuffled = [...fullVocabList].sort(() => 0.5 - Math.random());
+                vocabList = shuffled.slice(0, 10);
+            } else {
+                vocabList = [...fullVocabList];
+            }
+            
+            // Reset states
+            currentLevel = 1;
+            foundWords = [];
+            currentQuizIndex = 0;
+            dialogueIndex = 0;
+            grid = [];
+            selectedCells = [];
+            
+            renderStartScreen();
+        }
+
+        // --- Start Screen ---
+        function renderStartScreen() {
+            const container = document.getElementById('game-container');
+            container.innerHTML = \`
+                <div class="flex flex-col items-center justify-center h-full py-10 text-center">
+                    <div class="text-8xl mb-6">🐼</div>
+                    <h2 class="text-4xl font-black mb-4 text-slate-800">准备好挑战了吗？</h2>
+                    <p class="text-xl text-slate-500 font-bold mb-10">本轮共 \${vocabList.length} 个生词等你来闯关！</p>
+                    <button onclick="startLevel(1)" class="bg-indigo-500 hover:bg-indigo-400 text-white px-10 py-4 rounded-2xl font-black text-2xl border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(30,27,75,1)] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center mx-auto">
+                        开始挑战 <span class="ml-2">${SVG_STRINGS.ArrowRight}</span>
+                    </button>
+                </div>
+            \`;
+            document.getElementById('level-indicator').innerText = 'Ready?';
+        }
+
+        // --- Level 1 Logic ---
+        function generateGridData() {
+            const size = 10;
+            const newGrid = Array(size).fill(null).map((_, y) => 
+                Array(size).fill(null).map((_, x) => ({
+                    char: '', x, y, isFound: false
+                }))
+            );
+            
+            const placeWord = (word, id) => {
+                let placed = false;
+                let attempts = 0;
+                while (!placed && attempts < 100) {
+                    const direction = Math.random() > 0.5 ? 'H' : 'V';
+                    const startX = Math.floor(Math.random() * (size - (direction === 'H' ? word.length : 0)));
+                    const startY = Math.floor(Math.random() * (size - (direction === 'V' ? word.length : 0)));
+                    let canPlace = true;
+                    for (let i = 0; i < word.length; i++) {
+                        const x = direction === 'H' ? startX + i : startX;
+                        const y = direction === 'V' ? startY + i : startY;
+                        if (newGrid[y][x].char !== '') { canPlace = false; break; }
+                    }
+                    if (canPlace) {
+                        for (let i = 0; i < word.length; i++) {
+                            const x = direction === 'H' ? startX + i : startX;
+                            const y = direction === 'V' ? startY + i : startY;
+                            newGrid[y][x].char = word[i];
+                            newGrid[y][x].targetWordId = id; 
+                        }
+                        placed = true;
+                    }
+                    attempts++;
+                }
+            };
+
+            vocabList.forEach(v => placeWord(v.character, v.id));
+            const chars = "的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取完举科术话米群情展";
+            
+            for(let y=0; y<size; y++) {
+                for(let x=0; x<size; x++) {
+                    if (newGrid[y][x].char === '') {
+                        newGrid[y][x].char = chars[Math.floor(Math.random() * chars.length)];
+                    }
+                }
+            }
+            return newGrid;
+        }
+
+        function renderLevel1() {
+            if(grid.length === 0) grid = generateGridData(); 
+            selectedCells = []; 
+
+            const container = document.getElementById('game-container');
+            const gridHTML = '<div class="grid grid-cols-10 gap-1 bg-sky-100 p-2 rounded-xl border-2 border-slate-900 w-fit mx-auto mb-4 select-none" id="grid"></div>';
+            const listHTML = '<div class="flex flex-wrap gap-2 justify-center" id="word-list"></div>';
+            container.innerHTML = '<h2 class="text-xl font-bold text-center mb-4">找出藏起来的单词！</h2>' + gridHTML + listHTML;
+            
+            // Render List
+            const listEl = document.getElementById('word-list');
+            vocabList.forEach(v => {
+                const item = document.createElement('div');
+                item.className = 'px-3 py-1 rounded-full border-2 border-slate-200 bg-white font-bold transition-all flex items-center';
+                item.id = 'word-' + v.id;
+                item.innerHTML = '<div class="w-4 h-4 rounded-full border-2 border-slate-300 mr-2"></div>' + v.character;
+                if(foundWords.includes(v.id)) {
+                    item.className += ' bg-green-100 border-green-500 text-green-700 line-through';
+                    item.innerHTML = '${SVG_STRINGS.CheckCircle} <span class="ml-1">' + v.character + '</span>';
+                }
+                listEl.appendChild(item);
+            });
+
+            // Render Grid
+            const gridEl = document.getElementById('grid');
+            gridEl.innerHTML = '';
+            
+            for(let y=0; y<10; y++) {
+                for(let x=0; x<10; x++) {
+                    const cellData = grid[y][x];
+                    const cell = document.createElement('div');
+                    cell.id = \`cell-\${x}-\${y}\`;
+                    cell.className = \`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-lg font-black rounded-lg cursor-pointer border-2 transition-all \${cellData.isFound ? 'bg-green-400 text-white border-slate-900 animate-bounce' : 'bg-white text-slate-700 border-slate-200 hover:border-pink-300 hover:bg-pink-50'}\`;
+                    cell.innerText = cellData.char;
+                    
+                    cell.onclick = () => handleLevel1Click(x, y);
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleLevel1Click(x, y) {
+            const cellData = grid[y][x];
+            if (cellData.isFound) return;
+
+            const existingIdx = selectedCells.findIndex(c => c.x === x && c.y === y);
+            if (existingIdx >= 0) {
+                selectedCells.splice(existingIdx, 1); 
+                document.getElementById(\`cell-\${x}-\${y}\`).className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-lg font-black rounded-lg cursor-pointer border-2 transition-all bg-white text-slate-700 border-slate-200 hover:border-pink-300 hover:bg-pink-50';
+            } else {
+                selectedCells.push({x, y, char: cellData.char}); 
+                document.getElementById(\`cell-\${x}-\${y}\`).className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-lg font-black rounded-lg cursor-pointer border-2 transition-all bg-pink-400 text-white border-slate-900 transform scale-110';
+            }
+
+            // Sort to ensure reading order
+            selectedCells.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+            
+            const selectedString = selectedCells.map(c => c.char).join('');
+            const match = vocabList.find(v => v.character === selectedString);
+            
+            if (match && !foundWords.includes(match.id)) {
+                speak(match.character);
+                foundWords.push(match.id);
+                
+                selectedCells.forEach(c => {
+                    grid[c.y][c.x].isFound = true;
+                    const el = document.getElementById(\`cell-\${c.x}-\${c.y}\`);
+                    el.className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-lg font-black rounded-lg cursor-pointer border-2 transition-all bg-green-400 text-white border-slate-900 animate-bounce';
+                });
+                
+                const listItem = document.getElementById('word-' + match.id);
+                listItem.className = 'px-3 py-1 rounded-full border-2 bg-green-100 border-green-500 text-green-700 line-through font-bold transition-all flex items-center';
+                listItem.innerHTML = '${SVG_STRINGS.CheckCircle} <span class="ml-1">' + match.character + '</span>';
+
+                selectedCells = []; 
+
+                if (foundWords.length === vocabList.length) {
+                    setTimeout(() => showTransition(2), 1000);
+                }
+            }
+        }
+
+        function renderLevel2() {
+            const v = vocabList[currentQuizIndex];
+            const container = document.getElementById('game-container');
+            
+            let opts = [v.meaning];
+            while(opts.length < 4) {
+                let r = vocabList[Math.floor(Math.random()*vocabList.length)].meaning;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => Math.random() - 0.5);
+
+            container.innerHTML = \`
+                <div class="text-center">
+                    <div class="text-6xl font-black mb-2 text-slate-800 cursor-pointer hover:scale-110 transition" onclick="speak('\${v.character}')">\${v.character}</div>
+                    <div class="text-xl text-slate-400 font-bold mb-8">\${v.pinyin}</div>
+                    <div class="grid grid-cols-2 gap-4">
+                        \${opts.map(opt => \`<button onclick="checkL2('\${opt}')" class="p-4 border-4 border-slate-900 rounded-xl font-bold hover:bg-yellow-100">\${opt}</button>\`).join('')}
+                    </div>
+                    <div id="feedback" class="mt-4 font-bold h-8"></div>
+                </div>
+            \`;
+            setTimeout(() => speak(v.character), 500);
+        }
+
+        window.checkL2 = function(ans) {
+            const v = vocabList[currentQuizIndex];
+            const fb = document.getElementById('feedback');
+            if (ans === v.meaning) {
+                fb.innerText = "Correct! 太棒了!";
+                fb.className = "mt-4 font-bold h-8 text-green-500";
+                speak("太棒了");
+                setTimeout(() => {
+                    if (currentQuizIndex < vocabList.length - 1) {
+                        currentQuizIndex++;
+                        renderLevel2();
+                    } else {
+                        showTransition(3);
+                    }
+                }, 1000);
+            } else {
+                fb.innerText = "Oops! Try again.";
+                fb.className = "mt-4 font-bold h-8 text-red-500";
+                speak("再试一次");
+                setTimeout(() => fb.innerText = "", 2000);
+            }
+        }
+
+        function renderLevel3() {
+            const v = vocabList[dialogueIndex];
+            const container = document.getElementById('game-container');
+            container.innerHTML = \`
+                <div class="flex flex-col h-[400px]">
+                    <div id="chat-box" class="flex-1 overflow-y-auto p-4 border-2 border-slate-200 rounded-xl mb-4 bg-slate-50">
+                        <div class="flex justify-start mb-2">
+                            <div class="bg-white border-2 border-slate-900 p-3 rounded-xl rounded-bl-none max-w-[80%] flex gap-2">
+                                <span class="text-purple-600">${SVG_STRINGS.BookOpen}</span>
+                                <span>你好！\${v.question} (请用 "\${v.character}" 回答)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" class="flex-1 p-3 border-4 border-slate-900 rounded-xl font-bold" placeholder="输入中文..." onkeydown="if(event.key==='Enter') checkL3()">
+                        <button onclick="checkL3()" class="bg-indigo-500 text-white px-6 rounded-xl border-2 border-slate-900 font-bold flex items-center justify-center">${SVG_STRINGS.ArrowRight}</button>
+                    </div>
+                </div>
+            \`;
+        }
+
+        window.checkL3 = function() {
+            const input = document.getElementById('chat-input');
+            const box = document.getElementById('chat-box');
+            const val = input.value.trim();
+            if(!val) return;
+
+            const v = vocabList[dialogueIndex];
+            
+            // Add user msg
+            box.innerHTML += \`<div class="flex justify-end mb-2"><div class="bg-indigo-500 text-white border-2 border-slate-900 p-3 rounded-xl rounded-br-none max-w-[80%]">\${val}</div></div>\`;
+            input.value = '';
+
+            let valid = true;
+            let msg = "很好";
+            if (!val.includes(v.character)) { 
+                valid = false; 
+                msg = "句子必须包含“" + v.character + "”哦！"; 
+            } else if (val.length <= v.character.length + 2) { 
+                valid = false; 
+                msg = "句子太短了，请多写一点。"; 
+            }
+            const uniqueChars = new Set(val.split('')).size;
+            if (uniqueChars < 3 || (val.length > 5 && uniqueChars < val.length * 0.4)) {
+                valid = false;
+                msg = "句子看起来有点重复，试着说得更自然些！";
+            }
+
+            if (valid) {
+                speak("很好");
+                setTimeout(() => {
+                    if (dialogueIndex < vocabList.length - 1) {
+                        dialogueIndex++;
+                        const nextV = vocabList[dialogueIndex];
+                        box.innerHTML += \`<div class="flex justify-start mb-2"><div class="bg-white border-2 border-slate-900 p-3 rounded-xl rounded-bl-none max-w-[80%]">很好！下一个：\${nextV.question} (请用 "\${nextV.character}" 回答)</div></div>\`;
+                        box.scrollTop = box.scrollHeight;
+                    } else {
+                        showCelebration();
+                    }
+                }, 800);
+            } else {
+                speak(msg);
+                box.innerHTML += \`<div class="flex justify-start mb-2"><div class="bg-white border-2 border-slate-900 p-3 rounded-xl rounded-bl-none max-w-[80%]">\${msg}</div></div>\`;
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        function showTransition(nextLvl) {
+            const container = document.getElementById('game-container');
+            container.innerHTML = \`
+                <div class="flex flex-col items-center justify-center h-full py-10">
+                    <div class="text-6xl mb-4 text-yellow-400 animate-spin-slow">${SVG_STRINGS.Star}</div>
+                    <h2 class="text-4xl font-black mb-4 text-slate-800">恭喜过关!</h2>
+                    <p class="text-xl text-slate-500 font-bold mb-8">太棒了！准备好迎接下一个挑战了吗？</p>
+                    <button onclick="startLevel(\${nextLvl})" class="bg-green-500 hover:bg-green-400 text-white px-10 py-4 rounded-2xl font-black text-2xl border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center mx-auto">
+                        进入下一关 <span class="ml-3">${SVG_STRINGS.ArrowRight}</span>
+                    </button>
+                </div>
+            \`;
+            speak("恭喜过关");
+        }
+
+        function showCelebration() {
+            const container = document.getElementById('game-container');
+            container.innerHTML = \`
+                <div class="flex flex-col items-center justify-center h-full py-10 text-center">
+                    <div class="text-8xl mb-4 animate-bounce text-yellow-400">${SVG_STRINGS.Trophy}</div>
+                    <h2 class="text-5xl font-black mb-4 text-pink-500">通关成功!</h2>
+                    <p class="text-xl font-bold text-slate-500 mb-8">你太棒了！所有的单词都掌握了！</p>
+                    <button onclick="location.reload()" class="bg-yellow-400 text-slate-900 px-8 py-3 rounded-xl border-4 border-slate-900 font-bold text-xl shadow-[6px_6px_0px_0px_rgba(30,27,75,1)] flex items-center justify-center mx-auto">
+                        <span class="mr-2">${SVG_STRINGS.RefreshCw}</span> 再玩一次 (换一批词)
+                    </button>
+                </div>
+            \`;
+            speak("太棒了！你已经完成了所有的挑战");
+        }
+
+        function startLevel(lvl) {
+            currentLevel = lvl;
+            document.getElementById('level-indicator').innerText = 'Level ' + lvl;
+            if (lvl === 1) renderLevel1();
+            if (lvl === 2) renderLevel2();
+            if (lvl === 3) renderLevel3();
+        }
+
+        // Init: Random 10
+        startSession();
+    </` + `script>
+</body>
+</html>
+                `;
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '中文大闯关.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
+
+            // ... (handleVocabChange, addVocab, removeVocab, handleCellClick, handleQuizAnswer, generateOptions, currentOptions, handleSentenceSubmit) ...
+            // 为了简洁，这部分逻辑与之前完全一致，已在上方组件中实现
+            
+            const handleVocabChange = (index, field, value) => {
+                const newList = [...vocabList];
+                newList[index] = { ...newList[index], [field]: value };
+                setVocabList(newList);
+            };
+            const addVocab = () => {
+                const id = (vocabList.length + 1).toString();
+                setVocabList([...vocabList, { id, character: '新词', pinyin: '', meaning: '', question: 'Question?' }]);
+            };
+            const removeVocab = (index) => {
+                const newList = [...vocabList];
+                newList.splice(index, 1);
+                setVocabList(newList);
+            };
+            const handleCellClick = (x, y) => {
+                if (foundWords.length === activeVocabList.length) return;
+                const cell = grid[y][x];
+                if (cell.isFound) return;
+                const isSelected = selectedCells.some(c => c.x === x && c.y === y);
+                let newSelected = isSelected ? selectedCells.filter(c => c.x !== x || c.y !== y) : [...selectedCells, cell];
+                newSelected.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+                setSelectedCells(newSelected);
+                const selectedString = newSelected.map(c => c.char).join('');
+                const matchedVocab = activeVocabList.find(v => v.character === selectedString);
+                if (matchedVocab && !foundWords.includes(matchedVocab.id)) {
+                    speakChinese(matchedVocab.character);
+                    const newFound = [...foundWords, matchedVocab.id];
+                    setFoundWords(newFound);
+                    const newGrid = [...grid];
+                    newSelected.forEach(c => { newGrid[c.y][c.x].isFound = true; });
+                    setGrid(newGrid);
+                    setSelectedCells([]);
+                    if (newFound.length === activeVocabList.length) { setTimeout(() => { handleLevelComplete(2); }, 1000); }
+                }
+            };
+            const handleQuizAnswer = (selectedMeaning) => {
+                const currentVocab = activeVocabList[currentQuizIndex];
+                if (selectedMeaning === currentVocab.meaning) {
+                    setQuizFeedback('correct');
+                    speakChinese("太棒了");
+                    setTimeout(() => {
+                        setQuizFeedback('none');
+                        if (currentQuizIndex < activeVocabList.length - 1) { setCurrentQuizIndex(currentQuizIndex + 1); } 
+                        else { handleLevelComplete(3); }
+                    }, 1000);
+                } else {
+                    setQuizFeedback('wrong');
+                    speakChinese("再试一次");
+                    setTimeout(() => { setQuizFeedback('none'); }, 3000);
+                }
+            };
+            const generateOptions = (correctMeaning) => {
+                const options = [correctMeaning];
+                while (options.length < 4) {
+                    const randomVocab = activeVocabList[Math.floor(Math.random() * activeVocabList.length)];
+                    if (!options.includes(randomVocab.meaning)) { options.push(randomVocab.meaning); }
+                }
+                return options.sort(() => Math.random() - 0.5);
+            };
+            const currentOptions = useMemo(() => {
+                if (currentLevel !== 2 || activeVocabList.length === 0) return [];
+                return generateOptions(activeVocabList[currentQuizIndex].meaning);
+            }, [currentQuizIndex, currentLevel, activeVocabList]);
+            const handleSentenceSubmit = () => {
+                if (!sentenceInput.trim()) return;
+                if (currentDialogueIndex >= activeVocabList.length) {
+                    setChatHistory([...chatHistory, { role: 'user', text: sentenceInput }, { role: 'ai', text: "你已经完成所有挑战了！🎉" }]);
+                    setSentenceInput('');
+                    return;
+                }
+                const currentVocab = activeVocabList[currentDialogueIndex]; 
+                const isLast = currentDialogueIndex === activeVocabList.length - 1;
+                const analysis = analyzeSentence(sentenceInput, currentVocab.character);
+                const newHistory = [...chatHistory, { role: 'user', text: sentenceInput }];
+                if (analysis.valid) {
+                    if (isLast) {
+                        newHistory.push({ role: 'ai', text: "太棒了！你已经完成了所有的挑战！🎉" });
+                        setCurrentDialogueIndex(currentDialogueIndex + 1);
+                        handleGameComplete();
+                    } else {
+                        const nextVocab = activeVocabList[currentDialogueIndex + 1];
+                        newHistory.push({ role: 'ai', text: `很好！下一个问题：${nextVocab.question} (请用 "${nextVocab.character}" 回答)` });
+                        setCurrentDialogueIndex(currentDialogueIndex + 1);
+                        speakChinese("很好！");
+                    }
+                } else {
+                    newHistory.push({ role: 'ai', text: analysis.msg });
+                    speakChinese(analysis.msg);
+                }
+                setChatHistory(newHistory);
+                setSentenceInput('');
+            };
+
+            return (
+                <div className="min-h-screen bg-yellow-50 font-sans text-slate-800 selection:bg-pink-200 flex flex-col">
+                    <header className="bg-pink-300 border-b-4 border-slate-900 p-4 sticky top-0 z-10">
+                        <div className="max-w-4xl mx-auto flex justify-between items-center">
+                            <h1 className="text-2xl font-black flex items-center text-white drop-shadow-md tracking-wider">
+                                <Icons.Trophy /> 
+                                <span className="ml-2">中文生词大闯关</span>
+                            </h1>
+                            <div className="space-x-4">
+                                <button onClick={() => setMode('teacher')} className={`px-5 py-2 rounded-full font-bold border-2 border-slate-900 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all ${mode === 'teacher' ? 'bg-white text-slate-900' : 'bg-pink-400 text-white hover:bg-white hover:text-slate-900'}`}>
+                                    <span className="flex items-center"><Icons.Settings /> <span className="ml-1">老师</span></span>
+                                </button>
+                                <button onClick={parseAndStart} className={`px-5 py-2 rounded-full font-bold border-2 border-slate-900 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all ${mode === 'student' ? 'bg-white text-green-600' : 'bg-green-400 text-white hover:bg-white hover:text-green-600'}`}>
+                                    <span className="flex items-center"><Icons.Play /> <span className="ml-1">预览</span></span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="max-w-3xl mx-auto p-6 flex-1 w-full">
+                        {mode === 'teacher' && (
+                            <div className="bg-white rounded-3xl border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(251,207,232,1)] p-6">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                    <h2 className="text-xl font-black flex items-center text-slate-800">
+                                        <span className="text-pink-500 mr-2"><Icons.Edit3 /></span> 备课小助手
+                                    </h2>
+                                    <div className="flex bg-slate-100 p-1 rounded-xl border-2 border-slate-900">
+                                        <button onClick={() => setInputMethod('text')} className={`px-4 py-2 rounded-lg font-bold flex items-center transition-all ${inputMethod === 'text' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-400'}`}>
+                                            <span className="flex items-center"><Icons.List /> <span className="ml-2">智能文本</span></span>
+                                        </button>
+                                        <button onClick={() => setInputMethod('table')} className={`px-4 py-2 rounded-lg font-bold flex items-center transition-all ${inputMethod === 'table' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-400'}`}>
+                                            <span className="flex items-center"><Icons.Grid /> <span className="ml-2">详细表格</span></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-sm font-bold text-slate-500 mb-4 bg-blue-50 p-4 rounded-xl border-2 border-blue-200 border-dashed">
+                                    {inputMethod === 'text' ? "🚀 智能模式：只需输入 “汉字 英文”。拼音和引导问题会自动生成！(一行一个词)" : "✨ 详细模式：在这里可以逐个修改每一个格子的内容。"}
+                                </p>
+                                {inputMethod === 'text' && (
+                                    <div className="animate-fade-in">
+                                        <textarea value={textInput} onChange={(e) => setTextInput(e.target.value)} placeholder={`熊猫 Panda\n长城 Great Wall\n喜欢 To like`} className="w-full h-64 p-4 rounded-xl border-4 border-slate-200 focus:border-pink-400 focus:ring-0 outline-none font-mono text-slate-700 bg-slate-50 text-xl leading-relaxed resize-y" />
+                                        <div className="mt-4 flex justify-between items-center text-xs text-slate-400 font-bold px-2">
+                                            <span className="flex items-center">
+                                                {isPinyinLibLoaded ? <span className="text-green-500 flex items-center">● 拼音引擎已就绪</span> : <span className="text-amber-500 flex items-center">● 正在加载拼音引擎...</span>}
+                                            </span>
+                                            <button onClick={downloadGameHTML} className="bg-indigo-500 hover:bg-indigo-400 text-white px-8 py-3 rounded-xl font-bold border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all flex items-center text-base">
+                                                <span className="flex items-center mr-2"><Icons.Download /></span> 下载独立游戏包 (.html)
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                {inputMethod === 'table' && (
+                                    <div className="space-y-4 animate-fade-in">
+                                        {vocabList.map((vocab, index) => (
+                                            <div key={vocab.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-slate-50 p-4 rounded-2xl border-2 border-slate-200">
+                                                <div className="md:col-span-1 text-center font-black text-slate-300 text-xl">#{index + 1}</div>
+                                                <div className="md:col-span-2">
+                                                    <input type="text" placeholder="汉字" value={vocab.character} onChange={(e) => handleVocabChange(index, 'character', e.target.value)} className="w-full p-2 border-2 border-slate-300 rounded-lg focus:border-pink-400 focus:ring-0 outline-none font-bold text-center" />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <input type="text" placeholder="拼音" value={vocab.pinyin} onChange={(e) => handleVocabChange(index, 'pinyin', e.target.value)} className="w-full p-2 border-2 border-slate-300 rounded-lg focus:border-pink-400 focus:ring-0 outline-none font-medium text-center bg-slate-100" />
+                                                </div>
+                                                <div className="md:col-span-3">
+                                                    <input type="text" placeholder="英文" value={vocab.meaning} onChange={(e) => handleVocabChange(index, 'meaning', e.target.value)} className="w-full p-2 border-2 border-slate-300 rounded-lg focus:border-pink-400 focus:ring-0 outline-none" />
+                                                </div>
+                                                <div className="md:col-span-3">
+                                                    <input type="text" placeholder="问题" value={vocab.question} onChange={(e) => handleVocabChange(index, 'question', e.target.value)} className="w-full p-2 border-2 border-slate-300 rounded-lg focus:border-pink-400 focus:ring-0 outline-none text-sm bg-slate-100" />
+                                                </div>
+                                                <div className="md:col-span-1 text-center mt-2 md:mt-0">
+                                                    <button onClick={() => removeVocab(index)} className="w-8 h-8 rounded-full bg-red-100 text-red-500 hover:bg-red-500 hover:text-white font-bold transition">×</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="flex flex-col md:flex-row gap-4 mt-6">
+                                            <button onClick={addVocab} className="flex-1 py-3 border-4 border-dashed border-slate-300 text-slate-400 font-bold rounded-2xl hover:bg-slate-50 hover:border-pink-300 hover:text-pink-400 transition uppercase tracking-wider">+ 添加一行</button>
+                                            <button onClick={downloadGameHTML} className="flex-1 bg-indigo-500 text-white py-3 rounded-xl font-bold border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all flex items-center justify-center hover:bg-indigo-400">
+                                                <span className="flex items-center mr-2"><Icons.Download /></span> 下载独立游戏包
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {mode === 'student' && !isTransitioning && !isGameComplete && activeVocabList.length > 0 && (
+                            <div className="space-y-8 animate-fade-in">
+                                {/* Level Indicator */}
+                                <div className="flex justify-between items-center bg-white px-6 py-4 rounded-full border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
+                                    <div className={`flex items-center font-black ${currentLevel >= 1 ? 'text-pink-500' : 'text-slate-300'}`}><div className={`w-10 h-10 rounded-full border-4 border-current flex items-center justify-center mr-2 ${currentLevel >= 1 ? 'bg-pink-100' : 'bg-slate-100'}`}>1</div><span className="hidden sm:inline">找一找</span></div>
+                                    <div className="h-4 flex-1 mx-4 bg-slate-200 rounded-full border-2 border-slate-900 overflow-hidden"><div className="h-full bg-yellow-400 transition-all duration-500 border-r-2 border-slate-900" style={{width: currentLevel >= 2 ? '100%' : '0%'}}></div></div>
+                                    <div className={`flex items-center font-black ${currentLevel >= 2 ? 'text-sky-500' : 'text-slate-300'}`}><div className={`w-10 h-10 rounded-full border-4 border-current flex items-center justify-center mr-2 ${currentLevel >= 2 ? 'bg-sky-100' : 'bg-slate-100'}`}>2</div><span className="hidden sm:inline">认一认</span></div>
+                                    <div className="h-4 flex-1 mx-4 bg-slate-200 rounded-full border-2 border-slate-900 overflow-hidden"><div className="h-full bg-yellow-400 transition-all duration-500 border-r-2 border-slate-900" style={{width: currentLevel >= 3 ? '100%' : '0%'}}></div></div>
+                                    <div className={`flex items-center font-black ${currentLevel >= 3 ? 'text-green-500' : 'text-slate-300'}`}><div className={`w-10 h-10 rounded-full border-4 border-current flex items-center justify-center mr-2 ${currentLevel >= 3 ? 'bg-green-100' : 'bg-slate-100'}`}>3</div><span className="hidden sm:inline">说一说</span></div>
+                                </div>
+
+                                {/* LEVEL 1 */}
+                                {currentLevel === 1 && (
+                                    <div className="bg-white p-6 rounded-3xl border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(253,186,116,1)]">
+                                        <h3 className="text-center text-2xl font-black mb-6 text-slate-800 flex items-center justify-center"><span className="bg-yellow-300 px-3 py-1 transform -rotate-2 mr-2 border-2 border-slate-900 rounded-lg shadow-sm">第一关</span> 找出藏起来的单词！</h3>
+                                        <div className="flex flex-col md:flex-row gap-8 items-start">
+                                            <div className="bg-sky-100 p-4 rounded-2xl border-4 border-slate-900 mx-auto md:mx-0 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]" style={{display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '6px', width: 'fit-content'}}>
+                                                {grid.map((row, y) => row.map((cell, x) => {
+                                                    const isSelected = selectedCells.some(c => c.x === x && c.y === y);
+                                                    return (
+                                                        <div key={`${x}-${y}`} onClick={() => handleCellClick(x, y)} className={`w-8 h-8 md:w-10 md:h-10 flex items-center justify-center text-lg font-black rounded-lg cursor-pointer transition-all border-2 ${cell.isFound ? 'bg-green-400 text-white border-slate-900 animate-bounce' : isSelected ? 'bg-pink-400 text-white border-slate-900 transform scale-110' : 'bg-white text-slate-700 border-slate-200 hover:border-pink-300 hover:bg-pink-50'}`}>{cell.char}</div>
+                                                    );
+                                                }))}
+                                            </div>
+                                            <div className="flex-1 w-full">
+                                                <div className="bg-yellow-50 p-6 rounded-2xl border-4 border-slate-900 h-full relative overflow-hidden">
+                                                    <div className="absolute top-0 left-0 w-full h-4 bg-slate-200/50"></div>
+                                                    <h4 className="font-black text-slate-700 mb-4 text-lg flex items-center"><span className="mr-2"><Icons.CheckCircle /></span> 任务清单 ({foundWords.length}/{activeVocabList.length})</h4>
+                                                    <ul className="space-y-3">
+                                                        {activeVocabList.map(v => (
+                                                            <li key={v.id} className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${foundWords.includes(v.id) ? 'bg-green-100 border-green-400' : 'bg-white border-slate-200'}`}>
+                                                                <span className={`text-lg font-bold ${foundWords.includes(v.id) ? 'text-green-700 line-through' : 'text-slate-700'}`}>{v.character}</span>
+                                                                {foundWords.includes(v.id) && <span className="text-green-500"><Icons.CheckCircle /></span>}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* LEVEL 2 */}
+                                {currentLevel === 2 && (
+                                    <div className="bg-white p-8 rounded-3xl border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(244,114,182,1)] max-w-2xl mx-auto text-center relative overflow-hidden">
+                                        <div className="absolute top-4 right-4 text-pink-300">
+                                            {isPlaying ? <span className="text-indigo-500"><Icons.Loader2 /></span> : <span className="opacity-20"><Icons.Volume2 /></span>}
+                                        </div>
+                                        <div className="mb-10">
+                                            <div className="inline-block bg-sky-100 text-sky-700 px-4 py-1 rounded-full font-bold text-sm border-2 border-sky-200 mb-4">Question {currentQuizIndex + 1} / {activeVocabList.length}</div>
+                                            <div className="relative inline-block cursor-pointer" onClick={() => speakChinese(activeVocabList[currentQuizIndex].character)}>
+                                                <div className="text-7xl font-black text-slate-800 mb-2 drop-shadow-sm transition hover:scale-110 transform">{activeVocabList[currentQuizIndex].character}</div>
+                                            </div>
+                                            <div className="text-2xl text-slate-400 font-bold font-mono bg-slate-100 inline-block px-3 py-1 rounded-lg mt-2">{activeVocabList[currentQuizIndex].pinyin}</div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {currentOptions.map((opt, i) => (
+                                                <button key={i} onClick={() => handleQuizAnswer(opt)} disabled={quizFeedback !== 'none'} className={`p-5 rounded-xl text-lg font-bold border-4 transition-all transform hover:-translate-y-1 active:translate-y-0 ${quizFeedback === 'correct' && opt === activeVocabList[currentQuizIndex].meaning ? 'bg-green-400 border-slate-900 text-white shadow-[4px_4px_0px_0px_rgba(22,163,74,1)]' : quizFeedback === 'wrong' && opt !== activeVocabList[currentQuizIndex].meaning ? 'bg-slate-100 border-slate-300 text-slate-400' : 'bg-white border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:bg-yellow-50'}`}>{opt}</button>
+                                            ))}
+                                        </div>
+                                        {quizFeedback === 'correct' && <div className="mt-6 text-green-500 font-black text-xl animate-bounce">Correct! 太棒了! 🎉</div>}
+                                        {quizFeedback === 'wrong' && <div className="mt-6 text-red-400 font-black text-xl">Oops! 再试一次! 💪</div>}
+                                    </div>
+                                )}
+
+                                {/* LEVEL 3 */}
+                                {currentLevel === 3 && (
+                                    <div className="bg-white p-6 rounded-3xl border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(167,139,250,1)] max-w-2xl mx-auto flex flex-col h-[550px]">
+                                        <div className="flex items-center mb-4 pb-4 border-b-2 border-slate-100">
+                                            <div className="bg-purple-100 p-2 rounded-xl border-2 border-slate-900 mr-3"><span className="text-purple-600"><Icons.BookOpen /></span></div>
+                                            <h3 className="font-black text-xl text-slate-800">聊天大挑战</h3>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
+                                            {chatHistory.map((msg, i) => (
+                                                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                    {msg.role === 'ai' && <div className="w-8 h-8 rounded-full bg-yellow-300 border-2 border-slate-900 flex items-center justify-center mr-2 flex-shrink-0">🤖</div>}
+                                                    <div className={`max-w-[80%] p-4 rounded-2xl border-2 border-slate-900 font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)] ${msg.role === 'user' ? 'bg-indigo-500 text-white rounded-br-none' : 'bg-white text-slate-700 rounded-bl-none'}`}>{msg.text}</div>
+                                                </div>
+                                            ))}
+                                            <div ref={chatEndRef} />
+                                        </div>
+                                        <div className="relative">
+                                            <input type="text" value={sentenceInput} onChange={(e) => setSentenceInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSentenceSubmit()} placeholder="在这里输入中文句子..." className="w-full p-4 pr-16 bg-slate-50 border-4 border-slate-900 rounded-2xl focus:bg-white focus:border-pink-400 outline-none font-bold placeholder-slate-400" />
+                                            <button onClick={handleSentenceSubmit} className="absolute right-3 top-3 bottom-3 bg-indigo-500 text-white px-4 rounded-xl border-2 border-slate-900 hover:bg-indigo-600 transition shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]"><Icons.ArrowRight /></button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {mode === 'student' && isTransitioning && (
+                            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
+                                <div className="bg-white p-10 rounded-3xl border-8 border-slate-900 shadow-2xl text-center transform scale-110">
+                                    <div className="mb-6 flex justify-center"><div className="relative"><span className="text-yellow-400 block w-24 h-24 animate-spin-slow"><Icons.Star /></span></div></div>
+                                    <h2 className="text-4xl font-black text-slate-800 mb-4">恭喜过关!</h2>
+                                    <p className="text-xl text-slate-500 font-bold mb-8">太棒了！准备好迎接下一个挑战了吗？</p>
+                                    <button onClick={proceedToNextLevel} className="bg-green-500 hover:bg-green-400 text-white px-10 py-4 rounded-2xl font-black text-2xl border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all flex items-center justify-center mx-auto">
+                                        进入下一关 <span className="ml-3"><Icons.ArrowRight /></span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {mode === 'student' && isGameComplete && (
+                            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
+                                <div className="bg-white p-12 rounded-[3rem] border-8 border-yellow-400 shadow-[0px_0px_50px_rgba(234,179,8,0.5)] text-center relative overflow-hidden max-w-lg w-full">
+                                    <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-pink-500 via-yellow-500 to-sky-500"></div>
+                                    <div className="mb-8 relative inline-block"><span className="text-yellow-400 block w-32 h-32 animate-bounce"><Icons.Trophy /></span></div>
+                                    <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500 mb-4 tracking-tighter">通关成功!</h2>
+                                    <p className="text-2xl text-slate-500 font-bold mb-10 leading-relaxed">你真是太厉害了！<br/>所有的中文生词都掌握啦！🎉</p>
+                                    <div className="flex flex-col gap-4">
+                                        <button onClick={playAgain} className="bg-indigo-500 hover:bg-indigo-400 text-white px-10 py-4 rounded-2xl font-black text-xl border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(30,27,75,1)] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all flex items-center justify-center">
+                                            <span className="mr-3"><Icons.RefreshCw /></span> 再玩一次 (换一批词)
+                                        </button>
+                                        <button onClick={() => setMode('teacher')} className="text-slate-400 font-bold hover:text-slate-600 transition">返回教师设置</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                    <Footer />
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

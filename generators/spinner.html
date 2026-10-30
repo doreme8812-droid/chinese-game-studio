@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>转盘抽奖生成器 - Chinese Spinner Generator</title>
+<style id="kd-kids-theme">
+/* 儿童类生成器统一风格 - 由中文游戏工坊注入（外壳统一：圆润中文字体 + 标题品牌色；玩法区与对错配色不动） */
+:root{
+  --kd-primary:#FF7A45;
+  --kd-primary-d:#E85C2A;
+}
+body{
+  font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+h1,.title,.brand-title,.app-title,header h1,.header-title,.app-header h1{
+  color:var(--kd-primary-d) !important;
+}
+</style>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #FFF7ED; color: #7c2d12;
+            font-family: 'Varela Round','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; }
+        .topbar { display:flex; align-items:center; justify-content:space-between;
+            padding:12px 20px; background:#fff; border-bottom:2px solid #fed7aa; position:sticky; top:0; z-index:50; }
+        .brand { display:flex; align-items:center; gap:8px; font-weight:bold; color:#ea580c; font-size:1.1rem; }
+        .tag { background:#ffedd5; color:#c2410c; font-size:.8rem; padding:4px 12px; border-radius:999px; font-weight:bold; }
+        .wrap { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:24px; }
+        @media (max-width:820px){ .wrap{ grid-template-columns:1fr; } }
+        .panel { background:#fff; border-radius:20px; padding:22px; border:2px solid #fed7aa; box-shadow:0 6px 0 #fed7aa; }
+        .panel h2 { margin:0 0 16px; font-size:1.25rem; color:#ea580c; display:flex; align-items:center; gap:8px; }
+        label { display:block; font-weight:bold; font-size:.9rem; color:#9a3412; margin:14px 0 6px; }
+        input[type=text], textarea { width:100%; border:2px solid #fed7aa; border-radius:12px; padding:10px 12px;
+            font-family:inherit; font-size:1rem; color:#7c2d12; background:#fffdf9; outline:none; }
+        textarea { resize:vertical; min-height:140px; line-height:1.5; }
+        input:focus, textarea:focus { border-color:#fb923c; }
+        .hint { font-size:.8rem; color:#b45309; margin-top:4px; }
+        .switchline { display:flex; align-items:center; gap:10px; margin:14px 0; }
+        .switch { position:relative; width:52px; height:30px; flex:0 0 auto; }
+        .switch input { opacity:0; width:0; height:0; }
+        .slider { position:absolute; inset:0; background:#fed7aa; border-radius:999px; transition:.2s; cursor:pointer; }
+        .slider::before { content:""; position:absolute; width:24px; height:24px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+        .switch input:checked + .slider { background:#34d399; }
+        .switch input:checked + .slider::before { transform:translateX(22px); }
+        .lab { font-weight:bold; font-size:.95rem; color:#9a3412; }
+        .use { background:#fffbeb; border:2px dashed #fcd34d; border-radius:14px; padding:14px; font-size:.85rem; color:#92400e; line-height:1.6; }
+        .use b { color:#b45309; }
+        .btn { border:none; border-radius:14px; padding:14px; font-family:inherit; font-weight:bold; font-size:1.05rem;
+            cursor:pointer; background:#22c55e; color:#fff; box-shadow:0 4px 0 #15803d; width:100%; }
+        .btn:active { transform:translateY(2px); box-shadow:0 2px 0 #15803d; }
+        .btn.ghost { background:#fff; color:#ea580c; border:2px solid #fb923c; box-shadow:0 4px 0 #fed7aa; margin-top:10px; }
+        .actions { margin-top:20px; }
+        .mini-wrap { position:relative; width:260px; height:260px; margin:10px auto; }
+        .mini-wheel { position:absolute; inset:0; border-radius:50%; border:5px solid #fff; box-shadow:0 6px 0 rgba(0,0,0,.08); }
+        .mini-lbl { position:absolute; left:50%; top:50%; width:72px; margin-left:-36px; margin-top:-10px; height:20px;
+            line-height:20px; font-size:11px; font-weight:bold; color:#5b2c0c; text-align:center;
+            overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+        .mini-hub { position:absolute; left:50%; top:50%; margin-left:-22px; margin-top:-22px; width:44px; height:44px;
+            border-radius:50%; background:#fff; border:4px solid #fb923c; }
+        .mini-ptr { position:absolute; left:50%; top:-4px; margin-left:-12px; width:0; height:0;
+            border-left:12px solid transparent; border-right:12px solid transparent; border-top:22px solid #e11d48; z-index:2; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="brand"><span>🐼</span> Chinese with Dora</div>
+        <div class="tag">转盘抽奖生成器</div>
+    </div>
+
+    <div class="wrap">
+        <div class="panel">
+            <h2>⚙️ 基础设置</h2>
+            <label>游戏标题</label>
+            <input type="text" id="title" value="中文转盘">
+
+            <label>转盘内容（每行一个，或用逗号分隔）</label>
+            <textarea id="words" placeholder="例如：&#10;苹果&#10;香蕉&#10;西瓜&#10;葡萄&#10;橘子&#10;草莓"></textarea>
+            <div class="hint" id="wordHint"></div>
+
+            <div class="switchline">
+                <label class="switch"><input type="checkbox" id="audio" checked><span class="slider"></span></label>
+                <span class="lab">转到后自动朗读该词</span>
+            </div>
+            <div class="switchline">
+                <label class="switch"><input type="checkbox" id="record" checked><span class="slider"></span></label>
+                <span class="lab">记录已转到的内容（可打卡）</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>👀 实时预览</h2>
+            <div id="preview"></div>
+            <div class="use">
+                <b>怎么用：</b><br>
+                1. 填入词语 / 音节 / 任务（建议 <b>6–12 个</b>，太多字会挤）；<br>
+                2. 下载 .html 发给学生或投屏到教室大屏；<br>
+                3. 学生自转自读，或老师投屏抽人回答 —— 热身神器。
+            </div>
+            <div class="actions">
+                <button class="btn" id="download">⬇️ 生成独立游戏文件（HTML）</button>
+                <button class="btn ghost" id="reset">🗑️ 清空内容</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function $(id){ return document.getElementById(id); }
+        function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; }); }
+        function parseWords(raw){
+            return raw.split(/[\n,，、;；]/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length>0; });
+        }
+        var PALETTE = ['#FF8A65','#FFD54F','#81C784','#64B5F6','#BA68C8','#4DB6AC','#F06292','#AED581','#FFB74D','#4DD0E1','#9575CD','#F8BBD0'];
+
+        function buildGradient(n){
+            var seg = 360/n, parts = [];
+            for(var i=0;i<n;i++){ parts.push(PALETTE[i%PALETTE.length] + ' ' + (i*seg).toFixed(2) + 'deg ' + ((i+1)*seg).toFixed(2) + 'deg'); }
+            return 'conic-gradient(from 0deg, ' + parts.join(', ') + ')';
+        }
+
+        function renderPreview(){
+            var words = parseWords($('words').value);
+            var pv = $('preview');
+            if(words.length === 0){
+                pv.innerHTML = '<div style="text-align:center;color:#b45309;padding:60px 0;">填写内容后这里会出现转盘</div>';
+                $('wordHint').textContent = '建议 6–12 个；留空将用示例内容占位。';
+                return;
+            }
+            var n = words.length, seg = 360/n;
+            var html = '<div class="mini-wrap"><div class="mini-ptr"></div><div class="mini-wheel" style="background:' + buildGradient(n) + '">';
+            for(var i=0;i<n;i++){
+                var a = i*seg + seg/2;
+                html += '<div class="mini-lbl" style="transform:rotate(' + a.toFixed(2) + 'deg) translateY(-88px)">' + escapeHtml(words[i]) + '</div>';
+            }
+            html += '</div><div class="mini-hub"></div></div>';
+            pv.innerHTML = html;
+            var h = $('wordHint');
+            if(n > 14){ h.textContent = '已填 ' + n + ' 个 —— 偏多，转盘上的字会变小，建议精简到 12 个以内。'; }
+            else { h.textContent = '已填 ' + n + ' 个。'; }
+        }
+
+        function buildStudentHTML(cfg){
+            var css = [
+                "*{box-sizing:border-box;}",
+                "body{margin:0;font-family:'Varela Round','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:#FFF7ED;color:#7c2d12;}",
+                ".app{max-width:520px;margin:0 auto;padding:18px;text-align:center;}",
+                "h1{color:#ea580c;font-size:1.6rem;margin:6px 0 2px;}",
+                ".sub{color:#b45309;font-size:.9rem;margin-bottom:10px;}",
+                ".wheel-wrap{position:relative;width:320px;height:320px;margin:16px auto;}",
+                ".wheel{position:absolute;inset:0;border-radius:50%;border:6px solid #fff;box-shadow:0 8px 0 rgba(0,0,0,.08);transition:transform 4s cubic-bezier(.17,.67,.16,1);}",
+                ".lbl{position:absolute;left:50%;top:50%;width:92px;margin-left:-46px;margin-top:-11px;height:22px;line-height:22px;font-size:13px;font-weight:bold;color:#5b2c0c;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}",
+                ".ptr{position:absolute;left:50%;top:-8px;margin-left:-14px;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid #e11d48;z-index:3;}",
+                ".hub{position:absolute;left:50%;top:50%;margin-left:-28px;margin-top:-28px;width:56px;height:56px;border-radius:50%;background:#fff;border:4px solid #fb923c;z-index:2;font-weight:bold;color:#ea580c;line-height:48px;font-size:1.5rem;}",
+                ".result{margin-top:14px;font-size:2rem;font-weight:bold;color:#c2410c;min-height:46px;}",
+                ".btn{border:none;border-radius:14px;padding:14px 28px;font-family:inherit;font-weight:bold;font-size:1.05rem;cursor:pointer;background:#22c55e;color:#fff;box-shadow:0 4px 0 #15803d;margin-top:12px;}",
+                ".btn:active{transform:translateY(2px);box-shadow:0 2px 0 #15803d;}",
+                ".btn[disabled]{opacity:.5;cursor:not-allowed;}",
+                ".btn.small{background:#fb923c;box-shadow:0 4px 0 #c2410c;padding:8px 16px;font-size:.9rem;}",
+                ".done-wrap{margin-top:16px;text-align:left;}",
+                ".done-wrap h3{font-size:.95rem;color:#9a3412;margin:0 0 6px;}",
+                ".done{display:flex;flex-wrap:wrap;gap:6px;}",
+                ".chip{background:#ffedd5;border:1px solid #fed7aa;border-radius:999px;padding:4px 10px;font-size:.85rem;color:#9a3412;}"
+            ].join('');
+
+            var js = [
+                "var CFG = " + JSON.stringify(cfg) + ";",
+                "var PAL = " + JSON.stringify(PALETTE) + ";",
+                "var N = CFG.words.length;",
+                "var wheel = document.getElementById('wheel');",
+                "var resultEl = document.getElementById('result');",
+                "var btn = document.getElementById('spin');",
+                "var doneEl = document.getElementById('done');",
+                "var cntEl = document.getElementById('cnt');",
+                "var cur = 0, spinning = false, doneList = [];",
+                "function speak(t){ if(!CFG.audioOn) return; if('speechSynthesis' in window){ window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.lang='zh-CN'; window.speechSynthesis.speak(u); } }",
+                "function build(){",
+                "  if(N===0){ resultEl.textContent='（没有内容）'; btn.disabled=true; return; }",
+                "  var seg=360/N, parts=[];",
+                "  for(var i=0;i<N;i++){ parts.push(PAL[i%PAL.length]+' '+(i*seg).toFixed(2)+'deg '+((i+1)*seg).toFixed(2)+'deg'); }",
+                "  wheel.style.background='conic-gradient(from 0deg, '+parts.join(', ')+')';",
+                "  for(var i=0;i<N;i++){ var a=i*seg+seg/2;",
+                "    var d=document.createElement('div'); d.className='lbl';",
+                "    d.style.transform='rotate('+a.toFixed(2)+'deg) translateY(-108px)';",
+                "    d.textContent=CFG.words[i]; wheel.appendChild(d);",
+                "  }",
+                "}",
+                "function addDone(w){ doneList.push(w); var c=document.createElement('span'); c.className='chip'; c.textContent=w; doneEl.appendChild(c); cntEl.textContent=doneList.length; }",
+                "btn.onclick=function(){",
+                "  if(N===0||spinning) return;",
+                "  spinning=true; btn.disabled=true; resultEl.textContent='…';",
+                "  var i=Math.floor(Math.random()*N);",
+                "  var seg=360/N; var a=i*seg+seg/2;",
+                "  var target=((-a)%360+360)%360;",
+                "  var delta=((target-cur)%360+360)%360;",
+                "  cur=cur+360*5+delta;",
+                "  wheel.style.transform='rotate('+cur.toFixed(2)+'deg)';",
+                "  setTimeout(function(){",
+                "    resultEl.textContent=CFG.words[i];",
+                "    speak(CFG.words[i]);",
+                "    if(CFG.recordOn) addDone(CFG.words[i]);",
+                "    spinning=false; btn.disabled=false;",
+                "  }, 4100);",
+                "};",
+                "document.getElementById('again').onclick=function(){ speak(resultEl.textContent); };",
+                "build();"
+            ].join('\n');
+
+            return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n  <meta charset="UTF-8">\n' +
+                '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+                '  <title>' + escapeHtml(cfg.title) + ' - 转盘</title>\n' +
+                '  <style>' + css + '</style>\n</head>\n<body>\n' +
+                '  <div class="app">\n' +
+                '    <h1>' + escapeHtml(cfg.title) + '</h1>\n' +
+                '    <div class="sub">点下面按钮开始转动</div>\n' +
+                '    <div class="wheel-wrap">\n' +
+                '      <div class="ptr"></div>\n' +
+                '      <div class="wheel" id="wheel"></div>\n' +
+                '      <div class="hub">🎯</div>\n' +
+                '    </div>\n' +
+                '    <button class="btn" id="spin">🎡 开始转动</button>\n' +
+                (cfg.audioOn ? '    <button class="btn small" id="again">🔊 再听一次</button>\n' : '') +
+                '    <div class="result" id="result"></div>\n' +
+                (cfg.recordOn ? '    <div class="done-wrap"><h3>已完成 <span id="cnt">0</span> 个</h3><div class="done" id="done"></div></div>\n' : '') +
+                '  </div>\n' +
+                '  <script>' + js + '<\/script>\n</body>\n</html>';
+        }
+
+        function getConfig(){
+            return {
+                title: $('title').value.trim() || '中文转盘',
+                words: parseWords($('words').value),
+                audioOn: $('audio').checked,
+                recordOn: $('record').checked
+            };
+        }
+
+        function download(){
+            var cfg = getConfig();
+            var blob = new Blob([buildStudentHTML(cfg)], { type:'text/html;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = (cfg.title || '转盘') + '_转盘.html';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        ['title','words','audio','record'].forEach(function(id){
+            var el = $(id);
+            el.addEventListener('input', function(){ if(id==='words') renderPreview(); });
+            el.addEventListener('change', renderPreview);
+        });
+        $('download').addEventListener('click', download);
+        $('reset').addEventListener('click', function(){ $('words').value=''; renderPreview(); });
+        renderPreview();
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "Dora 教學白板",
+  "short_name": "白板",
+  "description": "Dora 的教學白板：普通話拼音 / 粵語耶魯 / 粵語粵拼 三檔注音。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f0fdfa",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

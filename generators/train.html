@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>造句小火车：通用版 / Train Game Generator</title>
+<style id="kd-kids-theme">
+/* 儿童类生成器统一风格 - 由中文游戏工坊注入（外壳统一：圆润中文字体 + 标题品牌色；玩法区与对错配色不动） */
+:root{
+  --kd-primary:#FF7A45;
+  --kd-primary-d:#E85C2A;
+}
+body{
+  font-family:'Varela Round','Noto Sans TC','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif !important;
+}
+h1,.title,.brand-title,.app-title,header h1,.header-title,.app-header h1{
+  color:var(--kd-primary-d) !important;
+}
+</style>
+
+    <script src="https://unpkg.com/pinyin-pro@3.18.2/dist/index.js"></script>
+    <style>
+        :root {
+            --bg-color: #fdf6e3;
+            --primary-color: #66bb6a;
+            --secondary-color: #ffca28;
+            --text-color: #3e2723;
+            --crate-bg: #ffcc80;
+            --crate-border: #795548;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "Heiti SC", "STXihei", "华文细黑", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        h1 { margin: 10px 0; font-size: 1.4rem; color: #5d4037; }
+
+        /* --- 老师设置面板 (Teacher Panel) --- */
+        #setup-panel {
+            display: flex; /* 默认显示 */
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 90%; max-width: 900px;
+            z-index: 100; flex-direction: column; gap: 15px;
+            max-height: 90vh; overflow-y: auto; border: 4px solid var(--primary-color);
+        }
+
+        .config-row { display: flex; gap: 15px; align-items: center; background: #f5f5f5; padding: 10px; border-radius: 8px; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; flex-grow: 1; }
+        .input-col { display: flex; flex-direction: column; }
+        .input-col label { font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; color: #555; }
+        textarea { height: 150px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 8px; font-size: 15px; resize: none; font-family: inherit; }
+        textarea:focus { border-color: var(--primary-color); outline: none; }
+
+        /* --- 学生开始封面 (Student Start Screen) --- */
+        #student-start-screen {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); flex-direction: column;
+            align-items: center; justify-content: center; z-index: 300;
+        }
+        .start-card {
+            background: white; padding: 40px; border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; width: 80%;
+        }
+
+        /* --- 游戏主画面 (Game Area) --- */
+        #game-area {
+            display: none; width: 100%; height: 100%;
+            flex-direction: column; align-items: center; justify-content: flex-start;
+        }
+
+        .header-bar {
+            width: 100%; padding: 10px 20px; box-sizing: border-box;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* 新增：头部按钮组 */
+        .header-btn-group {
+            display: flex; gap: 10px;
+        }
+
+        .hint-display {
+            font-size: 1.4rem; color: #00796b; font-weight: bold; margin: 10px 0;
+            min-height: 1.5em; text-align: center; padding: 0 20px;
+        }
+
+        /* --- SVG 画布 --- */
+        #train-canvas { width: 100%; height: 240px; flex-shrink: 0; overflow: visible; }
+        .svg-wheel { transform-box: fill-box; transform-origin: center; }
+        #train-group { transition: transform 1s cubic-bezier(0.4, 0.0, 0.2, 1); }
+        .train-enter { animation: slideIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .train-depart { animation: slideOut 1.5s ease-in forwards; }
+        @keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
+        @keyframes slideOut { to { transform: translateX(-150%); } }
+
+        /* --- 木箱堆场 --- */
+        #crate-yard {
+            flex-grow: 1; width: 95%; background: #d7ccc8;
+            border-top: 4px solid #8d6e63; border-radius: 15px 15px 0 0;
+            padding: 20px; overflow-y: auto;
+            display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start;
+            gap: 12px; box-shadow: inset 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .word-crate {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: var(--crate-bg); border: 3px solid var(--crate-border); border-radius: 6px;
+            padding: 8px 12px; min-width: 60px; height: 60px; cursor: pointer;
+            box-shadow: 3px 5px 0 rgba(0,0,0,0.2); transition: all 0.1s;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 2px, transparent 2px, transparent 8px);
+        }
+        .word-crate:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+        .word-crate.disabled { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+        .crate-char { font-size: 1.4rem; font-weight: bold; color: #3e2723; }
+        .crate-rom { font-size: 0.8rem; color: #5d4037; }
+
+        /* --- 按钮样式 --- */
+        .btn-primary {
+            background-color: var(--primary-color); color: white; border: none;
+            padding: 12px 30px; border-radius: 30px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; align-self: center; transition: transform 0.1s; box-shadow: 0 4px 0 #388e3c;
+        }
+        .btn-primary:active { transform: translateY(4px); box-shadow: none; }
+
+        .btn-export {
+            background-color: #ff9800; color: white; border: none;
+            padding: 12px 30px; border-radius: 30px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 0 #e65100; transition: transform 0.1s;
+        }
+        .btn-export:active { transform: translateY(4px); box-shadow: none; }
+
+        /* 小型导出按钮 (用于预览页) */
+        .btn-export-small {
+            background-color: #ff9800; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 0 #e65100;
+            font-size: 0.9rem;
+        }
+        .btn-export-small:active { transform: translateY(2px); box-shadow: none; }
+
+        .btn-secondary {
+            background-color: #90a4ae; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; box-shadow: 0 3px 0 #607d8b;
+        }
+        .btn-secondary:active { transform: translateY(3px); box-shadow: none; }
+
+        /* --- 页脚署名 --- */
+        #game-footer {
+            width: 100%; text-align: center; padding: 10px 0 15px 0;
+            color: #5d4037; font-weight: bold; font-size: 1rem;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.6);
+            font-family: "Comic Sans MS", "Microsoft YaHei", sans-serif;
+            flex-shrink: 0; /* 防止被挤压 */
+        }
+
+        /* --- 通用 --- */
+        .shake { animation: shake 0.4s both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        #toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 10px 25px; border-radius: 20px;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 2000;
+            font-size: 1.1rem;
+        }
+        #toast.show { opacity: 1; }
+
+        #end-screen {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; z-index: 200; width: 80%; max-width: 400px;
+        }
+        
+        #fireworks-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 150; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">提示 / Tip</div>
+    <canvas id="fireworks-canvas"></canvas>
+
+    <!-- 老师设置面板 -->
+    <div id="setup-panel">
+        <h2 style="margin:0; text-align:center;">🚂 造句小火车：题目编辑器 (老师版)</h2>
+        <div class="config-row">
+            <div>
+                <label>选择语言：</label>
+                <select id="lang-select" onchange="updateOptions()">
+                    <option value="mandarin">汉语 (普通话)</option>
+                    <option value="cantonese">粤语 (广东话)</option>
+                </select>
+            </div>
+            <div style="flex-grow:1; text-align:right;">
+                <button class="btn-secondary" onclick="fillExample()">填入范例</button>
+            </div>
+        </div>
+        <div class="input-grid">
+            <div class="input-col">
+                <label id="lbl-zh">1. 中文词语 (空格分开)</label>
+                <textarea id="input-zh"></textarea>
+            </div>
+            <div class="input-col">
+                <label id="lbl-rom">2. 拼音 (空格分开)</label>
+                <textarea id="input-rom"></textarea>
+            </div>
+            <div class="input-col">
+                <label>3. 英文意思 (每行一句)</label>
+                <textarea id="input-en"></textarea>
+            </div>
+        </div>
+        <div style="display:flex; justify-content: center; gap: 20px;">
+            <button class="btn-primary" onclick="teacherPreviewGame()">课堂演示 (预览)</button>
+            <button class="btn-export" onclick="exportStudentFile()">📥 导出学生作业文件</button>
+        </div>
+        <p style="text-align:center; color:#666; font-size:0.9rem; margin:0;">
+            点击“导出”后，将生成的 .html 文件发给学生即可。<br>学生版为中英双语界面，包含自动随机抽题功能。
+        </p>
+    </div>
+
+    <!-- 学生开始封面 -->
+    <div id="student-start-screen">
+        <div class="start-card">
+            <h1 style="color:#3e2723; margin-bottom: 10px;">🚂 造句小火车 <br><span style="font-size:0.7em; color:#5d4037;">Sentence Train: Practice</span></h1>
+            <p style="color:#5d4037; margin-bottom: 30px; line-height: 1.5;">
+                请点击下方按钮开始练习<br>Click the button to start<br>
+                <span style="font-size:0.9em; color:#777;">(每次随机抽取 10 题 / 10 random questions)</span>
+            </p>
+            <button class="btn-primary" onclick="startStudentGame()">开始挑战 / Start</button>
+        </div>
+    </div>
+
+    <!-- 游戏主画面 -->
+    <div id="game-area">
+        <div class="header-bar">
+            <h1>🚂 <span style="font-size:0.8em">得分/Score:</span> <span id="score">0</span> <span style="font-size:0.6em; color:#777; margin-left:10px;" id="progress-display"></span></h1>
+            <!-- 按钮组 -->
+            <div class="header-btn-group">
+                <!-- 仅老师模式下可见的导出按钮 -->
+                <button id="btn-preview-export" class="btn-export-small" onclick="exportStudentFile()">📥 导出 / Export</button>
+                <button class="btn-secondary" onclick="handleExit()">退出 / Exit</button>
+            </div>
+        </div>
+
+        <div class="hint-display" id="hint-text">Ready?</div>
+
+        <!-- SVG 火车轨道 -->
+        <svg id="train-canvas" viewBox="0 0 800 240" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <g id="wheel-def">
+                    <circle cx="0" cy="0" r="14" fill="#3e2723" stroke="#5d4037" stroke-width="2"/>
+                    <line x1="-14" y1="0" x2="14" y2="0" stroke="#8d6e63" stroke-width="2"/>
+                    <line x1="0" y1="-14" x2="0" y2="14" stroke="#8d6e63" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="5" fill="#a1887f"/>
+                </g>
+                <linearGradient id="train-body-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef5350;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#c62828;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <g id="train-group"></g>
+        </svg>
+
+        <!-- 词语堆场 -->
+        <div id="crate-yard"></div>
+        <div id="game-footer">Chinese with Dora | Dora 老师</div>
+    </div>
+
+    <!-- 结算 -->
+    <div id="end-screen">
+        <h2 style="font-size: 2rem; margin-bottom: 0; color:#2e7d32;">🎉 挑战成功！<br><span style="font-size:0.6em;">Challenge Complete!</span></h2>
+        <p style="margin: 15px 0;">本次得分 / Final Score</p>
+        <div style="font-size: 4rem; color: #ef5350; margin: 10px 0; font-weight: bold;" id="end-score">0</div>
+        <button class="btn-primary" onclick="location.reload()">再来一次 / Play Again</button>
+    </div>
+
+    <script>
+        // ==========================================
+        //  === 配置中心 (Config Center) ===
+        // ==========================================
+        
+        // 这里的配置会被“导出”功能自动替换
+        /* CONFIG_START */
+        var GAME_MODE = 'teacher'; // 'teacher' 或 'student'
+        var PRELOADED_DATA = null; // 学生模式下这里会有数据
+        /* CONFIG_END */
+
+        // --- 运行时变量 ---
+        let levels = [];
+        let currentLevelIdx = 0;
+        let score = 0;
+        let allPoolItems = []; // 全局词库 (Train Game 原本就是混杂所有词的)
+        let userFilled = [];
+        let isAnimating = false;
+
+        // UI 文本配置
+        const UI_TEXT = {
+            mandarin: {
+                phZh: "我 喜欢 学 中文\n今天 天气 很 好",
+                phRom: "留空系统会自动生成拼音",
+                phEn: "I like learning Chinese\nThe weather is good today",
+                toastEmpty: "请输入中文词语"
+            },
+            cantonese: {
+                phZh: "我 锺意 学 广东话\n请问 地铁站 喺 边度",
+                phRom: "ngo5 zung1ji3 hok6 gwong2dung1waa2\nceng2man6 dei6tit3zaam6 hai2 bin1dou6",
+                phEn: "I like learning Cantonese\nWhere is the MTR station?",
+                toastEmpty: "请输入中文词语"
+            }
+        };
+
+        // --- 初始化 ---
+        window.onload = function() {
+            if (GAME_MODE === 'student' && PRELOADED_DATA) {
+                document.getElementById('setup-panel').style.display = 'none';
+                document.getElementById('student-start-screen').style.display = 'flex';
+                // 隐藏预览页的导出按钮
+                document.getElementById('btn-preview-export').style.display = 'none';
+            } else {
+                document.getElementById('setup-panel').style.display = 'flex';
+                // 显示预览页的导出按钮
+                document.getElementById('btn-preview-export').style.display = 'inline-block';
+                updateOptions();
+            }
+        };
+
+        function handleExit() {
+            if (GAME_MODE === 'student') {
+                location.reload();
+            } else {
+                // 老师模式返回设置
+                document.getElementById('game-area').style.display = 'none';
+                document.getElementById('setup-panel').style.display = 'flex';
+                stopFireworks();
+                document.getElementById('end-screen').style.display = 'none';
+            }
+        }
+
+        function updateOptions() {
+            const lang = document.getElementById('lang-select').value;
+            const ui = UI_TEXT[lang];
+            const lblZh = document.getElementById('lbl-zh');
+            const lblRom = document.getElementById('lbl-rom');
+            
+            if (lang === 'mandarin') {
+                lblZh.innerText = "1. 普通话词语 (空格分开)";
+                lblRom.innerText = "2. 拼音 (留空则自动生成)";
+            } else {
+                lblZh.innerText = "1. 粤语词语 (空格分开)";
+                lblRom.innerText = "2. 粤拼 (对应词语)";
+            }
+            
+            document.getElementById('input-zh').placeholder = ui.phZh;
+            document.getElementById('input-rom').placeholder = ui.phRom;
+            document.getElementById('input-en').placeholder = ui.phEn;
+        }
+
+        function fillExample() {
+            const lang = document.getElementById('lang-select').value;
+            const ui = UI_TEXT[lang];
+            document.getElementById('input-zh').value = ui.phZh;
+            document.getElementById('input-rom').value = lang === 'mandarin' ? "" : ui.phRom; 
+            document.getElementById('input-en').value = ui.phEn;
+        }
+
+        // --- 导出功能 ---
+        function exportStudentFile() {
+            const data = getInputs();
+            if (!data) return;
+
+            let htmlContent = document.documentElement.outerHTML;
+            htmlContent = '<!DOCTYPE html>' + htmlContent;
+
+            const newConfig = `
+        var GAME_MODE = 'student';
+        var PRELOADED_DATA = ${JSON.stringify(data)};
+            `;
+
+            const regex = /\/\* CONFIG_START \*\/([\s\S]*?)\/\* CONFIG_END \*\//;
+            
+            if (htmlContent.match(regex)) {
+                htmlContent = htmlContent.replace(regex, `/* CONFIG_START */${newConfig}/* CONFIG_END */`);
+                const blob = new Blob([htmlContent], {type: 'text/html'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '造句小火车_学生作业.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("文件已生成！\nFile generated!");
+            } else {
+                alert("生成失败：配置标记丢失。");
+            }
+        }
+
+        function getInputs() {
+            const zh = document.getElementById('input-zh').value.trim();
+            const rom = document.getElementById('input-rom').value.trim();
+            const en = document.getElementById('input-en').value.trim();
+            const lang = document.getElementById('lang-select').value;
+
+            if (!zh) { showToast(UI_TEXT[lang].toastEmpty); return null; }
+
+            const zLines = zh.split('\n');
+            const rLines = rom ? rom.split('\n') : [];
+            const eLines = en.split('\n');
+            const questions = [];
+
+            for (let i = 0; i < zLines.length; i++) {
+                if (!zLines[i].trim()) continue;
+                const words = zLines[i].trim().split(/\s+/);
+                let pinyins = [];
+                if (lang === 'mandarin' && (!rLines[i] || !rLines[i].trim())) {
+                    if (window.pinyinPro) pinyins = words.map(w => window.pinyinPro.pinyin(w));
+                    else pinyins = words.map(()=>'');
+                } else {
+                    pinyins = (rLines[i]||'').trim().split(/\s+/);
+                }
+                questions.push({ zh: words, rom: pinyins, en: eLines[i] || '' });
+            }
+            return { questions: questions, lang: lang };
+        }
+
+        // --- 游戏启动逻辑 ---
+        function teacherPreviewGame() {
+            const data = getInputs();
+            if(!data) return;
+            initGameEngine(data.questions, false);
+        }
+
+        function startStudentGame() {
+            if (!PRELOADED_DATA) return;
+            initGameEngine(PRELOADED_DATA.questions, true);
+        }
+
+        function initGameEngine(rawQuestions, isRandomSession) {
+            levels = [];
+            let globalWords = [];
+
+            rawQuestions.forEach((q, qIdx) => {
+                const items = q.zh.map((w, i) => ({ 
+                    char: w, 
+                    rom: q.rom[i]||'', 
+                    id: `${qIdx}-${i}` 
+                }));
+                // 收集全局词库
+                globalWords = globalWords.concat(items);
+                levels.push({ items: items, en: q.en });
+            });
+
+            if (levels.length === 0) return;
+
+            // 老师模式预览全部，学生模式随机抽10题
+            if (isRandomSession) {
+                levels.sort(() => Math.random() - 0.5);
+                levels = levels.slice(0, 10);
+            }
+
+            // 更新全局词库 (Train Game 特性：所有题目的词混在一起)
+            // 注意：如果只抽了10题，是否要包含所有题目的词做干扰？
+            // 為了簡化邏輯且保留“干擾”特性，我們使用當前選中關卡的所有詞作為池子
+            // 或者，如果數據量夠大，我們可以使用 rawQuestions 的所有詞
+            // 這裡我們使用所有選中關卡的詞匯總
+            allPoolItems = levels.flatMap(l => l.items).map(item => ({...item})); 
+
+            // UI 切换
+            document.getElementById('setup-panel').style.display = 'none';
+            document.getElementById('student-start-screen').style.display = 'none';
+            document.getElementById('game-area').style.display = 'flex';
+
+            score = 0;
+            currentLevelIdx = 0;
+            document.getElementById('score').innerText = score;
+            
+            loadLevel();
+        }
+
+        // --- 游戏主逻辑 (SVG Train) ---
+        function loadLevel() {
+            if (currentLevelIdx >= levels.length) {
+                showEndScreen();
+                return;
+            }
+
+            const level = levels[currentLevelIdx];
+            document.getElementById('hint-text').innerText = level.en;
+            
+            // 显示进度
+            const progressText = `( ${currentLevelIdx + 1} / ${levels.length} )`;
+            document.getElementById('progress-display').innerText = progressText;
+
+            userFilled = new Array(level.items.length).fill(null);
+            
+            renderTrain(level.items.length);
+            renderCrateYard();
+
+            const group = document.getElementById('train-group');
+            group.setAttribute('class', '');
+            void group.offsetWidth;
+            group.setAttribute('class', 'train-enter');
+            
+            isAnimating = false;
+        }
+
+        function showEndScreen() {
+            document.getElementById('end-score').innerText = score;
+            document.getElementById('end-screen').style.display = 'block';
+            startFireworks();
+        }
+
+        function renderTrain(count) {
+            const group = document.getElementById('train-group');
+            group.innerHTML = '';
+            const startX = 50; const yBase = 80; const carWidth = 100; const gap = 15;
+
+            // Engine
+            const engine = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            engine.innerHTML = `
+                <rect x="${startX+15}" y="${yBase-40}" width="20" height="40" fill="#d32f2f" stroke="#b71c1c" stroke-width="2"/>
+                <path d="M${startX+10} ${yBase-50} L${startX+40} ${yBase-50} L${startX+35} ${yBase-40} L${startX+15} ${yBase-40} Z" fill="#b71c1c"/>
+                <path d="M${startX} ${yBase} L${startX+90} ${yBase} L${startX+90} ${yBase+70} L${startX} ${yBase+70} Z" fill="url(#train-body-grad)" stroke="#b71c1c" stroke-width="2"/>
+                <path d="M${startX+90} ${yBase-20} L${startX+140} ${yBase-20} L${startX+140} ${yBase+70} L${startX+90} ${yBase+70} Z" fill="#c62828" stroke="#b71c1c" stroke-width="2"/>
+                <rect x="${startX+100}" y="${yBase-10}" width="30" height="30" fill="#81d4fa" stroke="#0277bd" stroke-width="2"/>
+                <use href="#wheel-def" transform="translate(${startX+35}, ${yBase+85}) scale(1.3)" class="svg-wheel" />
+                <use href="#wheel-def" transform="translate(${startX+115}, ${yBase+85}) scale(1.5)" class="svg-wheel" />
+            `;
+            group.appendChild(engine);
+
+            // Carriages
+            let currX = startX + 140 + gap;
+            for (let i = 0; i < count; i++) {
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", "carriage");
+                g.setAttribute("transform", `translate(${currX}, ${yBase})`);
+                g.style.cursor = "pointer";
+                g.onclick = () => handleCarriageClick(i);
+                g.innerHTML = `
+                    <rect x="-15" y="50" width="15" height="8" fill="#5d4037"/>
+                    <rect x="0" y="0" width="${carWidth}" height="80" rx="6" fill="#ffecb3" stroke="#ffb300" stroke-width="3"/>
+                    <line x1="0" y1="20" x2="${carWidth}" y2="20" stroke="#ffca28" stroke-width="2"/>
+                    <line x1="0" y1="60" x2="${carWidth}" y2="60" stroke="#ffca28" stroke-width="2"/>
+                    <use href="#wheel-def" x="25" y="85" class="svg-wheel"/>
+                    <use href="#wheel-def" x="75" y="85" class="svg-wheel"/>
+                    <text id="svg-char-${i}" x="50" y="45" text-anchor="middle" fill="#4e342e" font-size="28" font-weight="bold"></text>
+                    <text id="svg-rom-${i}" x="50" y="70" text-anchor="middle" fill="#795548" font-size="14"></text>
+                `;
+                group.appendChild(g);
+                currX += carWidth + gap;
+            }
+        }
+
+        function renderCrateYard() {
+            const yard = document.getElementById('crate-yard');
+            yard.innerHTML = '';
+            // 词库逻辑：这里我们展示所有题目的所有词，增加难度
+            const pool = [...allPoolItems].sort(() => Math.random() - 0.5);
+
+            pool.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'word-crate';
+                div.innerHTML = `<span class="crate-char">${item.char}</span><span class="crate-rom">${item.rom}</span>`;
+                div.onclick = (e) => handleCrateClick(item, div);
+                yard.appendChild(div);
+            });
+        }
+
+        function handleCrateClick(item, divEl) {
+            if (isAnimating) return;
+            const emptyIdx = userFilled.findIndex(u => u === null);
+            if (emptyIdx === -1) return;
+
+            userFilled[emptyIdx] = { item: item, el: divEl };
+            document.getElementById(`svg-char-${emptyIdx}`).textContent = item.char;
+            document.getElementById(`svg-rom-${emptyIdx}`).textContent = item.rom;
+            divEl.classList.add('disabled');
+            checkAnswer();
+        }
+
+        function handleCarriageClick(idx) {
+            if (isAnimating) return;
+            if (userFilled[idx] === null) return;
+            const filled = userFilled[idx];
+            filled.el.classList.remove('disabled');
+            document.getElementById(`svg-char-${idx}`).textContent = "";
+            document.getElementById(`svg-rom-${idx}`).textContent = "";
+            userFilled[idx] = null;
+        }
+
+        function checkAnswer() {
+            if (userFilled.includes(null)) return; 
+            const currentLevel = levels[currentLevelIdx];
+            const isCorrect = userFilled.every((filled, idx) => {
+                return filled.item.char === currentLevel.items[idx].char;
+            });
+
+            const group = document.getElementById('train-group');
+            if (isCorrect) {
+                score += 10;
+                document.getElementById('score').innerText = score;
+                isAnimating = true;
+                setTimeout(() => {
+                    group.classList.add('train-depart');
+                    setTimeout(() => {
+                        currentLevelIdx++;
+                        group.classList.remove('train-depart');
+                        loadLevel();
+                    }, 1500);
+                }, 500);
+            } else {
+                const canvas = document.getElementById('train-canvas');
+                canvas.classList.remove('shake');
+                void canvas.offsetWidth; canvas.classList.add('shake');
+                showToast("顺序错误 / Incorrect Order");
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // --- 烟火动画 ---
+        function startFireworks() {
+            const fc = document.getElementById('fireworks-canvas'); fc.style.display = 'block';
+            const fctx = fc.getContext('2d'); fc.width = window.innerWidth; fc.height = window.innerHeight;
+            let particles = [];
+            function createP(x,y,c){ return {x,y,c,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,a:1}; }
+            function loop() {
+                if(fc.style.display==='none') return;
+                fctx.globalCompositeOperation = 'destination-out'; fctx.fillStyle = 'rgba(0,0,0,0.1)'; fctx.fillRect(0,0,fc.width,fc.height);
+                fctx.globalCompositeOperation = 'lighter';
+                if(Math.random()<0.05) {
+                    const cx=Math.random()*fc.width, cy=Math.random()*fc.height*0.6;
+                    const c = `hsl(${Math.random()*360},100%,50%)`; for(let i=0;i<50;i++) particles.push(createP(cx,cy,c));
+                }
+                for(let i=0;i<particles.length;i++){
+                    let p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.a-=0.02;
+                    fctx.fillStyle=p.c; fctx.globalAlpha=p.a; fctx.beginPath(); fctx.arc(p.x,p.y,3,0,Math.PI*2); fctx.fill();
+                    if(p.a<=0) { particles.splice(i,1); i--; }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+        function stopFireworks(){ document.getElementById('fireworks-canvas').style.display='none'; }
+    </script>
+</body>
+</html>
