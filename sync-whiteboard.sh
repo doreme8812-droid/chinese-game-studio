@@ -11,7 +11,7 @@
 # ============================================================
 
 SRC="/Users/Dora_1/WorkBuddy/Claw/workbench/whiteboard-plus/dist"
-DST="/Users/Dora_1/WorkBuddy/Claw/game-studio/tools/whiteboard"
+DST="/Users/Dora_1/WorkBuddy/Claw/chinese-game-studio/tools/whiteboard"
 
 if [ ! -f "$SRC/index.html" ]; then
   echo "❌ 找不到白板构建产物：$SRC/index.html"
