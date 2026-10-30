@@ -18,7 +18,6 @@
   .top p{margin:0;color:var(--muted);font-size:14px;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
     padding:24px 22px;box-shadow:0 6px 22px rgba(30,70,130,.06);}
-  /* intro */
   .modes{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;}
   .mode{flex:1;min-width:220px;border:2px solid var(--line);border-radius:14px;padding:18px;
     cursor:pointer;transition:.15s;background:#fff;text-align:left;}
@@ -27,36 +26,42 @@
   .mode small{color:var(--muted);font-size:13px;}
   .intro-note{margin-top:16px;font-size:13px;color:var(--muted);background:#EFF5FC;
     border-radius:10px;padding:12px 14px;}
-  /* progress */
   .prog{height:8px;background:#E6EEF8;border-radius:99px;overflow:hidden;margin-bottom:6px;}
   .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#5BB0F5);
     width:0;transition:width .25s;}
-  .prog-txt{font-size:13px;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;}
+  .prog-txt{font-size:13px;color:var(--muted);margin-bottom:14px;display:flex;justify-content:space-between;}
+  .meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
   .sec-tag{display:inline-block;font-size:12px;font-weight:600;color:#fff;background:var(--accent);
-    border-radius:99px;padding:3px 12px;margin-bottom:12px;}
-  .q-text{font-size:19px;font-weight:600;margin:4px 0 16px;}
+    border-radius:99px;padding:3px 12px;}
+  .diff{font-size:13px;font-weight:700;color:var(--accent-d);background:#EAF3FE;
+    border-radius:99px;padding:3px 12px;}
+  .q-text{font-size:19px;font-weight:600;margin:4px 0 4px;}
+  .py{font-size:15px;color:#8A94A6;letter-spacing:.5px;margin-bottom:14px;}
   .tts{display:flex;align-items:center;gap:12px;background:#EFF5FC;border-radius:12px;
-    padding:14px 16px;margin-bottom:16px;}
+    padding:14px 16px;margin-bottom:14px;}
   .tts button{border:none;background:var(--accent);color:#fff;font-size:15px;font-weight:600;
     border-radius:10px;padding:10px 16px;cursor:pointer;}
   .tts button:hover{background:var(--accent-d);}
   .tts .fallback{font-size:16px;color:var(--ink);}
   .tts .hint{font-size:12px;color:var(--muted);}
   .opts{display:flex;flex-direction:column;gap:12px;}
-  .opt{border:2px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;
+  .opt{border:2px solid var(--line);border-radius:12px;padding:13px 16px;cursor:pointer;
     font-size:16px;transition:.12s;display:flex;gap:12px;align-items:center;background:#fff;}
   .opt:hover{border-color:var(--accent);}
   .opt .k{width:28px;height:28px;flex:none;border-radius:8px;background:#EEF3FA;color:var(--accent-d);
     font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .opt .ot{flex:1;}
+  .opt .opy{display:block;font-size:13px;color:#8A94A6;letter-spacing:.4px;margin-top:2px;}
   .opt.sel{border-color:var(--accent);background:#EAF3FE;}
-  .opt.corr{border-color:var(--ok);background:#E9F8EF;}
-  .opt.wrong{border-color:#E2533B;background:#FDEEEA;}
+  .dk{margin-top:14px;width:100%;border:2px dashed #C2CCDA;background:#F7FAFD;color:var(--muted);
+    font-size:15px;font-weight:600;border-radius:12px;padding:12px;cursor:pointer;}
+  .dk:hover{border-color:var(--warn);color:var(--warn);}
+  .dk.sel{border-color:var(--warn);color:var(--warn);background:#FDF3E9;}
   .nav{display:flex;justify-content:flex-end;margin-top:22px;}
   .btn{border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:600;
     border-radius:12px;padding:12px 26px;cursor:pointer;}
   .btn:hover{background:var(--accent-d);}
   .btn:disabled{background:#B9C6D6;cursor:not-allowed;}
-  /* result */
   .res-hero{text-align:center;background:linear-gradient(135deg,#2E86DE,#5BB0F5);
     color:#fff;border-radius:16px;padding:26px 20px;margin-bottom:20px;}
   .res-hero .lv{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0;}
@@ -67,7 +72,7 @@
   .acc b{color:var(--accent-d);font-size:20px;}
   .bars h3{font-size:16px;margin:0 0 14px;color:var(--accent-d);}
   .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:14px;}
-  .bar-row .nm{width:64px;flex:none;color:var(--muted);}
+  .bar-row .nm{width:74px;flex:none;color:var(--muted);}
   .bar-row .track{flex:1;height:14px;background:#E6EEF8;border-radius:99px;overflow:hidden;}
   .bar-row .track>i{display:block;height:100%;border-radius:99px;}
   .bar-row .ct{width:54px;flex:none;text-align:right;color:var(--muted);font-size:13px;}
@@ -80,7 +85,7 @@
 <div class="wrap">
   <div class="top">
     <h1 id="appTitle">汉语水平自测</h1>
-    <p id="appSub">快速了解你的中文程度（参考 HSK 等级）</p>
+    <p id="appSub">自适应分级摸底 · 参考 HSK 等级</p>
   </div>
 
   <!-- 介绍页 -->
@@ -88,12 +93,12 @@
     <div id="introBody"></div>
     <div class="modes">
       <button class="mode" id="modeFull">
-        <h3 id="fullTitle">完整模式</h3>
-        <small id="fullSub">30 题 · 约 8–10 分钟</small>
+        <h3 id="fullTitle">完整测试</h3>
+        <small id="fullSub">约 12–16 题 · 精度更高</small>
       </button>
       <button class="mode" id="modeQuick">
-        <h3 id="quickTitle">快速模式</h3>
-        <small id="quickSub">10 题 · 约 3 分钟</small>
+        <h3 id="quickTitle">快速测试</h3>
+        <small id="quickSub">约 8–10 题 · 速度更快</small>
       </button>
     </div>
     <div class="intro-note" id="introNote"></div>
@@ -102,7 +107,7 @@
   <!-- 答题页 -->
   <section id="quiz" class="card hidden">
     <div class="prog"><i id="progBar"></i></div>
-    <div class="prog-txt"><span id="qCount"></span><span id="secName"></span></div>
+    <div class="prog-txt"><span id="qCount"></span><span id="convHint"></span></div>
     <div id="qArea"></div>
     <div class="nav"><button class="btn" id="nextBtn" disabled>下一题</button></div>
   </section>
@@ -126,7 +131,6 @@
 /* ===================== 版本（简/繁） ===================== */
 const params = new URLSearchParams(location.search);
 let edition = params.get('ed') === 'traditional' ? 'traditional' : 'simplified';
-// 在门户 iframe 中打开时，门户不会把 ?ed 传给 iframe，故回退读取父页面版本
 try{
   if(edition === 'simplified' && window.parent && window.parent !== window){
     const pp = new URLSearchParams(window.parent.location.search);
@@ -136,19 +140,24 @@ try{
 
 const I18N = {
   simplified: {
-    appTitle:'汉语水平自测', appSub:'快速了解你的中文程度（参考 HSK 等级）',
-    introBody:'本测试包含<b>听力、词汇、语法</b>三类题目，覆盖 HSK 1–6 级。'+
-      '完成后会根据你的正确率估算当前水平，并给出学习建议。<br>适合上课前快速了解学生水平，便于备课与分班。',
-    fullTitle:'完整模式', fullSub:'30 题 · 约 8–10 分钟',
-    quickTitle:'快速模式', quickSub:'10 题 · 约 3 分钟',
-    introNote:'说明：听力题使用浏览器语音朗读（支持 Chrome / Edge / Safari）。本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
+    appTitle:'汉语水平自测', appSub:'自适应分级摸底 · 参考 HSK 等级',
+    introBody:'系统会<b>从最简单的 HSK 1 开始</b>：<br>'+
+      '· 答对 → 自动加大难度（升一级）<br>'+
+      '· 答错或选「不知道」 → 自动降低难度（降一级）<br>'+
+      '最后<b>停留最多的那个等级，就是你的中文水平</b>。HSK 1–2 的题目会附拼音，方便入门学习者。',
+    fullTitle:'完整测试', fullSub:'约 12–16 题 · 精度更高',
+    quickTitle:'快速测试', quickSub:'约 8–10 题 · 速度更快',
+    introNote:'说明：听力题使用浏览器语音朗读（支持 Chrome / Edge / Safari）；答「不知道」会被视为「不会」，帮助更准确地测出真实水平。本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
     next:'下一题', seeResult:'查看结果',
-    qOf:'第 %d / %d 题',
+    qOf:'第 %d 题',
+    diffLabel:'当前难度',
+    conv:'已稳定，即将结束',
     listenHint:'🔊 点击播放，听完后选择正确答案',
     noTts:'当前浏览器不支持语音播放，已显示文本供参考：',
     replay:'重听',
     sec_listen:'听力', sec_read:'词汇阅读', sec_grammar:'语法',
-    resLabel:'你的水平约', resAcc:'总正确率', resBars:'各级掌握情况',
+    dk:'不知道 / 不会',
+    resLabel:'你的水平约', resAcc:'总答题数', resBars:'各级停留次数（越高越接近你的水平）',
     resNote:'说明：本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
     restart:'再测一次',
     rec0:'建议从 HSK 1（零基础）开始系统学习，先掌握最基础的日常用语与拼音。',
@@ -166,19 +175,24 @@ const I18N = {
     }
   },
   traditional: {
-    appTitle:'漢語水平自測', appSub:'快速了解你的中文程度（參考 HSK 等級）',
-    introBody:'本測試包含<b>聽力、詞彙、語法</b>三類題目，涵蓋 HSK 1–6 級。'+
-      '完成後會根據你的正確率估算當前水平，並給出學習建議。<br>適合上課前快速了解學生水平，便於備課與分班。',
-    fullTitle:'完整模式', fullSub:'30 題 · 約 8–10 分鐘',
-    quickTitle:'快速模式', quickSub:'10 題 · 約 3 分鐘',
-    introNote:'說明：聽力題使用瀏覽器語音朗讀（支援 Chrome / Edge / Safari）。本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
+    appTitle:'漢語水平自測', appSub:'自適應分級摸底 · 參考 HSK 等級',
+    introBody:'系統會<b>從最簡單的 HSK 1 開始</b>：<br>'+
+      '· 答對 → 自動加大難度（升一級）<br>'+
+      '· 答錯或選「不知道」 → 自動降低難度（降一級）<br>'+
+      '最後<b>停留最多的那個等級，就是你的中文水平</b>。HSK 1–2 的題目會附拼音，方便入門學習者。',
+    fullTitle:'完整測試', fullSub:'約 12–16 題 · 精確度更高',
+    quickTitle:'快速測試', quickSub:'約 8–10 題 · 速度更快',
+    introNote:'說明：聽力題使用瀏覽器語音朗讀（支援 Chrome / Edge / Safari）；答「不知道」會被視為「不會」，幫助更準確測出真實水平。本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
     next:'下一題', seeResult:'查看結果',
-    qOf:'第 %d / %d 題',
+    qOf:'第 %d 題',
+    diffLabel:'目前難度',
+    conv:'已穩定，即將結束',
     listenHint:'🔊 點擊播放，聽完後選擇正確答案',
     noTts:'目前瀏覽器不支援語音播放，已顯示文字供參考：',
     replay:'重聽',
     sec_listen:'聽力', sec_read:'詞彙閱讀', sec_grammar:'語法',
-    resLabel:'你的水平約', resAcc:'總正確率', resBars:'各級掌握情況',
+    dk:'不知道 / 不會',
+    resLabel:'你的水平約', resAcc:'總答題數', resBars:'各級停留次數（越高越接近你的水平）',
     resNote:'說明：本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
     restart:'再測一次',
     rec0:'建議從 HSK 1（零基礎）開始系統學習，先掌握最基礎的日常用語與拼音。',
@@ -201,21 +215,23 @@ const T = I18N[edition];
 /* ===================== 题库 =====================
    字段：sec 题型(listen/read/grammar) · lv 等级(1-6)
          q 题干 · audio 听力朗读文本(仅listen) · opts 选项 · ans 正确项下标
-   题目内容为普通话（简体），对应 HSK 标准。 */
+         py 题干拼音(仅 HSK1-2 阅读/语法) · pyo 选项拼音(同上)
+   逻辑：自适应阶梯——从 lv1 起，答对+1、答错或「不知道」-1；
+        各级停留次数最多者即估算水平。 */
 const BANK = [
   // ---- HSK 1 ----
   {sec:'listen', lv:1, q:'听录音，这个词的意思是？', audio:'你好', opts:['你好（问候）','谢谢','对不起','再见'], ans:0},
   {sec:'listen', lv:1, q:'听录音，选择正确的意思。', audio:'今天天气很好', opts:['今天天气不错','今天下雨了','我很累','明天见'], ans:0},
-  {sec:'read',   lv:1, q:'“谢谢”是什么意思？', opts:['表示感谢','表示道歉','表示问候','表示邀请'], ans:0},
-  {sec:'grammar',lv:1, q:'我___中国人。', opts:['是','的','在','有'], ans:0},
-  {sec:'grammar',lv:1, q:'这是___书。', opts:['一本','一个','一只','一条'], ans:0},
+  {sec:'read',   lv:1, q:'“谢谢”是什么意思？', py:'“xièxie” shì shénme yìsi？', opts:['表示感谢','表示道歉','表示问候','表示邀请'], pyo:['biǎoshì gǎnxiè','biǎoshì dàoqiàn','biǎoshì wènhòu','biǎoshì yāoqǐng'], ans:0},
+  {sec:'grammar',lv:1, q:'我___中国人。', py:'wǒ ___ zhōngguórén。', opts:['是','的','在','有'], pyo:['shì','de','zài','yǒu'], ans:0},
+  {sec:'grammar',lv:1, q:'这是___书。', py:'zhè shì ___ shū。', opts:['一本','一个','一只','一条'], pyo:['yì běn','yí gè','yì zhī','yì tiáo'], ans:0},
 
   // ---- HSK 2 ----
   {sec:'listen', lv:2, q:'听录音，选择正确的意思。', audio:'我每天八点去公司上班', opts:['我每天八点去工作','我八点吃早饭','我去上学','我八点睡觉'], ans:0},
-  {sec:'read',   lv:2, q:'“便宜”是什么意思？', opts:['价格低','价格高','距离远','距离近'], ans:0},
-  {sec:'grammar',lv:2, q:'他比我___高。', opts:['更','很','太','都'], ans:0},
-  {sec:'grammar',lv:2, q:'请把门关___。', opts:['上','了','过','着'], ans:0},
-  {sec:'read',   lv:2, q:'“超市”是做什么的地方？', opts:['买东西','看病','上学','取钱'], ans:0},
+  {sec:'read',   lv:2, q:'“便宜”是什么意思？', py:'“piányi” shì shénme yìsi？', opts:['价格低','价格高','距离远','距离近'], pyo:['jiàgé dī','jiàgé gāo','jùlí yuǎn','jùlí jìn'], ans:0},
+  {sec:'grammar',lv:2, q:'他比我___高。', py:'tā bǐ wǒ ___ gāo。', opts:['更','很','太','都'], pyo:['gèng','hěn','tài','dōu'], ans:0},
+  {sec:'grammar',lv:2, q:'请把门关___。', py:'qǐng bǎ mén guān ___。', opts:['上','了','过','着'], pyo:['shàng','le','guò','zhe'], ans:0},
+  {sec:'read',   lv:2, q:'“超市”是做什么的地方？', py:'“chāoshì” shì zuò shénme de dìfāng？', opts:['买东西','看病','上学','取钱'], pyo:['mǎi dōngxi','kànbìng','shàngxué','qǔqián'], ans:0},
 
   // ---- HSK 3 ----
   {sec:'listen', lv:3, q:'听录音，他在周末想做什么？', audio:'周末我想和朋友一起去爬山', opts:['和朋友去爬山','一个人看书','去公司加班','去医院'], ans:0},
@@ -246,11 +262,6 @@ const BANK = [
   {sec:'grammar',lv:6, q:'他___是年轻人，难免会犯错。', opts:['毕竟','或许','忽然','大致'], ans:0}
 ];
 
-/* ===================== 状态 ===================== */
-let QUESTIONS = [];
-let cur = 0;
-let picks = [];   // 每题用户选的下标（null 未答）
-
 /* ===================== 语音朗读 ===================== */
 let zhVoice = null;
 function loadVoice(){
@@ -274,12 +285,49 @@ function speak(text){
   }catch(e){ return false; }
 }
 
+/* ===================== 自适应引擎 ===================== */
+let MAX_Q = 16, MIN_Q = 8; const CONV_N = 4;
+let mode = 'full';
+let curLv = 1;
+let curQ = null;
+let picked = null;            // 0..3 或 'dk'
+let visits = {};              // 各级停留次数
+let history = [];             // 每题展示的等级序列
+let usedByLv = {};            // 各级已用题下标，避免短期重复
+
+function resetEngine(){
+  curLv = 1; picked = null; curQ = null;
+  visits = {1:0,2:0,3:0,4:0,5:0,6:0};
+  history = []; usedByLv = {1:[],2:[],3:[],4:[],5:[],6:[]};
+}
+function pickQuestion(lv){
+  const pool = BANK.filter(q => q.lv === lv);
+  let avail = pool.filter((_,i) => !usedByLv[lv].includes(i));
+  if(avail.length === 0){ usedByLv[lv] = []; avail = pool; }
+  const item = avail[Math.floor(Math.random()*avail.length)];
+  const idx = pool.indexOf(item);
+  usedByLv[lv].push(idx);
+  return item;
+}
+function lastNEqual(n){
+  if(history.length < n) return false;
+  const tail = history.slice(-n);
+  return tail.every(x => x === tail[0]);
+}
+function estimate(){
+  let best = 1, bestC = -1;
+  for(let lv=1; lv<=6; lv++) if(visits[lv] > bestC){ bestC = visits[lv]; best = lv; }
+  // 并列时取较高等级（已触及更高等级说明能力更接近那里）
+  let cands = [];
+  for(let lv=1; lv<=6; lv++) if(visits[lv] === bestC) cands.push(lv);
+  return cands[cands.length-1];
+}
+
 /* ===================== 工具 ===================== */
 const $ = id => document.getElementById(id);
-function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function fmt(s, ...n){ return s.replace(/%d/g, () => n.shift()); }
 
-/* ===================== 渲染：介绍页 ===================== */
+/* ===================== 介绍页 ===================== */
 function renderIntro(){
   $('appTitle').textContent = T.appTitle;
   $('appSub').textContent = T.appSub;
@@ -294,125 +342,103 @@ function renderIntro(){
   $('result').classList.add('hidden');
 }
 
-/* 选题：完整=全部；快速=每级随机 2 题 */
-function buildQuestions(quick){
-  let pool = BANK;
-  if(quick){
-    pool = [];
-    for(let lv=1; lv<=6; lv++){
-      const ofLv = BANK.filter(q => q.lv === lv);
-      pool = pool.concat(shuffle(ofLv).slice(0,2));
-    }
-  }
-  QUESTIONS = shuffle(pool);
-  picks = new Array(QUESTIONS.length).fill(null);
-  cur = 0;
-}
-
-/* ===================== 渲染：答题页 ===================== */
+/* ===================== 答题页 ===================== */
 function renderQuestion(){
-  const q = QUESTIONS[cur];
-  const total = QUESTIONS.length;
-  $('progBar').style.width = ((cur)/total*100) + '%';
-  $('qCount').textContent = fmt(T.qOf, cur+1, total);
+  const q = curQ;
   const secName = q.sec==='listen'?T.sec_listen : q.sec==='read'?T.sec_read : T.sec_grammar;
-  $('secName').textContent = secName;
+  $('qCount').textContent = fmt(T.qOf, history.length + 1);
+  $('convHint').textContent = (history.length >= MIN_Q && lastNEqual(CONV_N)) ? T.conv : '';
+  $('progBar').style.width = Math.min(100, history.length / MAX_Q * 100) + '%';
 
-  let html = '<span class="sec-tag">'+secName+'</span>';
+  let html = '<div class="meta">';
+  html += '<span class="sec-tag">'+secName+'</span>';
+  html += '<span class="diff">'+T.diffLabel+'：'+T.lv[curLv]+'</span>';
+  html += '</div>';
   html += '<div class="q-text">'+q.q+'</div>';
+  if(q.py) html += '<div class="py">'+q.py+'</div>';
 
   if(q.sec === 'listen'){
     const ok = speak(q.audio);
     html += '<div class="tts">';
     html += '<button id="playBtn">🔊 播放</button>';
-    if(ok){
-      html += '<div><div class="hint">'+T.listenHint+'</div></div>';
-    }else{
-      html += '<div><div class="hint">'+T.noTts+'</div><div class="fallback">'+q.audio+'</div></div>';
-    }
+    if(ok) html += '<div><div class="hint">'+T.listenHint+'</div></div>';
+    else html += '<div><div class="hint">'+T.noTts+'</div><div class="fallback">'+q.audio+'</div></div>';
     html += '</div>';
   }
 
   html += '<div class="opts" id="opts">';
   const keys = ['A','B','C','D'];
   for(let i=0;i<q.opts.length;i++){
-    const sel = picks[cur]===i ? ' sel' : '';
-    html += '<div class="opt'+sel+'" data-i="'+i+'"><span class="k">'+keys[i]+'</span><span>'+q.opts[i]+'</span></div>';
+    html += '<div class="opt" data-i="'+i+'"><span class="k">'+keys[i]+'</span>';
+    html += '<span class="ot">'+q.opts[i];
+    if(q.pyo && q.pyo[i]) html += '<span class="opy">'+q.pyo[i]+'</span>';
+    html += '</span></div>';
   }
   html += '</div>';
-
+  html += '<button class="dk" id="dkBtn">'+T.dk+'</button>';
   $('qArea').innerHTML = html;
 
-  // 绑定选项点击
   $('opts').querySelectorAll('.opt').forEach(el=>{
     el.addEventListener('click', ()=>{
-      const i = +el.dataset.i;
-      picks[cur] = i;
+      picked = +el.dataset.i;
       $('opts').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+      $('dkBtn').classList.remove('sel');
       el.classList.add('sel');
       $('nextBtn').disabled = false;
     });
   });
-
-  // 播放按钮
+  $('dkBtn').addEventListener('click', ()=>{
+    picked = 'dk';
+    $('opts').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+    $('dkBtn').classList.add('sel');
+    $('nextBtn').disabled = false;
+  });
   const pb = $('playBtn');
   if(pb) pb.addEventListener('click', ()=>speak(q.audio));
 
-  // 下一题 / 查看结果
-  const last = cur === total-1;
+  const last = history.length + 1 >= MAX_Q;
   $('nextBtn').textContent = last ? T.seeResult : T.next;
-  $('nextBtn').disabled = picks[cur]===null;
+  $('nextBtn').disabled = true;
   $('nextBtn').onclick = ()=>{
-    if(picks[cur]===null) return;
-    if(last){ finish(); }
-    else { cur++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+    if(picked === null) return;
+    visits[curLv]++; history.push(curLv);
+    const correct = (picked !== 'dk') && (picked === q.ans);
+    curLv = correct ? Math.min(6, curLv+1) : Math.max(1, curLv-1);
+    if((history.length >= MIN_Q && lastNEqual(CONV_N)) || history.length >= MAX_Q){
+      finish();
+    }else{
+      curQ = pickQuestion(curLv);
+      renderQuestion();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
   };
-
-  if(q.sec==='listen') speak(q.audio);
 }
 
-/* ===================== 计算与结果 ===================== */
+/* ===================== 结果页 ===================== */
 function finish(){
   $('progBar').style.width = '100%';
-  // 各级正确率
-  const stat = {}; for(let lv=1;lv<=6;lv++) stat[lv] = {c:0,t:0};
-  QUESTIONS.forEach((q,i)=>{ stat[q.lv].t++; if(picks[i]===q.ans) stat[q.lv].c++; });
-  let correctAll = 0;
-  QUESTIONS.forEach((q,i)=>{ if(picks[i]===q.ans) correctAll++; });
-  const total = QUESTIONS.length;
-  const acc = Math.round(correctAll/total*100);
-
-  // 估算等级：最高“掌握(>=60%)”的级别；0 表示尚未达到 HSK1
-  let est = 0;
-  for(let lv=1; lv<=6; lv++){
-    const s = stat[lv];
-    if(s.t>0 && s.c/s.t >= 0.6) est = lv; else break;
-  }
-
-  // 头部
+  const est = estimate();
   $('resLabel').textContent = T.resLabel;
   $('resLevel').textContent = T.lv[est];
   $('resDesc').textContent = T.lvDesc[est];
 
-  // 建议
   let rec;
   if(est===0) rec = T.rec0;
   else if(est===6) rec = T.recTop;
   else rec = fmt(T.recMid, est, est+1, est);
   $('resRec').innerHTML = '<b>'+(edition==='traditional'?'學習建議':'学习建议')+'：</b>'+rec;
 
-  // 正确率
-  $('resAcc').innerHTML = T.resAcc + '：<b>'+acc+'%</b>（'+correctAll+' / '+total+'）';
+  $('resAcc').innerHTML = T.resAcc + '：<b>'+history.length+'</b> 题';
 
-  // 各级掌握条形
   let bars = '<h3>'+T.resBars+'</h3>';
+  const maxV = Math.max(1, ...Object.values(visits));
   for(let lv=1; lv<=6; lv++){
-    const s = stat[lv];
-    const a = s.t ? Math.round(s.c/s.t*100) : 0;
-    const color = a>=60 ? 'var(--ok)' : (a>=30 ? 'var(--warn)' : '#E2533B');
-    bars += '<div class="bar-row"><span class="nm">'+(edition==='traditional'?'HSK ':'HSK ')+lv+'</span>'+
-      '<span class="track"><i style="width:'+a+'%;background:'+color+'"></i></span>'+
-      '<span class="ct">'+s.c+'/'+s.t+'</span></div>';
+    const v = visits[lv];
+    const pct = Math.round(v/maxV*100);
+    const color = (lv===est) ? 'var(--accent)' : '#9DB4CC';
+    bars += '<div class="bar-row"><span class="nm">'+T.lv[lv]+'</span>'+
+      '<span class="track"><i style="width:'+pct+'%;background:'+color+'"></i></span>'+
+      '<span class="ct">'+v+' 次</span></div>';
   }
   $('resBars').innerHTML = bars;
   $('resNote').textContent = T.resNote;
@@ -424,11 +450,12 @@ function finish(){
 }
 
 /* ===================== 启动 ===================== */
-$('modeFull').addEventListener('click', ()=>{ buildQuestions(false); renderQuestion();
+$('modeFull').addEventListener('click', ()=>{ resetEngine(); curQ = pickQuestion(curLv); renderQuestion();
   $('intro').classList.add('hidden'); $('quiz').classList.remove('hidden'); });
-$('modeQuick').addEventListener('click', ()=>{ buildQuestions(true); renderQuestion();
+$('modeQuick').addEventListener('click', ()=>{ MIN_Q = 6; MAX_Q = 10;
+  resetEngine(); curQ = pickQuestion(curLv); renderQuestion();
   $('intro').classList.add('hidden'); $('quiz').classList.remove('hidden'); });
-$('restartBtn').addEventListener('click', renderIntro);
+$('restartBtn').addEventListener('click', ()=>{ MIN_Q = 8; MAX_Q = 16; renderIntro(); });
 
 renderIntro();
 </script>
