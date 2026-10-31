@@ -18,23 +18,40 @@
   .top p{margin:0;color:var(--muted);font-size:14px;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
     padding:24px 22px;box-shadow:0 6px 22px rgba(30,70,130,.06);}
+  .en{display:block;font-size:.8em;color:var(--muted);font-weight:400;margin-top:2px;line-height:1.45;}
+  .intro-note{margin-top:16px;font-size:13px;color:var(--muted);background:#EFF5FC;
+    border-radius:10px;padding:12px 14px;}
+  /* 开场自定位 */
+  .start-q{font-size:17px;font-weight:700;color:var(--accent-d);margin:18px 0 10px;}
+  .slv-list{display:flex;flex-direction:column;gap:10px;}
+  .slv{border:2px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;
+    background:#fff;text-align:left;font-size:16px;display:flex;align-items:center;gap:12px;transition:.12s;}
+  .slv:hover{border-color:var(--accent);}
+  .slv.sel{border-color:var(--accent);background:#EAF3FE;}
+  .slv .k{width:26px;height:26px;flex:none;border-radius:8px;background:#EEF3FA;color:var(--accent-d);
+    font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .slv .zh{font-weight:600;}
+  .slv .en{margin:0 0 0 auto;font-size:13px;}
   .modes{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;}
   .mode{flex:1;min-width:220px;border:2px solid var(--line);border-radius:14px;padding:18px;
     cursor:pointer;transition:.15s;background:#fff;text-align:left;}
   .mode:hover{border-color:var(--accent);transform:translateY(-2px);}
   .mode h3{margin:0 0 6px;color:var(--accent-d);font-size:18px;}
   .mode small{color:var(--muted);font-size:13px;}
-  .intro-note{margin-top:16px;font-size:13px;color:var(--muted);background:#EFF5FC;
-    border-radius:10px;padding:12px 14px;}
   .prog{height:8px;background:#E6EEF8;border-radius:99px;overflow:hidden;margin-bottom:6px;}
   .prog>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#5BB0F5);
     width:0;transition:width .25s;}
-  .prog-txt{font-size:13px;color:var(--muted);margin-bottom:14px;display:flex;justify-content:space-between;}
+  .prog-txt{font-size:13px;color:var(--muted);margin-bottom:14px;display:flex;
+    justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .timer{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .timer b{font-size:17px;color:var(--accent-d);margin-left:4px;}
+  .timer.low b{color:#D64545;}
   .meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
   .sec-tag{display:inline-block;font-size:12px;font-weight:600;color:#fff;background:var(--accent);
     border-radius:99px;padding:3px 12px;}
   .diff{font-size:13px;font-weight:700;color:var(--accent-d);background:#EAF3FE;
     border-radius:99px;padding:3px 12px;}
+  .pic{font-size:64px;line-height:1.2;margin:6px 0 4px;}
   .q-text{font-size:19px;font-weight:600;margin:4px 0 4px;}
   .py{font-size:15px;color:#8A94A6;letter-spacing:.5px;margin-bottom:14px;}
   .tts{display:flex;align-items:center;gap:12px;background:#EFF5FC;border-radius:12px;
@@ -53,29 +70,39 @@
   .opt .ot{flex:1;}
   .opt .opy{display:block;font-size:13px;color:#8A94A6;letter-spacing:.4px;margin-top:2px;}
   .opt.sel{border-color:var(--accent);background:#EAF3FE;}
-  .dk{margin-top:14px;width:100%;border:2px dashed #C2CCDA;background:#F7FAFD;color:var(--muted);
-    font-size:15px;font-weight:600;border-radius:12px;padding:12px;cursor:pointer;}
-  .dk:hover{border-color:var(--warn);color:var(--warn);}
-  .dk.sel{border-color:var(--warn);color:var(--warn);background:#FDF3E9;}
+  .opt.dkopt{border-style:dashed;color:var(--muted);background:#F7FAFD;}
+  .opt.dkopt:hover{border-color:var(--warn);}
+  .opt.dkopt.sel{border-color:var(--warn);color:var(--warn);background:#FDF3E9;}
+  .opt.dkopt.sel .k{background:#FDEBD4;color:var(--warn);}
   .nav{display:flex;justify-content:flex-end;margin-top:22px;}
   .btn{border:none;background:var(--accent);color:#fff;font-size:16px;font-weight:600;
     border-radius:12px;padding:12px 26px;cursor:pointer;}
   .btn:hover{background:var(--accent-d);}
   .btn:disabled{background:#B9C6D6;cursor:not-allowed;}
+  /* 结果页 */
+  .rep-title{text-align:center;font-size:20px;font-weight:800;color:var(--accent-d);margin-bottom:16px;}
   .res-hero{text-align:center;background:linear-gradient(135deg,#2E86DE,#5BB0F5);
     color:#fff;border-radius:16px;padding:26px 20px;margin-bottom:20px;}
   .res-hero .lv{font-size:46px;font-weight:800;line-height:1.1;margin:6px 0;}
   .res-hero .desc{font-size:15px;opacity:.95;max-width:560px;margin:10px auto 0;}
+  .res-hero .en{color:rgba(255,255,255,.88);}
   .res-rec{background:#EAF3FE;border-left:5px solid var(--accent);border-radius:10px;
     padding:14px 16px;font-size:15px;margin-bottom:20px;}
-  .acc{font-size:15px;margin-bottom:18px;}
+  .acc{font-size:15px;margin-bottom:6px;}
   .acc b{color:var(--accent-d);font-size:20px;}
-  .bars h3{font-size:16px;margin:0 0 14px;color:var(--accent-d);}
-  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:14px;}
-  .bar-row .nm{width:74px;flex:none;color:var(--muted);}
-  .bar-row .track{flex:1;height:14px;background:#E6EEF8;border-radius:99px;overflow:hidden;}
-  .bar-row .track>i{display:block;height:100%;border-radius:99px;}
-  .bar-row .ct{width:54px;flex:none;text-align:right;color:var(--muted);font-size:13px;}
+  .vocab-line{font-size:15px;margin-bottom:6px;}
+  .vocab-line b{color:var(--accent-d);font-size:20px;}
+  .vocab-note{font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .vchart{display:flex;align-items:flex-end;gap:8px;margin:14px 0 6px;padding:0 4px;}
+  .vcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+    font-size:12px;color:var(--muted);text-align:center;}
+  .vcol .vnm{font-weight:600;color:var(--ink);white-space:nowrap;}
+  .vcol i{display:block;width:72%;max-width:46px;background:#C9DCF0;border-radius:6px 6px 0 0;}
+  .vcol .vct{font-variant-numeric:tabular-nums;}
+  .vcol .ven{font-size:10px;line-height:1.2;}
+  .vcol.me .vnm{color:var(--accent-d);font-weight:800;}
+  .vcol.me i{background:linear-gradient(180deg,var(--accent),#5BB0F5);}
+  .vcol.me .vct{color:var(--accent-d);font-weight:700;}
   .foot-note{font-size:12px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
   .res-actions{text-align:center;margin-top:22px;}
   .hidden{display:none;}
@@ -85,20 +112,22 @@
 <div class="wrap">
   <div class="top">
     <h1 id="appTitle">汉语水平自测</h1>
-    <p id="appSub">自适应分级摸底 · 参考 HSK 等级</p>
+    <p id="appSub"></p>
   </div>
 
   <!-- 介绍页 -->
   <section id="intro" class="card">
     <div id="introBody"></div>
+    <div class="start-q" id="startQ"></div>
+    <div class="slv-list" id="slvList"></div>
     <div class="modes">
       <button class="mode" id="modeFull">
-        <h3 id="fullTitle">完整测试</h3>
-        <small id="fullSub">约 12–16 题 · 精度更高</small>
+        <h3 id="fullTitle"></h3>
+        <small id="fullSub"></small>
       </button>
       <button class="mode" id="modeQuick">
-        <h3 id="quickTitle">快速测试</h3>
-        <small id="quickSub">约 8–10 题 · 速度更快</small>
+        <h3 id="quickTitle"></h3>
+        <small id="quickSub"></small>
       </button>
     </div>
     <div class="intro-note" id="introNote"></div>
@@ -107,13 +136,14 @@
   <!-- 答题页 -->
   <section id="quiz" class="card hidden">
     <div class="prog"><i id="progBar"></i></div>
-    <div class="prog-txt"><span id="qCount"></span><span id="convHint"></span></div>
+    <div class="prog-txt"><span id="qCount"></span><span id="convHint"></span><span class="timer" id="timerBox"></span></div>
     <div id="qArea"></div>
     <div class="nav"><button class="btn" id="nextBtn" disabled>下一题</button></div>
   </section>
 
   <!-- 结果页 -->
   <section id="result" class="card hidden">
+    <div class="rep-title" id="repTitle"></div>
     <div class="res-hero">
       <div id="resLabel"></div>
       <div class="lv" id="resLevel"></div>
@@ -121,7 +151,9 @@
     </div>
     <div class="res-rec" id="resRec"></div>
     <div class="acc" id="resAcc"></div>
-    <div class="bars" id="resBars"></div>
+    <div class="vocab-line" id="resVocab"></div>
+    <div class="vocab-note" id="vocabNote"></div>
+    <div class="vchart" id="resBars"></div>
     <div class="foot-note" id="resNote"></div>
     <div class="res-actions"><button class="btn" id="restartBtn">再测一次</button></div>
   </section>
@@ -141,13 +173,15 @@ try{
 const I18N = {
   simplified: {
     appTitle:'汉语水平自测', appSub:'自适应分级摸底 · 参考 HSK 等级',
-    introBody:'系统会<b>从最简单的 HSK 1 开始</b>：<br>'+
+    introBody:'先告诉我们你学了多久，测试会<b>从合适的等级开始</b>：<br>'+
       '· 答对 → 自动加大难度（升一级）<br>'+
-      '· 答错或选「不知道」 → 自动降低难度（降一级）<br>'+
+      '· 答错或选「我不会」→ 自动降低难度（降一级）<br>'+
       '最后<b>停留最多的那个等级，就是你的中文水平</b>。HSK 1–2 的题目会附拼音，方便入门学习者。',
     fullTitle:'完整测试', fullSub:'约 12–16 题 · 精度更高',
     quickTitle:'快速测试', quickSub:'约 8–10 题 · 速度更快',
-    introNote:'说明：听力题使用浏览器语音朗读（支持 Chrome / Edge / Safari）；答「不知道」会被视为「不会」，帮助更准确地测出真实水平。本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
+    introNote:'说明：听力题使用浏览器语音朗读（支持 Chrome / Edge / Safari）；每题有限时，超时按「我不会」处理；答「我不会」会被视为「不会」，帮助更准确地测出真实水平。本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
+    startQ:'您学习中文有多久了？',
+    startOpts:['刚接触汉语','刚学几个月','学了一年左右','学了两年以上'],
     next:'下一题', seeResult:'查看结果',
     qOf:'第 %d 题',
     diffLabel:'当前难度',
@@ -155,15 +189,21 @@ const I18N = {
     listenHint:'🔊 点击播放，听完后选择正确答案',
     noTts:'当前浏览器不支持语音播放，已显示文本供参考：',
     replay:'重听',
-    sec_listen:'听力', sec_read:'词汇阅读', sec_grammar:'语法',
-    dk:'不知道 / 不会',
-    resLabel:'你的水平约', resAcc:'总答题数', resBars:'各级停留次数（越高越接近你的水平）',
-    resNote:'说明：本测试为教学参考工具，等级估算仅供参考，不等同于官方 HSK 成绩。',
+    sec_listen:'听力', sec_read:'词汇阅读', sec_grammar:'语法', sec_pic:'看图',
+    dk:'我不会',
+    timer:'倒计时',
+    reportTitle:'您的测评报告',
+    resLabel:'根据《国际中文教育中文水平等级标准》，你目前处于',
+    vocabLabel:'你的词汇量约为', vocabUnit:'词',
+    vocabNote:'各等级词汇量参照《国际中文教育中文水平等级标准》',
+    resAcc:'总答题数',
+    resNote:'说明：本测试为教学参考工具，等级与词汇量估算仅供参考，不等同于官方 HSK 成绩。',
     restart:'再测一次',
     rec0:'建议从 HSK 1（零基础）开始系统学习，先掌握最基础的日常用语与拼音。',
     recTop:'已达到 HSK 6 水平，可进入高阶专题、商务汉语或翻译训练。',
     recMid:'当前约 HSK %d，建议从 HSK %d 起步，同时巩固 HSK %d。',
     lv:{0:'入门',1:'HSK 1',2:'HSK 2',3:'HSK 3',4:'HSK 4',5:'HSK 5',6:'HSK 6'},
+    lvCn:{1:'一级',2:'二级',3:'三级',4:'四级',5:'五级',6:'六级',79:'七–九级'},
     lvDesc:{
       0:'目前还处在入门阶段，建议先掌握最基础的日常问候、数字、拼音与简单句型。',
       1:'能理解并使用熟悉的日常用语和非常简单的句子，满足具体的交际需求。',
@@ -176,13 +216,15 @@ const I18N = {
   },
   traditional: {
     appTitle:'漢語水平自測', appSub:'自適應分級摸底 · 參考 HSK 等級',
-    introBody:'系統會<b>從最簡單的 HSK 1 開始</b>：<br>'+
+    introBody:'先告訴我們你學了多久，測試會<b>從合適的等級開始</b>：<br>'+
       '· 答對 → 自動加大難度（升一級）<br>'+
-      '· 答錯或選「不知道」 → 自動降低難度（降一級）<br>'+
+      '· 答錯或選「我不會」→ 自動降低難度（降一級）<br>'+
       '最後<b>停留最多的那個等級，就是你的中文水平</b>。HSK 1–2 的題目會附拼音，方便入門學習者。',
     fullTitle:'完整測試', fullSub:'約 12–16 題 · 精確度更高',
     quickTitle:'快速測試', quickSub:'約 8–10 題 · 速度更快',
-    introNote:'說明：聽力題使用瀏覽器語音朗讀（支援 Chrome / Edge / Safari）；答「不知道」會被視為「不會」，幫助更準確測出真實水平。本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
+    introNote:'說明：聽力題使用瀏覽器語音朗讀（支援 Chrome / Edge / Safari）；每題有限時，超時按「我不會」處理；答「我不會」會被視為「不會」，幫助更準確測出真實水平。本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
+    startQ:'您學習中文有多久了？',
+    startOpts:['剛接觸漢語','剛學幾個月','學了一年左右','學了兩年以上'],
     next:'下一題', seeResult:'查看結果',
     qOf:'第 %d 題',
     diffLabel:'目前難度',
@@ -190,15 +232,21 @@ const I18N = {
     listenHint:'🔊 點擊播放，聽完後選擇正確答案',
     noTts:'目前瀏覽器不支援語音播放，已顯示文字供參考：',
     replay:'重聽',
-    sec_listen:'聽力', sec_read:'詞彙閱讀', sec_grammar:'語法',
-    dk:'不知道 / 不會',
-    resLabel:'你的水平約', resAcc:'總答題數', resBars:'各級停留次數（越高越接近你的水平）',
-    resNote:'說明：本測試為教學參考工具，等級估算僅供參考，不等同於官方 HSK 成績。',
+    sec_listen:'聽力', sec_read:'詞彙閱讀', sec_grammar:'語法', sec_pic:'看圖',
+    dk:'我不會',
+    timer:'倒計時',
+    reportTitle:'您的測評報告',
+    resLabel:'根據《國際中文教育中文水平等級標準》，你目前處於',
+    vocabLabel:'你的詞彙量約為', vocabUnit:'詞',
+    vocabNote:'各等級詞彙量參照《國際中文教育中文水平等級標準》',
+    resAcc:'總答題數',
+    resNote:'說明：本測試為教學參考工具，等級與詞彙量估算僅供參考，不等同於官方 HSK 成績。',
     restart:'再測一次',
     rec0:'建議從 HSK 1（零基礎）開始系統學習，先掌握最基礎的日常用語與拼音。',
     recTop:'已達到 HSK 6 水平，可進入高階專題、商務漢語或翻譯訓練。',
     recMid:'當前約 HSK %d，建議從 HSK %d 起步，同時鞏固 HSK %d。',
     lv:{0:'入門',1:'HSK 1',2:'HSK 2',3:'HSK 3',4:'HSK 4',5:'HSK 5',6:'HSK 6'},
+    lvCn:{1:'一級',2:'二級',3:'三級',4:'四級',5:'五級',6:'六級',79:'七–九級'},
     lvDesc:{
       0:'目前還處在入門階段，建議先掌握最基礎的日常問候、數字、拼音與簡單句型。',
       1:'能理解並使用熟悉的日常用語和非常簡單的句子，滿足具體的交際需求。',
@@ -212,11 +260,55 @@ const I18N = {
 };
 const T = I18N[edition];
 
+/* 英文对照（两种版本共用） */
+const EN = {
+  appTitle:'Chinese Level Test', appSub:'Adaptive placement · based on HSK levels',
+  introBody:'Tell us how long you have studied Chinese and the test <b>starts at a suitable level</b>:<br>'+
+    '· Correct → difficulty goes <b>up</b> one level<br>'+
+    '· Wrong or "I don\'t know" → difficulty goes <b>down</b> one level<br>'+
+    'The level you <b>stay at the most is your Chinese level</b>. HSK 1–2 questions include pinyin.',
+  fullTitle:'Full Test', fullSub:'12–16 questions · more accurate',
+  quickTitle:'Quick Test', quickSub:'8–10 questions · faster',
+  introNote:'Note: listening questions use your browser\'s speech synthesis (Chrome / Edge / Safari). Each question is timed — a timeout counts as "I don\'t know", which helps measure your real level more accurately. This is a teaching reference tool only; it is not an official HSK score.',
+  startQ:'How long have you learned Chinese?',
+  startOptsEn:['New to Chinese','A few months','About 1 year','Over 2 years'],
+  next:'Next', seeResult:'See Result',
+  qOf:'Question %d',
+  diffLabel:'Difficulty',
+  conv:'Stable — finishing soon',
+  listenHint:'🔊 Play the audio, then choose the correct answer',
+  noTts:'Your browser does not support speech playback. Text is shown instead:',
+  sec_listen:'Listening', sec_read:'Vocabulary', sec_grammar:'Grammar', sec_pic:'Picture',
+  dk:'I don\'t know',
+  timer:'Countdown',
+  reportTitle:'Your Assessment Report',
+  resLabel:'According to the Chinese Proficiency Grading Standards for International Chinese Language Education, you are currently at',
+  vocabLabel:'Your vocabulary is approximately', vocabUnit:'words',
+  vocabNote:'Word counts per level, based on the Grading Standards',
+  resAcc:'Questions answered',
+  resNote:'This is a teaching reference tool only — the estimated level and vocabulary are not official HSK results.',
+  restart:'Test Again',
+  rec0:'We suggest starting systematic learning from HSK 1: basic everyday phrases and pinyin first.',
+  recTop:'You have reached HSK 6 — move on to advanced topics, business Chinese or translation training.',
+  recMid:'You are around HSK %d. We suggest continuing from HSK %d while consolidating HSK %d.',
+  lvEn:{1:'Level 1',2:'Level 2',3:'Level 3',4:'Level 4',5:'Level 5',6:'Level 6',79:'Level 7–9'},
+  lvDesc:{
+    0:'You are at the beginner stage. Start with the most basic everyday greetings, numbers, pinyin and simple sentence patterns.',
+    1:'Can understand and use familiar everyday expressions and very simple sentences to meet concrete communication needs.',
+    2:'Can communicate in simple, direct exchanges on familiar everyday topics.',
+    3:'Can handle basic communication tasks in daily life, study and work, with a growing feel for the language.',
+    4:'Can discuss a fairly wide range of topics and express opinions fairly fluently.',
+    5:'Can read fairly difficult Chinese materials and express themselves fluently, both orally and in writing.',
+    6:'Can easily understand most of what is heard or read, and communicate appropriately and fluently.'
+  }
+};
+
 /* ===================== 题库 =====================
-   字段：sec 题型(listen/read/grammar) · lv 等级(1-6)
-         q 题干 · audio 听力朗读文本(仅listen) · opts 选项 · ans 正确项下标
-         py 题干拼音(仅 HSK1-2 阅读/语法) · pyo 选项拼音(同上)
-   逻辑：自适应阶梯——从 lv1 起，答对+1、答错或「不知道」-1；
+   字段：sec 题型(listen/read/grammar/pic) · lv 等级(1-6)
+         q 题干 · audio 听力朗读文本(仅listen) · pic 图片(emoji,仅pic)
+         opts 选项 · ans 正确项下标
+         py 题干拼音 · pyo 选项拼音（仅低级别题目）
+   逻辑：自适应阶梯——从自定位等级起，答对+1、答错或「我不会」-1；
         各级停留次数最多者即估算水平。 */
 const BANK = [
   // ===== HSK 1（词汇/语法均取自 HSK1 样题实际用词；读音题/语法题附拼音）=====
@@ -224,6 +316,8 @@ const BANK = [
   {sec:'listen', lv:1, q:'听，他下午去哪里？', audio:'下午我去商店买水果。', opts:['商店','医院','学校'], ans:0},
   {sec:'listen', lv:1, q:'听，今天天气好吗？', audio:'今天天气很好。', opts:['很好','很热','下雨'], ans:0},
   {sec:'listen', lv:1, q:'听，他喜欢做什么？', audio:'我喜欢看书和写字。', opts:['看书写字','看电视','去学校'], ans:0},
+  // 看图（emoji 图，零依赖）
+  {sec:'pic',    lv:1, pic:'🍚', q:'这是什么？', py:'zhè shì shénme？', opts:['米饭','面包','牛奶'], pyo:['mǐfàn','miànbāo','niúnǎi'], ans:0},
   // 阅读：词义/情景，附拼音
   {sec:'read',   lv:1, q:'“水果”是什么？', py:'“shuǐguǒ” shì shénme？', opts:['吃的东西','喝的东西','穿的东西'], pyo:['chī de dōngxi','hē de dōngxi','chuān de dōngxi'], ans:0},
   {sec:'read',   lv:1, q:'“医院”是做什么的地方？', py:'“yīyuàn” shì zuò shénme de dìfāng？', opts:['看病','买东西','学习'], pyo:['kànbìng','mǎi dōngxi','xuéxí'], ans:0},
@@ -236,6 +330,7 @@ const BANK = [
   {sec:'listen', lv:2, q:'听，他在做什么？', audio:'他正在关门。', opts:['关门','开门','睡觉'], ans:0},
   {sec:'listen', lv:2, q:'听，她为什么高兴？', audio:'她考试考得很好，所以很高兴。', opts:['考试考得好','买了新衣服','去了银行'], ans:0},
   {sec:'listen', lv:2, q:'听，他打算什么时候去？', audio:'我明天上午八点去公司上班。', opts:['明天上午','今天下午','昨天晚上'], ans:0},
+  {sec:'pic',    lv:2, pic:'🍵', q:'这是什么？', py:'zhè shì shénme？', opts:['茶','菜','米饭'], pyo:['chá','cài','mǐfàn'], ans:0},
   {sec:'read',   lv:2, q:'“便宜”是什么意思？', py:'“piányi” shì shénme yìsi？', opts:['不贵','很贵','很好看'], pyo:['bú guì','hěn guì','hěn hǎokàn'], ans:0},
   {sec:'read',   lv:2, q:'“超市”是什么地方？', py:'“chāoshì” shì shénme dìfāng？', opts:['买东西的地方','看病人的地方','学习的地方'], pyo:['mǎi dōngxi de dìfāng','kànbìngrén de dìfāng','xuéxí de dìfāng'], ans:0},
   {sec:'grammar',lv:2, q:'他比我___高。', py:'tā bǐ wǒ ___ gāo。', opts:['更','很','太'], pyo:['gèng','hěn','tài'], ans:0},
@@ -246,6 +341,7 @@ const BANK = [
   {sec:'listen', lv:3, q:'听，他周末想做什么？', audio:'周末我想跟朋友一起去爬山。', opts:['和朋友爬山','一个人在家看书','去公司工作'], ans:0},
   {sec:'listen', lv:3, q:'听，她为什么没来？', audio:'因为下雨了，所以她没来。', opts:['下雨了','生病了','睡晚了'], ans:0},
   {sec:'listen', lv:3, q:'听，他们怎么去北京？', audio:'我们坐火车去北京，比坐飞机便宜。', opts:['坐火车','坐飞机','开车'], ans:0},
+  {sec:'pic',    lv:3, pic:'🔑', q:'这是什么？', opts:['钥匙','手机','眼睛'], ans:0},
   {sec:'read',   lv:3, q:'“方便”是什么意思？', opts:['不麻烦','很困难','很早'], ans:0},
   {sec:'read',   lv:3, q:'“到处”是什么意思？', opts:['很多地方','只有一个地方','没有地方'], ans:0},
   {sec:'grammar',lv:3, q:'我___书放在桌子上。', opts:['把','被','用'], ans:0},
@@ -266,6 +362,7 @@ const BANK = [
   {sec:'listen', lv:5, q:'听，说话人对这件事的态度是什么？', audio:'对于这个问题，我不敢轻易下结论。', opts:['谨慎、不下结论','完全不在意','非常赞同'], ans:0},
   {sec:'listen', lv:5, q:'听，他为什么改变主意了？', audio:'鉴于天气不好，我们不得不推迟计划。', opts:['天气不好','费用太高','时间不够'], ans:0},
   {sec:'listen', lv:5, q:'听，她的话给了他什么？', audio:'她的经历让我深受启发，对我影响很大。', opts:['启发和影响','批评和指责','安慰和鼓励'], ans:0},
+  {sec:'read',   lv:5, q:'这次失败对他打击很大，但他没有（），而是总结经验，继续努力。', opts:['放弃','坚持','后悔'], ans:0},
   {sec:'read',   lv:5, q:'“微妙”是什么意思？', opts:['复杂难懂的','非常清楚的','很简单的'], ans:0},
   {sec:'read',   lv:5, q:'“权衡”是什么意思？', opts:['比较、考虑','忽视、放下','加快速度'], ans:0},
   {sec:'grammar',lv:5, q:'_____困难多大，我们都要坚持下去。', opts:['无论','尽管','既然'], ans:0},
@@ -276,11 +373,23 @@ const BANK = [
   {sec:'listen', lv:6, q:'听，这段话主要讲什么？', audio:'随着全球化的深入，各国文化相互影响、相互融合。', opts:['文化相互影响融合','经济快速发展','科技改变生活'], ans:0},
   {sec:'listen', lv:6, q:'听，他对批评是什么态度？', audio:'面对大家的批评，他坦然地接受了。', opts:['坦然接受','坚决反驳','假装没听见'], ans:0},
   {sec:'listen', lv:6, q:'听，作者认为传统应该怎么办？', audio:'传统并非一成不变，而应与时俱进。', opts:['与时俱进','完全保留','彻底抛弃'], ans:0},
+  {sec:'read',   lv:6, q:'森林对环境有很好的保护作用，因为森林里的植物可以留住更多的水分，使空气变得（）。', opts:['湿润','干燥','清澈'], ans:0},
   {sec:'read',   lv:6, q:'“潜移默化”是什么意思？', opts:['不知不觉中受影响','突然改变','明显不同'], ans:0},
   {sec:'read',   lv:6, q:'“甄别”是什么意思？', opts:['审查辨别','合并处理','完全忽视'], ans:0},
   {sec:'grammar',lv:6, q:'这篇论文的观点___新颖，___有些极端。', opts:['既…又…','不但…而且…','虽然…但是…'], ans:0},
   {sec:'grammar',lv:6, q:'_____困难再多，他也从未放弃。', opts:['即使','因为','如果'], ans:0},
   {sec:'grammar',lv:6, q:'他___是年轻人，难免会犯错。', opts:['毕竟','或许','忽然'], ans:0}
+];
+
+/* 各等级词汇量参照（国际中文教育中文水平等级标准） */
+const VMAP = [
+  {lv:1, cn:'一级', en:'Level 1', n:500},
+  {lv:2, cn:'二级', en:'Level 2', n:1200},
+  {lv:3, cn:'三级', en:'Level 3', n:2200},
+  {lv:4, cn:'四级', en:'Level 4', n:3200},
+  {lv:5, cn:'五级', en:'Level 5', n:4300},
+  {lv:6, cn:'六级', en:'Level 6', n:5400},
+  {lv:79,cn:'七–九级', en:'Level 7–9', n:11000}
 ];
 
 /* ===================== 语音朗读 ===================== */
@@ -309,15 +418,16 @@ function speak(text){
 /* ===================== 自适应引擎 ===================== */
 let MAX_Q = 16, MIN_Q = 8; const CONV_N = 4;
 let mode = 'full';
+let startLv = 1;               // 开场自定位等级 1-4
 let curLv = 1;
 let curQ = null;
-let picked = null;            // 0..3 或 'dk'
-let visits = {};              // 各级停留次数
-let history = [];             // 每题展示的等级序列
-let usedByLv = {};            // 各级已用题下标，避免短期重复
+let picked = null;             // 0..n 或 'dk'
+let visits = {};               // 各级停留次数
+let history = [];              // 每题展示的等级序列
+let usedByLv = {};             // 各级已用题下标，避免短期重复
 
 function resetEngine(){
-  curLv = 1; picked = null; curQ = null;
+  curLv = startLv; picked = null; curQ = null;
   visits = {1:0,2:0,3:0,4:0,5:0,6:0};
   history = []; usedByLv = {1:[],2:[],3:[],4:[],5:[],6:[]};
 }
@@ -344,20 +454,70 @@ function estimate(){
   return cands[cands.length-1];
 }
 
+/* ===================== 倒计时 ===================== */
+const TIME_LISTEN = 15, TIME_OTHER = 12;
+let timerId = null, timeLeft = 0;
+function stopTimer(){ if(timerId){ clearInterval(timerId); timerId = null; } }
+function updateTimerUI(){
+  const box = $('timerBox');
+  if(!box) return;
+  box.classList.toggle('low', timeLeft <= 3);
+  box.innerHTML = T.timer+' / '+EN.timer+'<b>'+timeLeft+'</b>';
+}
+function startTimer(sec){
+  stopTimer();
+  timeLeft = sec;
+  updateTimerUI();
+  timerId = setInterval(()=>{
+    timeLeft--;
+    updateTimerUI();
+    if(timeLeft <= 0){ stopTimer(); autoSubmit(); }
+  }, 1000);
+}
+function autoSubmit(){
+  if(picked === null) picked = 'dk';
+  const btn = $('nextBtn');
+  if(btn){
+    btn.disabled = false;
+    btn.click();
+  }
+}
+
 /* ===================== 工具 ===================== */
 const $ = id => document.getElementById(id);
 function fmt(s, ...n){ return s.replace(/%d/g, () => n.shift()); }
+/* 中文 + 英文对照 */
+function bi(zh, en){ return zh + '<span class="en">'+en+'</span>'; }
 
 /* ===================== 介绍页 ===================== */
+let slvPicked = 0;             // startOpts 下标
 function renderIntro(){
-  $('appTitle').textContent = T.appTitle;
-  $('appSub').textContent = T.appSub;
-  $('introBody').innerHTML = T.introBody;
-  $('fullTitle').textContent = T.fullTitle;
-  $('fullSub').textContent = T.fullSub;
-  $('quickTitle').textContent = T.quickTitle;
-  $('quickSub').textContent = T.quickSub;
-  $('introNote').textContent = T.introNote;
+  $('appTitle').innerHTML = bi(T.appTitle, EN.appTitle);
+  $('appSub').innerHTML = bi(T.appSub, EN.appSub);
+  $('introBody').innerHTML = T.introBody + '<span class="en">'+EN.introBody+'</span>';
+  $('startQ').innerHTML = bi(T.startQ, EN.startQ);
+  const list = $('slvList');
+  list.innerHTML = '';
+  const keys = ['A','B','C','D'];
+  T.startOpts.forEach((zh,i)=>{
+    const b = document.createElement('button');
+    b.className = 'slv' + (i===slvPicked ? ' sel' : '');
+    b.innerHTML = '<span class="k">'+keys[i]+'</span><span class="zh">'+zh+'</span>'+
+                  '<span class="en">'+EN.startOptsEn[i]+'</span>';
+    b.addEventListener('click', ()=>{
+      slvPicked = i;
+      list.querySelectorAll('.slv').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+    });
+    list.appendChild(b);
+  });
+  $('fullTitle').innerHTML = bi(T.fullTitle, EN.fullTitle);
+  $('fullSub').innerHTML = bi(T.fullSub, EN.fullSub);
+  $('quickTitle').innerHTML = bi(T.quickTitle, EN.quickTitle);
+  $('quickSub').innerHTML = bi(T.quickSub, EN.quickSub);
+  $('introNote').innerHTML = bi(T.introNote, EN.introNote);
+  $('nextBtn').textContent = T.next;
+  $('restartBtn').innerHTML = bi(T.restart, EN.restart);
   $('intro').classList.remove('hidden');
   $('quiz').classList.add('hidden');
   $('result').classList.add('hidden');
@@ -366,62 +526,62 @@ function renderIntro(){
 /* ===================== 答题页 ===================== */
 function renderQuestion(){
   const q = curQ;
-  const secName = q.sec==='listen'?T.sec_listen : q.sec==='read'?T.sec_read : T.sec_grammar;
-  $('qCount').textContent = fmt(T.qOf, history.length + 1);
+  const secName = q.sec==='listen'?T.sec_listen : q.sec==='pic'?T.sec_pic : q.sec==='read'?T.sec_read : T.sec_grammar;
+  const secEn   = q.sec==='listen'?EN.sec_listen : q.sec==='pic'?EN.sec_pic : q.sec==='read'?EN.sec_read : EN.sec_grammar;
+  $('qCount').textContent = fmt(T.qOf, history.length + 1) + ' · ' + fmt(EN.qOf, history.length + 1);
   $('convHint').textContent = (history.length >= MIN_Q && lastNEqual(CONV_N)) ? T.conv : '';
   $('progBar').style.width = Math.min(100, history.length / MAX_Q * 100) + '%';
 
   let html = '<div class="meta">';
-  html += '<span class="sec-tag">'+secName+'</span>';
+  html += '<span class="sec-tag">'+secName+' <span style="opacity:.8;font-weight:400">'+secEn+'</span></span>';
   html += '<span class="diff">'+T.diffLabel+'：'+T.lv[curLv]+'</span>';
   html += '</div>';
+  if(q.sec === 'pic') html += '<div class="pic">'+q.pic+'</div>';
   html += '<div class="q-text">'+q.q+'</div>';
   if(q.py) html += '<div class="py">'+q.py+'</div>';
 
   if(q.sec === 'listen'){
     const ok = speak(q.audio);
     html += '<div class="tts">';
-    html += '<button id="playBtn">🔊 播放</button>';
-    if(ok) html += '<div><div class="hint">'+T.listenHint+'</div></div>';
-    else html += '<div><div class="hint">'+T.noTts+'</div><div class="fallback">'+q.audio+'</div></div>';
+    html += '<button id="playBtn">🔊 '+T.replay+'</button>';
+    if(ok) html += '<div><div class="hint">'+T.listenHint+'<span class="en">'+EN.listenHint+'</span></div></div>';
+    else html += '<div><div class="hint">'+T.noTts+'<span class="en">'+EN.noTts+'</span></div><div class="fallback">'+q.audio+'</div></div>';
     html += '</div>';
   }
 
   html += '<div class="opts" id="opts">';
-  const keys = ['A','B','C','D'];
+  const keys = ['A','B','C','D','E','F'];
   for(let i=0;i<q.opts.length;i++){
     html += '<div class="opt" data-i="'+i+'"><span class="k">'+keys[i]+'</span>';
     html += '<span class="ot">'+q.opts[i];
     if(q.pyo && q.pyo[i]) html += '<span class="opy">'+q.pyo[i]+'</span>';
     html += '</span></div>';
   }
+  // 「我不会」作为最后一个选项（同原版 E 选项）
+  html += '<div class="opt dkopt" data-i="dk"><span class="k">'+keys[q.opts.length]+'</span>'+
+          '<span class="ot">'+T.dk+' <span style="font-size:13px;opacity:.75">('+EN.dk+')</span></span></div>';
   html += '</div>';
-  html += '<button class="dk" id="dkBtn">'+T.dk+'</button>';
   $('qArea').innerHTML = html;
 
   $('opts').querySelectorAll('.opt').forEach(el=>{
     el.addEventListener('click', ()=>{
-      picked = +el.dataset.i;
+      picked = el.dataset.i === 'dk' ? 'dk' : +el.dataset.i;
       $('opts').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
-      $('dkBtn').classList.remove('sel');
       el.classList.add('sel');
       $('nextBtn').disabled = false;
     });
   });
-  $('dkBtn').addEventListener('click', ()=>{
-    picked = 'dk';
-    $('opts').querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
-    $('dkBtn').classList.add('sel');
-    $('nextBtn').disabled = false;
-  });
   const pb = $('playBtn');
   if(pb) pb.addEventListener('click', ()=>speak(q.audio));
+
+  startTimer(q.sec === 'listen' ? TIME_LISTEN : TIME_OTHER);
 
   const last = history.length + 1 >= MAX_Q;
   $('nextBtn').textContent = last ? T.seeResult : T.next;
   $('nextBtn').disabled = true;
   $('nextBtn').onclick = ()=>{
     if(picked === null) return;
+    stopTimer();
     visits[curLv]++; history.push(curLv);
     const correct = (picked !== 'dk') && (picked === q.ans);
     curLv = correct ? Math.min(6, curLv+1) : Math.max(1, curLv-1);
@@ -437,32 +597,48 @@ function renderQuestion(){
 
 /* ===================== 结果页 ===================== */
 function finish(){
+  stopTimer();
   $('progBar').style.width = '100%';
   const est = estimate();
-  $('resLabel').textContent = T.resLabel;
-  $('resLevel').textContent = T.lv[est];
-  $('resDesc').textContent = T.lvDesc[est];
+
+  $('repTitle').innerHTML = bi(T.reportTitle, EN.reportTitle);
+  $('resLabel').innerHTML = bi(T.resLabel, EN.resLabel);
+  $('resLevel').innerHTML = (T.lvCn[est] || T.lv[est]) + '<span class="en">'+EN.lvEn[est]+'</span>';
+  $('resDesc').innerHTML = T.lvDesc[est] + '<span class="en">'+EN.lvDesc[est]+'</span>';
 
   let rec;
   if(est===0) rec = T.rec0;
   else if(est===6) rec = T.recTop;
   else rec = fmt(T.recMid, est, est+1, est);
-  $('resRec').innerHTML = '<b>'+(edition==='traditional'?'學習建議':'学习建议')+'：</b>'+rec;
+  const recEn = (est===0) ? EN.rec0 : (est===6) ? EN.recTop : fmt(EN.recMid, est, est+1, est);
+  $('resRec').innerHTML = '<b>'+(edition==='traditional'?'學習建議':'学习建议')+' / Suggestions：</b>'+rec+
+                          '<span class="en">'+recEn+'</span>';
 
-  $('resAcc').innerHTML = T.resAcc + '：<b>'+history.length+'</b> 题';
+  $('resAcc').innerHTML = bi(T.resAcc, EN.resAcc) + '：<b>'+history.length+'</b> '+(edition==='traditional'?'題':'题');
 
-  let bars = '<h3>'+T.resBars+'</h3>';
-  const maxV = Math.max(1, ...Object.values(visits));
-  for(let lv=1; lv<=6; lv++){
-    const v = visits[lv];
-    const pct = Math.round(v/maxV*100);
-    const color = (lv===est) ? 'var(--accent)' : '#9DB4CC';
-    bars += '<div class="bar-row"><span class="nm">'+T.lv[lv]+'</span>'+
-      '<span class="track"><i style="width:'+pct+'%;background:'+color+'"></i></span>'+
-      '<span class="ct">'+v+' 次</span></div>';
-  }
+  // 词汇量估算：按各级停留次数加权
+  let total = 0;
+  for(let lv=1; lv<=6; lv++) total += visits[lv];
+  let vocab = 0;
+  for(let lv=1; lv<=6; lv++) vocab += visits[lv] * VMAP[lv-1].n;
+  vocab = total ? Math.round(vocab/total) : VMAP[est-1].n;
+  $('resVocab').innerHTML = bi(T.vocabLabel, EN.vocabLabel) + '：<b>≈ '+vocab+'</b> '+T.vocabUnit;
+
+  // 词汇量柱状图（纯 CSS，零依赖）
+  const MAXN = 11000, MAXH = 130;
+  let bars = '';
+  VMAP.forEach(v=>{
+    const hi = (v.lv === est);
+    const h = Math.max(8, Math.round(v.n/MAXN*MAXH));
+    bars += '<div class="vcol'+(hi?' me':'')+'">'+
+      '<span class="vnm">'+v.cn+'</span>'+
+      '<i style="height:'+h+'px"></i>'+
+      '<span class="vct">'+v.n+'</span>'+
+      '<span class="ven">'+v.en+'</span></div>';
+  });
   $('resBars').innerHTML = bars;
-  $('resNote').textContent = T.resNote;
+  $('vocabNote').innerHTML = bi(T.vocabNote, EN.vocabNote);
+  $('resNote').innerHTML = bi(T.resNote, EN.resNote);
 
   $('intro').classList.add('hidden');
   $('quiz').classList.add('hidden');
@@ -471,12 +647,19 @@ function finish(){
 }
 
 /* ===================== 启动 ===================== */
-$('modeFull').addEventListener('click', ()=>{ resetEngine(); curQ = pickQuestion(curLv); renderQuestion();
-  $('intro').classList.add('hidden'); $('quiz').classList.remove('hidden'); });
-$('modeQuick').addEventListener('click', ()=>{ MIN_Q = 6; MAX_Q = 10;
-  resetEngine(); curQ = pickQuestion(curLv); renderQuestion();
-  $('intro').classList.add('hidden'); $('quiz').classList.remove('hidden'); });
-$('restartBtn').addEventListener('click', ()=>{ MIN_Q = 8; MAX_Q = 16; renderIntro(); });
+function beginTest(){
+  startLv = slvPicked + 1;             // 4 档自定位 → 起始等级 1-4
+  resetEngine();
+  curQ = pickQuestion(curLv);
+  $('intro').classList.add('hidden');
+  $('result').classList.add('hidden');
+  $('quiz').classList.remove('hidden');
+  renderQuestion();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('modeFull').addEventListener('click', ()=>{ MIN_Q = 8; MAX_Q = 16; beginTest(); });
+$('modeQuick').addEventListener('click', ()=>{ MIN_Q = 6; MAX_Q = 10; beginTest(); });
+$('restartBtn').addEventListener('click', ()=>{ MIN_Q = 8; MAX_Q = 16; stopTimer(); renderIntro(); });
 
 renderIntro();
 </script>
