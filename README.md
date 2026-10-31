@@ -23,11 +23,24 @@
 ```
 index.html              门户首页（双入口版 + 四组筛选）
 assets/games.js         工具目录数据（加新工具只改这一个文件）
+assets/previews/        工具卡片预览图（真实截图，自动生成）
 assets/styles.css       门户样式
 generators/             13 个单文件生成器
+scripts/make-previews.mjs  预览图生成脚本（本机 Chrome 无头截屏）
 tools/whiteboard/       教学白板（Vite 构建产物，多文件应用）
 sync-whiteboard.sh      白板更新同步脚本
 ```
+
+## 维护：更新预览图
+
+首页卡片顶部显示每个工具的**真实界面截图**（`assets/previews/<id>.webp`）。
+工具改版或新增工具后，重跑一次脚本即可全部重新生成（需本机装有 Chrome）：
+
+```bash
+node scripts/make-previews.mjs
+```
+
+某个工具若暂时没有截图文件，卡片会自动回退显示 emoji 图标。
 
 ## 如何加一个新工具
 
