@@ -1,0 +1,4 @@
+# 不要提交真实密钥与演示数据
+.env
+data/
+node_modules/

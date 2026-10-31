@@ -1,0 +1,12 @@
+{
+  "name": "chinese-game-studio-payments",
+  "version": "0.1.0",
+  "description": "中文教学工具库 · 支付宝/微信 月付订阅（签约代扣）收款后端脚手架",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {}
+}

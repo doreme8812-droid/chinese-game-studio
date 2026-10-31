@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>付费门禁演示 · 中文教学工具库</title>
+<style>
+  body { font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px; color: #222; }
+  h1 { font-size: 20px; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 20px; }
+  input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 8px; }
+  button { padding: 6px 12px; border: 0; border-radius: 8px; background: #2b6cff; color: #fff; cursor: pointer; }
+  .card { border: 1px solid #e5e5e5; border-radius: 14px; padding: 18px; margin: 14px 0; position: relative; }
+  .tag { font-size: 12px; color: #fff; background: #16a34a; padding: 2px 8px; border-radius: 999px; margin-left: 8px; }
+  .tag.pay { background: #f59e0b; }
+  .premium.locked { overflow: hidden; }
+  .lock-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.82); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; }
+  .lock-box { text-align: center; }
+  .lock-box .hint { font-size: 13px; color: #666; }
+  .unlock-btn { margin-top: 10px; }
+  .muted { color: #888; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>中文教学工具库 · 付费门禁演示</h1>
+  <div class="bar">
+    <span>用户标识（演示用，真实环境用登录态 uid）：</span>
+    <input id="uid" value="demo-user-1" />
+    <button onclick="refresh()">刷新门禁</button>
+  </div>
+
+  <div class="card">
+    <strong>免费工具</strong><span class="tag">免费</span>
+    <p class="muted">所有访客都能用，例如：汉字书写练习、拼音对照表。</p>
+  </div>
+
+  <div class="card premium">
+    <strong>付费工具（例：HSK 自适应水平测试 · 完整版）</strong><span class="tag pay">付费</span>
+    <p class="muted">订阅后解锁：完整题库、测评报告、词汇量分析。</p>
+  </div>
+
+  <p class="muted">演示说明：点付费卡片上的「解锁」会模拟一次支付成功，门禁随即打开。真实环境会跳转到支付宝/微信签约页，支付成功后由服务器 webhook 自动开通。</p>
+
+  <script src="gate.js"></script>
+  <script>
+    function refresh() {
+      const uid = document.getElementById('uid').value.trim();
+      applyGating(uid, { channel: 'alipay' });
+    }
+    refresh();
+  </script>
+</body>
+</html>
