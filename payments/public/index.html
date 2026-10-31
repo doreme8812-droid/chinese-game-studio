@@ -19,6 +19,8 @@
   .lock-box .hint { font-size: 13px; color: #666; }
   .unlock-btn { margin-top: 10px; }
   .muted { color: #888; font-size: 13px; }
+  .payrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .payrow button.overseas { background: #6b21a8; }
 </style>
 </head>
 <body>
@@ -37,15 +39,30 @@
   <div class="card premium">
     <strong>付费工具（例：HSK 自适应水平测试 · 完整版）</strong><span class="tag pay">付费</span>
     <p class="muted">订阅后解锁：完整题库、测评报告、词汇量分析。</p>
+    <div class="payrow">
+      <button onclick="pay('alipay')">中国大陆 · 支付宝</button>
+      <button onclick="pay('wechat')">中国大陆 · 微信</button>
+      <button class="overseas" onclick="pay('paypal')">Overseas · PayPal</button>
+      <button class="overseas" onclick="pay('paddle')">Overseas · Paddle</button>
+    </div>
   </div>
 
-  <p class="muted">演示说明：点付费卡片上的「解锁」会模拟一次支付成功，门禁随即打开。真实环境会跳转到支付宝/微信签约页，支付成功后由服务器 webhook 自动开通。</p>
+  <p class="muted">演示说明：点任意「支付」按钮会模拟一次对应渠道的支付成功，门禁随即打开。真实环境会跳转到对应平台（支付宝/微信签约页 或 PayPal/Paddle 结账页），支付成功后由服务器 webhook 自动开通。</p>
 
   <script src="gate.js"></script>
   <script>
     function refresh() {
       const uid = document.getElementById('uid').value.trim();
       applyGating(uid, { channel: 'alipay' });
+    }
+    async function pay(channel) {
+      const uid = document.getElementById('uid').value.trim();
+      const r = await fetch('/api/subscribe', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, channel })
+      }).then(x => x.json());
+      if (r.payUrl) { window.location.href = r.payUrl; }   // 沙箱：直接跳转模拟支付成功
+      else alert('真实模式未接线：请填 ' + channel + ' 密钥并在 server.js 接入 SDK');
     }
     refresh();
   </script>

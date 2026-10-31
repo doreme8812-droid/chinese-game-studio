@@ -27,6 +27,10 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 // 真实模式：商户密钥齐了才启用；否则走沙箱
 const REAL_ALIPAY = !!(process.env.ALIPAY_APP_ID && process.env.ALIPAY_PRIVATE_KEY);
 const REAL_WECHAT = !!(process.env.WECHAT_MCH_ID && process.env.WECHAT_API_KEY);
+const REAL_PAYPAL = !!(process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_SECRET);
+const REAL_PADDLE = !!(process.env.PADDLE_VENDOR_ID && process.env.PADDLE_WEBHOOK_SECRET);
+const REAL_CHANNELS = { alipay: REAL_ALIPAY, wechat: REAL_WECHAT, paypal: REAL_PAYPAL, paddle: REAL_PADDLE };
+const CHANNELS = ['alipay', 'wechat', 'paypal', 'paddle'];
 
 /* ============ 权益存储 ============
    演示用 JSON 文件；生产请换成 Firebase/Firestore 或数据库。
@@ -69,18 +73,21 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, uid ? getEnt(uid) : { error: 'uid required' });
   }
 
-  // 发起订阅（签约代扣）：返回支付/签约链接或二维码内容
+  // 发起订阅（签约代扣 / 海外订阅）：返回支付/签约链接或二维码内容
   if (req.method === 'POST' && p === '/api/subscribe') {
     const body = await readBody(req);
     const uid = body.uid;
     if (!uid) return json(res, 400, { error: 'uid required' });
-    const ch = body.channel === 'wechat' ? 'wechat' : 'alipay';
+    if (!CHANNELS.includes(body.channel)) return json(res, 400, { error: 'unsupported channel' });
+    const ch = body.channel;
 
-    if ((ch === 'alipay' && REAL_ALIPAY) || (ch === 'wechat' && REAL_WECHAT)) {
-      // TODO 真实签约代扣：用 alipay-sdk / wechatpay-node-v3 创建周期扣款协议，
-      //       返回 payUrl（支付宝跳转签约）或 qr（微信二维码）。
-      // const sdk = ch === 'alipay' ? require('alipay-sdk') : require('wechatpay-node-v3');
-      return json(res, 501, { error: 'real SDK path not wired; fill keys + SDK calls in server.js' });
+    if (REAL_CHANNELS[ch]) {
+      // TODO 真实订阅：按渠道接入官方 SDK / API
+      //  - alipay : alipay-sdk  → alipay.trade.page.agreement.sign（周期扣款）
+      //  - wechat : wechatpay-node-v3 → 委托代扣协议
+      //  - paypal : 服务端用 PAYPAL_CLIENT_ID/SECRET 调 /v1/billing/plans + /v1/billing/subscriptions
+      //  - paddle : 用 PADDLE_VENDOR_ID 创建 Subscription/Checkout 链接（merchant of record，无需你注册公司）
+      return json(res, 501, { error: `real ${ch} path not wired; fill keys + SDK/API calls in server.js` });
     }
 
     // 沙箱：返回一个"模拟支付"链接供演示 gating 闭环
@@ -92,9 +99,21 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // 异步通知（webhook）：真实环境由支付宝/微信服务器回调；此处沙箱版校验 HMAC
-  if (req.method === 'POST' && (p === '/api/notify/alipay' || p === '/api/notify/wechat')) {
+  // 异步通知（webhook）：真实环境由支付平台服务器回调；此处沙箱版校验 HMAC
+  if (req.method === 'POST' && p.startsWith('/api/notify/')) {
+    const ch = p.split('/').pop();
+    if (!CHANNELS.includes(ch)) return json(res, 400, { error: 'unknown channel' });
     const body = await readBody(req);
+
+    if (REAL_CHANNELS[ch]) {
+      // TODO 真实 webhook 验签（各渠道不同）：
+      //  - alipay : 用 ALIPAY_PUBLIC_KEY 验签
+      //  - wechat : 用平台证书验签
+      //  - paypal : 用 Webhook Signature（证书 + transmission_id/timestamp/body）
+      //  - paddle : 用 PADDLE_WEBHOOK_SECRET 校验 Paddle-Signature (HMAC-SHA256, ts+nonce+body)
+      return json(res, 501, { error: `real ${ch} webhook verify not wired` });
+    }
+
     const expected = sign({ uid: body.uid, ch: body.channel, t: body.t });
     if (body.sig !== expected) return json(res, 403, { error: 'bad signature' });
     const months = parseInt(body.months || '1', 10);
@@ -143,6 +162,7 @@ function serveStatic(p, res) {
   });
 }
 
-server.listen(PORT, () =>
-  console.log(`payments server on http://localhost:${PORT}  (mode=${REAL_ALIPAY || REAL_WECHAT ? 'REAL' : 'SANDBOX'})`)
-);
+server.listen(PORT, () => {
+  const real = CHANNELS.filter(c => REAL_CHANNELS[c]);
+  console.log(`payments server on http://localhost:${PORT}  (mode=${real.length ? 'REAL:' + real.join(',') : 'SANDBOX'})`);
+});

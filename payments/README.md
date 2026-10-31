@@ -106,7 +106,31 @@ npm install alipay-sdk wechatpay-node-v3
 
 ---
 
-## 六、把门禁接到现有工具站
+## 六、海外收款（PayPal / Paddle）
+
+国内用支付宝/微信，海外学生用 **PayPal** 或 **Paddle**。两者都已并入同一套门禁与权益体系：
+前端只需把 `applyGating(uid, { channel })` 的 `channel` 换成 `'paypal'` / `'paddle'` 即可，后端 `/api/subscribe` 与 `/api/notify/{paypal,paddle}` 已留好位置。
+
+### 两个海外渠道怎么选
+
+| 渠道 | 需要公司吗 | 跨境税务 | 接入难度 | 适合 |
+|---|---|---|---|---|
+| **Paddle** | ❌ 不需要（merchant of record 代售） | Paddle 替你处理 VAT/消费税 | 低（一个 Checkout 链接 + webhook） | **最推荐**：你没注册海外公司时的首选 |
+| **PayPal** | 个人号可收；商用建议升「商业账号」 | 需自行申报 | 中（服务端调 Billing API 建订阅） | 学生习惯用 PayPal、想要品牌熟悉度 |
+
+> **Wise 的建议**：Wise 个人号**不适合做客户付款入口**（无法网页收银、无订阅/webhook）。把它当作你的**回款归集账户**——Paddle/PayPal 收到的钱提现到 Wise，再落地到你本地银行。
+
+### 真实接入（拿到密钥后）
+
+1. **Paddle**：在 [paddle.com](https://paddle.com) 注册卖家 → 创建 Product/Subscription → 在 `server.js` 的 `/api/subscribe` 用 `PADDLE_VENDOR_ID` + `PADDLE_API_KEY` 创建 Checkout 链接返回前端；`/api/notify/paddle` 用 `PADDLE_WEBHOOK_SECRET` 校验 `Paddle-Signature` 头后开通权益。
+2. **PayPal**：在 [developer.paypal.com](https://developer.paypal.com) 建 App 拿 Client ID + Secret → 服务端用 `PAYPAL_CLIENT_ID`/`PAYPAL_SECRET` 调 `/v1/billing/plans` + `/v1/billing/subscriptions` 建订阅，返回 approve URL；`/api/notify/paypal` 用 PayPal Webhook Signature 验签后开通权益。
+3. 把密钥填进 `.env`（参照 `.env.example` 的 `PAYPAL_*` / `PADDLE_*` 段）。填齐后启动会打印 `mode=REAL:...,paypal,paddle`，沙箱分支自动失效。
+
+> 海外收款也要有**退款规则 + 隐私政策**，且 Paddle 作为代售方会替你出合规发票，对个人卖家最省心。
+
+---
+
+## 七、把门禁接到现有工具站
 
 1. 在要收费的工具容器上加 `class="premium"`。
 2. 页面加载时调用：
@@ -117,7 +141,7 @@ npm install alipay-sdk wechatpay-node-v3
 
 ---
 
-## 七、部署与合规提醒
+## 八、部署与合规提醒
 
 - 后端需独立部署（任意 Node 主机 / 云函数 / 你已有的 Firebase Cloud Functions 都可跑）。
 - 回调地址必须是 **HTTPS**；国内服务器需 **ICP 备案**。
@@ -126,7 +150,7 @@ npm install alipay-sdk wechatpay-node-v3
 
 ---
 
-## 八、下一步建议
+## 九、下一步建议
 
 1. 你先去把个体工商户 + 商户号办下来（最耗时的前置）。
 2. 同时可用本沙箱演示，把「哪些工具收费、收费怎么呈现」定下来。
