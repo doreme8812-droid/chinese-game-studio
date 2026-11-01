@@ -9,24 +9,15 @@
 </head>
 <body>
 
-  <!-- 顶部栏 -->
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="logo">🎮</div>
-      <div class="brand-text">
-        <h1 id="ui-siteName">中文教学工具库</h1>
-        <p id="ui-tagline">对外汉语课堂互动游戏与教学工具</p>
-      </div>
-      <div style="flex:1"></div>
+  <!-- Hero（品牌名 + 版本切换，无顶部栏） -->
+  <section class="hero">
+    <div class="hero-top">
       <div class="edition-switch">
         <button id="ed-simple">简体版</button>
         <button id="ed-trad">繁体版</button>
       </div>
     </div>
-  </header>
-
-  <!-- Hero -->
-  <section class="hero">
+    <div class="hero-brand">Chinese with Dora</div>
     <h2 id="ui-heroTitle">挑一个工具，输几个词，就能上课</h2>
     <p id="ui-heroText"></p>
     <div class="hero-stats">
@@ -36,31 +27,34 @@
     </div>
   </section>
 
-  <!-- 控制条 -->
+  <!-- 控制条：搜索 + 折叠筛选 -->
   <section class="controls">
     <div class="search">
       <span class="ico">🔎</span>
       <input id="search" type="text" placeholder="" />
     </div>
-    <div class="ed-hint" id="ui-edHint"></div>
-    <div class="filter-row">
-      <span class="filter-label" id="lb-purpose"></span>
-      <span class="chips" id="f-purpose"></span>
-    </div>
-    <div class="filter-row">
-      <span class="filter-label" id="lb-script"></span>
-      <span class="chips" id="f-script"></span>
-    </div>
-    <div class="filter-row">
-      <span class="filter-label" id="lb-lang"></span>
-      <span class="chips" id="f-lang"></span>
-    </div>
-    <div class="filter-row">
-      <span class="filter-label" id="lb-roman"></span>
-      <span class="chips" id="f-roman"></span>
-    </div>
-    <div class="share-row">
+    <div class="controls-row">
+      <button class="chip filter-toggle" id="filter-toggle" aria-expanded="false"></button>
       <button class="chip" id="copy-link">复制本页链接</button>
+    </div>
+    <div class="filter-panel" id="filter-panel" hidden>
+      <div class="ed-hint" id="ui-edHint"></div>
+      <div class="filter-row">
+        <span class="filter-label" id="lb-purpose"></span>
+        <span class="chips" id="f-purpose"></span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label" id="lb-script"></span>
+        <span class="chips" id="f-script"></span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label" id="lb-lang"></span>
+        <span class="chips" id="f-lang"></span>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label" id="lb-roman"></span>
+        <span class="chips" id="f-roman"></span>
+      </div>
     </div>
   </section>
 
@@ -273,8 +267,6 @@
     function applyI18N() {
       const Uu = U();
       document.title = Uu.siteName + ' · ' + Uu.tagline;
-      document.getElementById('ui-siteName').textContent = Uu.siteName;
-      document.getElementById('ui-tagline').textContent = Uu.tagline;
       document.getElementById('ui-heroTitle').textContent = Uu.heroTitle;
       document.getElementById('ui-heroText').textContent = Uu.heroText;
       document.getElementById('ui-statTools').textContent = Uu.statTools;
@@ -297,7 +289,25 @@
       document.getElementById('ed-trad').classList.toggle('active', edition === 'traditional');
     }
 
-    function renderAll() { applyI18N(); renderFilters(); render(); renderStats(); }
+    function renderAll() { applyI18N(); renderFilters(); render(); renderStats(); updateFilterToggle(); }
+
+    // ---------- 筛选折叠 ----------
+    const filterPanel = document.getElementById('filter-panel');
+    const filterToggle = document.getElementById('filter-toggle');
+    function setPanel(open) {
+      filterPanel.hidden = !open;
+      filterToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      filterToggle.classList.toggle('open', open);
+    }
+    filterToggle.onclick = () => setPanel(filterPanel.hidden);
+    // 折叠按钮上显示已生效的筛选数量；有筛选时自动展开
+    function updateFilterToggle() {
+      const n = ['purpose', 'script', 'lang', 'roman'].filter(k => S[k] !== 'all').length;
+      const Uu = U();
+      filterToggle.textContent = Uu.filterToggle + (n ? ' · ' + n : '');
+      filterToggle.classList.toggle('has-active', n > 0);
+      if (n) setPanel(true);
+    }
 
     // ---------- 版本切换 ----------
     function setEdition(ed) {
@@ -339,6 +349,18 @@
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
+    // 隐藏部署层自动注入的角标（如 Netlify），主文档与弹窗 iframe 内都处理
+    function hideHostBadge(doc) {
+      try {
+        if (!doc) return;
+        doc.querySelectorAll('a[href*="netlify"], [id*="netlify"]').forEach(el => {
+          (el.closest('div') || el).style.display = 'none';
+        });
+      } catch (e) { /* 跨域时静默跳过 */ }
+    }
+    hideHostBadge(document);
+    frame.addEventListener('load', () => hideHostBadge(frame.contentDocument));
+
     function closeModal() {
       modal.classList.remove('open');
       frame.src = 'about:blank';
