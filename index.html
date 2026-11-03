@@ -9,17 +9,38 @@
 </head>
 <body>
 
-  <!-- Hero（品牌名 + 版本切换，无顶部栏） -->
-  <section class="hero">
-    <div class="hero-top">
+  <!-- 背景：自由流动的糖果色大色块（无边框） -->
+  <div class="bg-blobs" aria-hidden="true"></div>
+  <!-- 手绘感灵动装饰元素 -->
+  <div class="deco" aria-hidden="true">
+    <svg class="d d1" viewBox="0 0 100 100"><path d="M50 5l10 28 28 10-28 10-10 28-10-28-28-10 28-10z" fill="#ffe27a"/></svg>
+    <svg class="d d2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#bfe3ff"/></svg>
+    <svg class="d d3" viewBox="0 0 100 100"><path d="M50 6c12 28 28 44 44 44-16 0-32 16-44 44C38 84 22 68 6 68c16 0 32-16 44-44z" fill="#ffd6e8"/></svg>
+    <span class="d d4">✦</span>
+    <span class="d d5">✺</span>
+    <span class="d d6">📖</span>
+    <span class="d d7">✦</span>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="topnav">
+    <div class="topnav-inner">
+      <a class="brand" href="?ed=simplified">
+        <span class="brand-ico">🎮</span>
+        <span id="ui-siteName">中文教学工具库</span>
+      </a>
       <div class="edition-switch">
         <button id="ed-simple">简体版</button>
         <button id="ed-trad">繁体版</button>
       </div>
     </div>
+  </header>
+
+  <!-- 主视觉 -->
+  <section class="hero">
     <div class="hero-brand">Chinese with Dora</div>
-    <h2 id="ui-heroTitle">挑一个工具，输几个词，就能上课</h2>
-    <p id="ui-heroText"></p>
+    <h1 class="headline"><span class="hl" id="ui-heroTitle">挑一个工具，输几个词，就能上课</span></h1>
+    <p class="subtitle" id="ui-heroText"></p>
     <div class="hero-stats">
       <div class="stat"><b id="stat-total">0</b><span id="ui-statTools"></span></div>
       <div class="stat"><b id="stat-gen">0</b><span id="ui-statGen"></span></div>
@@ -27,18 +48,14 @@
     </div>
   </section>
 
-  <!-- 控制条：搜索 + 折叠筛选 -->
+  <!-- 控制条：泡泡搜索框 + 多彩药丸筛选 -->
   <section class="controls">
-    <div class="search">
+    <div class="search-bubble">
       <span class="ico">🔎</span>
       <input id="search" type="text" placeholder="" />
     </div>
-    <div class="controls-row">
-      <button class="chip filter-toggle" id="filter-toggle" aria-expanded="false"></button>
-      <button class="chip" id="copy-link">复制本页链接</button>
-    </div>
-    <div class="filter-panel" id="filter-panel" hidden>
-      <div class="ed-hint" id="ui-edHint"></div>
+    <div class="ed-hint" id="ui-edHint"></div>
+    <div class="filters">
       <div class="filter-row">
         <span class="filter-label" id="lb-purpose"></span>
         <span class="chips" id="f-purpose"></span>
@@ -55,6 +72,9 @@
         <span class="filter-label" id="lb-roman"></span>
         <span class="chips" id="f-roman"></span>
       </div>
+    </div>
+    <div class="share-row">
+      <button class="chip ghost" id="copy-link">复制本页链接</button>
     </div>
   </section>
 
@@ -90,7 +110,6 @@
   <script>
     // ---------- 状态 ----------
     // edition: 入口版（simplified 简体版 / traditional 繁体版）
-    // 版本只影响界面文案与默认可见字形，工具数据始终只有一份
     const LS_KEY = 'gs_edition';
     const params = new URLSearchParams(location.search);
     let edition = params.get('ed') === 'traditional' ? 'traditional'
@@ -108,7 +127,6 @@
     const grid = document.getElementById('main');
     const searchEl = document.getElementById('search');
 
-    // 当前版本下该用的文案块（zh 简体 / hant 繁体）
     const txtOf = g => (edition === 'traditional' ? g.hant : g.zh);
     const U = () => UI[edition];
 
@@ -117,15 +135,12 @@
       if (g.langs.length > 1) return Uu.langBoth;
       return g.langs[0] === 'mandarin' ? Uu.langMandarin : Uu.langCantonese;
     }
-    // 单文件生成器用 file，多文件应用（如白板）用 path
     const srcOf = g => g.path || ('generators/' + g.file);
 
     // ---------- 版本基础可见性 ----------
-    // 简体版不出现纯繁体工具（如粤语通关），繁体版不出现纯简体工具
     function editionVisible(g) {
       return edition === 'simplified' ? g.script !== 'traditional' : g.script !== 'simplified';
     }
-    // 字形选项随版本变化
     function scriptOpts() {
       return edition === 'simplified'
         ? SCRIPT_OPTS.filter(o => o.v !== 'traditional')
@@ -159,14 +174,17 @@
       history.replaceState(null, '', location.pathname + '?' + p.toString());
     }
 
-    // ---------- 渲染 ----------
+    // 糖果色（用于筛选药丸）
+    const CANDY = ['#bfe3ff', '#ffd1a6', '#c7f0d2', '#e4d6ff', '#ffd6e8', '#ffe27a', '#c9f0ff'];
+
     function renderFilterRow(elId, opts, cur, key) {
       const el = document.getElementById(elId);
       el.innerHTML = '';
-      opts.forEach(o => {
+      opts.forEach((o, i) => {
         const b = document.createElement('button');
         b.className = 'chip' + (o.v === cur ? ' active' : '');
         b.textContent = edition === 'traditional' ? o.hant : o.zh;
+        if (o.v !== cur) b.style.background = CANDY[i % CANDY.length];
         b.onclick = () => { S[key] = o.v; updateURL(); renderAll(); };
         el.appendChild(b);
       });
@@ -179,7 +197,6 @@
       renderFilterRow('f-roman', ROMAN_OPTS, S.roman, 'roman');
     }
 
-    // 是否处于「筛选/搜索」状态（是 → 平铺结果；否 → 按教学阶段分块）
     function hasActiveFilters() {
       return S.purpose !== 'all' || S.script !== 'all' || S.lang !== 'all' || S.roman !== 'all' || !!S.q;
     }
@@ -192,7 +209,7 @@
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
-        <div class="card-top" style="background:${g.accent}1a;">
+        <div class="card-top" style="--c:${g.accent};">
           <span class="emoji">${g.emoji}</span>
           <span class="type-tag ${typeCls}">${typeTag}</span>
         </div>
@@ -224,7 +241,6 @@
         return;
       }
 
-      // 筛选 / 搜索：平铺结果
       if (hasActiveFilters()) {
         const head = document.createElement('div');
         head.className = 'flat-head';
@@ -234,7 +250,6 @@
         return;
       }
 
-      // 默认：按教学阶段三段色块
       PHASE_DEFS.forEach(pd => {
         const items = list.filter(g => (PHASES[g.id] || []).includes(pd.v));
         if (!items.length) return;
@@ -242,8 +257,6 @@
         const sec = document.createElement('section');
         sec.className = 'phase';
         sec.style.setProperty('--ph', pd.accent);
-        sec.style.background = pd.accent + '0d';
-        sec.style.borderColor = pd.accent + '30';
         sec.innerHTML = `
           <div class="phase-head">
             <span class="ph-icon">${pd.icon}</span>
@@ -267,6 +280,7 @@
     function applyI18N() {
       const Uu = U();
       document.title = Uu.siteName + ' · ' + Uu.tagline;
+      document.getElementById('ui-siteName').textContent = Uu.siteName;
       document.getElementById('ui-heroTitle').textContent = Uu.heroTitle;
       document.getElementById('ui-heroText').textContent = Uu.heroText;
       document.getElementById('ui-statTools').textContent = Uu.statTools;
@@ -289,32 +303,14 @@
       document.getElementById('ed-trad').classList.toggle('active', edition === 'traditional');
     }
 
-    function renderAll() { applyI18N(); renderFilters(); render(); renderStats(); updateFilterToggle(); }
-
-    // ---------- 筛选折叠 ----------
-    const filterPanel = document.getElementById('filter-panel');
-    const filterToggle = document.getElementById('filter-toggle');
-    function setPanel(open) {
-      filterPanel.hidden = !open;
-      filterToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      filterToggle.classList.toggle('open', open);
-    }
-    filterToggle.onclick = () => setPanel(filterPanel.hidden);
-    // 折叠按钮上显示已生效的筛选数量；有筛选时自动展开
-    function updateFilterToggle() {
-      const n = ['purpose', 'script', 'lang', 'roman'].filter(k => S[k] !== 'all').length;
-      const Uu = U();
-      filterToggle.textContent = Uu.filterToggle + (n ? ' · ' + n : '');
-      filterToggle.classList.toggle('has-active', n > 0);
-      if (n) setPanel(true);
-    }
+    function renderAll() { applyI18N(); renderFilters(); render(); renderStats(); }
 
     // ---------- 版本切换 ----------
     function setEdition(ed) {
       if (edition === ed) return;
       edition = ed;
       localStorage.setItem(LS_KEY, ed);
-      S.script = 'all'; // 字形选项随版本变化，重置避免空结果
+      S.script = 'all';
       updateURL();
       renderAll();
     }
@@ -338,7 +334,6 @@
       const src = srcOf(g);
       frame.src = src;
       document.getElementById('m-open').href = src;
-      // 多文件应用（课堂工具）下载单个 HTML 无法运行，隐藏下载按钮
       const dlBtn = document.getElementById('m-download');
       if (g.purpose === 'tool') {
         dlBtn.style.display = 'none';
@@ -349,14 +344,13 @@
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
-    // 隐藏部署层自动注入的角标（如 Netlify），主文档与弹窗 iframe 内都处理
     function hideHostBadge(doc) {
       try {
         if (!doc) return;
         doc.querySelectorAll('a[href*="netlify"], [id*="netlify"]').forEach(el => {
           (el.closest('div') || el).style.display = 'none';
         });
-      } catch (e) { /* 跨域时静默跳过 */ }
+      } catch (e) { }
     }
     hideHostBadge(document);
     frame.addEventListener('load', () => hideHostBadge(frame.contentDocument));
