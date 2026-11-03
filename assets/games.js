@@ -101,7 +101,7 @@ const GAMES = [
     script: "both",
     langs: ["mandarin", "cantonese"],
     roman: ["pinyin", "yale", "jyutping"],
-    emoji: "🖍️", accent: "#0D9488", layout: "wide",
+    emoji: "🖍️", accent: "#00DF89", layout: "wide",
     zh: {
       title: "Dora 教学白板",
       desc: "上课直接用的书写白板：写中文自动标注拼音 / 粤拼，普通话与粤语双语，无需登录，内容存本机。",
@@ -118,7 +118,7 @@ const GAMES = [
     file: "hanzi-challenge.html",
     en: "Character Challenge Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🏆", accent: "#0984E3", layout: "phone",
+    emoji: "🏆", accent: "#4D6EF7", layout: "phone",
     zh: {
       title: "汉字闯关游戏生成器",
       desc: "输入生词，生成学生版「中文大闯关」答题游戏，可下载独立网页。",
@@ -135,7 +135,7 @@ const GAMES = [
     file: "snake.html",
     en: "Snake Game Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🐍", accent: "#00B894", layout: "phone",
+    emoji: "🐍", accent: "#3AF072", layout: "phone",
     zh: {
       title: "灵动贪吃蛇生成器",
       desc: "把生词变成贪吃蛇食物，学生边玩边记词，可下载学生版网页。",
@@ -152,7 +152,7 @@ const GAMES = [
     file: "bingo.html",
     en: "Bingo Card Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🎲", accent: "#E8590C", layout: "phone",
+    emoji: "🎲", accent: "#FF5C00", layout: "phone",
     zh: {
       title: "宾果 Bingo 生成器",
       desc: "输入生词，生成可打印 / 可点选的宾果卡，学生每人随机不同，连成线即 BINGO。",
@@ -169,7 +169,7 @@ const GAMES = [
     file: "spinner.html",
     en: "Spinner Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🎡", accent: "#F0932B", layout: "phone",
+    emoji: "🎡", accent: "#FF9E00", layout: "phone",
     zh: {
       title: "转盘抽奖生成器",
       desc: "输入词语 / 音节 / 任务，生成可转动的抽奖转盘，可自动发音并打卡记录。也可投屏全班互动。",
@@ -186,7 +186,7 @@ const GAMES = [
     file: "listen-choose.html",
     en: "Listen and Choose Generator",
     purpose: "generator", script: "both", langs: ["mandarin"], roman: ["pinyin"],
-    emoji: "🎧", accent: "#2980B9", layout: "phone",
+    emoji: "🎧", accent: "#7C97FF", layout: "phone",
     zh: {
       title: "听音选字生成器",
       desc: "输入词语，生成「听发音选词」练习，网页朗读中文、学生四选一并即时判分。",
@@ -203,7 +203,7 @@ const GAMES = [
     file: "word-search.html",
     en: "Word Search Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🔍", accent: "#6C5CE7", layout: "phone",
+    emoji: "🔍", accent: "#7F56D9", layout: "phone",
     zh: {
       title: "中文找字游戏生成器",
       desc: "输入词语，自动生成找字 / 字谜网格，可下载网页或打印版。",
@@ -220,7 +220,7 @@ const GAMES = [
     file: "vocab-reading.html",
     en: "Vocab Reading Practice",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: ["pinyin"],
-    emoji: "📖", accent: "#E17055", layout: "phone",
+    emoji: "📖", accent: "#FF7E9F", layout: "phone",
     zh: {
       title: "生词阅读练习生成器",
       desc: "输入短文与生词，生成带词卡和练习的阅读网页。偏成人 / 青少年。",
@@ -237,7 +237,7 @@ const GAMES = [
     file: "reading-train.html",
     en: "Reading Cognition Trainer",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🧠", accent: "#00CEC9", layout: "phone",
+    emoji: "🧠", accent: "#00C47F", layout: "phone",
     zh: {
       title: "阅读认知训练生成器",
       desc: "生成阅读理解与认知训练互动练习，可下载学生版。",
@@ -254,7 +254,7 @@ const GAMES = [
     file: "sentence-scramble.html",
     en: "Sentence Scramble Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🐟", accent: "#0984E3", layout: "phone",
+    emoji: "🐟", accent: "#4D6EF7", layout: "phone",
     zh: {
       title: "语块重组造句生成器",
       desc: "输入句子，生成「小鱼吃词」语块重组游戏，可下载。",
@@ -271,7 +271,7 @@ const GAMES = [
     file: "train.html",
     en: "Sentence Train Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "🚂", accent: "#E67E22", layout: "phone",
+    emoji: "🚂", accent: "#FF7A00", layout: "phone",
     zh: {
       title: "造句小火车生成器",
       desc: "输入句子，生成「小火车」连词成句游戏，可下载学生版。",
@@ -288,7 +288,7 @@ const GAMES = [
     file: "stroke-practice.html",
     en: "Stroke Order Practice",
     purpose: "generator", script: "both", langs: ["mandarin"], roman: ["pinyin"],
-    emoji: "✍️", accent: "#D63031", layout: "phone",
+    emoji: "✍️", accent: "#FF4B72", layout: "phone",
     zh: {
       title: "汉字笔画练习生成器",
       desc: "输入汉字，生成笔画顺序练习游戏，可下载学生版。偏成人 / 青少年。",
@@ -305,7 +305,7 @@ const GAMES = [
     file: "cantonese-game.html",
     en: "Cantonese Game Generator",
     purpose: "generator", script: "traditional", langs: ["cantonese"], roman: ["yale", "jyutping"],
-    emoji: "🗣️", accent: "#C0392B", layout: "phone",
+    emoji: "🗣️", accent: "#E8395F", layout: "phone",
     zh: {
       title: "粤语通关游戏生成器",
       desc: "输入繁体字词，生成粤语通关练习游戏（耶鲁 / 粤拼），可下载。",
@@ -322,7 +322,7 @@ const GAMES = [
     file: "story-cards.html",
     en: "Picture Story Cards Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: ["pinyin"],
-    emoji: "🖼️", accent: "#E17055", layout: "wide",
+    emoji: "🖼️", accent: "#FF7E9F", layout: "wide",
     zh: {
       title: "看图说话卡片生成器",
       desc: "掷骰子随机抽图卡（3/5/9 张），学生用抽到的词说一段话。内置 120+ 张图卡开箱即玩，也能换成你自己的生词表，没图的词自动显示词语 + 拼音。",
@@ -339,7 +339,7 @@ const GAMES = [
     file: "exercise.html",
     en: "Homework Exercise Generator",
     purpose: "generator", script: "both", langs: ["mandarin", "cantonese"], roman: [],
-    emoji: "📝", accent: "#1F9D55", layout: "wide",
+    emoji: "📝", accent: "#00DF89", layout: "wide",
     zh: {
       title: "课后练习生成器",
       desc: "输入选择题、填空题，生成可在线作答、自动判分的练习网页；还能打印「题目卷 + 答案卷」。",
@@ -356,7 +356,7 @@ const GAMES = [
     file: "level-test.html",
     en: "Chinese Level Placement Test",
     purpose: "tool", script: "both", langs: ["mandarin"], roman: ["pinyin"],
-    emoji: "📊", accent: "#2E86DE", layout: "wide",
+    emoji: "📊", accent: "#4D6EF7", layout: "wide",
     zh: {
       title: "汉语水平自测",
       desc: "上课前给学生做的自适应分级摸底：从 HSK 1 起，答对升级、答错或选「不知道」降级，停留最多的等级即水平；HSK 1–2 带拼音，含「不知道」选项，便于备课与分班。",
@@ -393,13 +393,13 @@ const PHASES = {
   "level-test":       ["before"]
 };
 const PHASE_DEFS = [
-  { v: "before", icon: "🎒", accent: "#2E86DE",
+  { v: "before", icon: "🎒", accent: "#FF4B72",
     zh:   { name: "课堂前 · 备课", desc: "生成上课要用的游戏和材料" },
     hant: { name: "課堂前 · 備課", desc: "產生上課要用的遊戲和材料" } },
-  { v: "during", icon: "🎓", accent: "#FF7A45",
+  { v: "during", icon: "🎓", accent: "#00DF89",
     zh:   { name: "课堂中 · 上课互动", desc: "打开就能投屏使用的工具和游戏" },
     hant: { name: "課堂中 · 上課互動", desc: "開啟就能投屏使用的工具和遊戲" } },
-  { v: "after", icon: "📚", accent: "#1F9D55",
+  { v: "after", icon: "📚", accent: "#4D6EF7",
     zh:   { name: "课堂后 · 练习巩固", desc: "生成练习发给学生自学" },
     hant: { name: "課堂後 · 練習鞏固", desc: "產生練習發給學生自學" } }
 ];

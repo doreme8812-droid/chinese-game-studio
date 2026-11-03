@@ -9,37 +9,46 @@
 </head>
 <body>
 
-  <!-- 背景：自由流动的糖果色大色块（无边框） -->
-  <div class="bg-blobs" aria-hidden="true"></div>
+  <!-- 背景：有机波浪剪纸感大色块（淡蓝→浅灰打底，淡紫粉/淡蓝波浪叠层） -->
+  <svg class="bg-waves" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="wv-base" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#EAF7FF"/><stop offset="1" stop-color="#F2F4F7"/>
+      </linearGradient>
+      <linearGradient id="wv-lav" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#E8EAFF"/><stop offset="1" stop-color="#F1EAFE"/>
+      </linearGradient>
+      <linearGradient id="wv-pink" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FFE9F0"/><stop offset="1" stop-color="#F3E8FF"/>
+      </linearGradient>
+    </defs>
+    <rect width="1440" height="900" fill="url(#wv-base)"/>
+    <path d="M0,0 H1440 V150 C1180,265 940,85 660,175 C400,255 200,145 0,245 Z" fill="url(#wv-lav)"/>
+    <path d="M1440,120 C1240,210 1300,430 1050,470 C830,505 790,650 980,745 C1130,818 1320,770 1440,705 Z" fill="#EAF7FF" opacity=".9"/>
+    <path d="M0,555 C240,462 480,608 720,558 C960,508 1180,645 1440,555 V900 H0 Z" fill="url(#wv-pink)" opacity=".85"/>
+    <path d="M0,700 C260,615 520,742 800,690 C1080,638 1280,745 1440,688 V900 H0 Z" fill="#E8EAFF" opacity=".8"/>
+  </svg>
   <!-- 手绘感灵动装饰元素 -->
   <div class="deco" aria-hidden="true">
-    <svg class="d d1" viewBox="0 0 100 100"><path d="M50 5l10 28 28 10-28 10-10 28-10-28-28-10 28-10z" fill="#ffe27a"/></svg>
-    <svg class="d d2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#bfe3ff"/></svg>
-    <svg class="d d3" viewBox="0 0 100 100"><path d="M50 6c12 28 28 44 44 44-16 0-32 16-44 44C38 84 22 68 6 68c16 0 32-16 44-44z" fill="#ffd6e8"/></svg>
+    <svg class="d d1" viewBox="0 0 100 100"><path d="M50 5l10 28 28 10-28 10-10 28-10-28-28-10 28-10z" fill="#FFB25C"/></svg>
+    <svg class="d d2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#CFE0FF"/></svg>
+    <svg class="d d3" viewBox="0 0 100 100"><path d="M50 6c12 28 28 44 44 44-16 0-32 16-44 44C38 84 22 68 6 68c16 0 32-16 44-44z" fill="#FFD9E4"/></svg>
     <span class="d d4">✦</span>
     <span class="d d5">✺</span>
     <span class="d d6">📖</span>
     <span class="d d7">✦</span>
   </div>
 
-  <!-- 顶部导航 -->
-  <header class="topnav">
-    <div class="topnav-inner">
-      <a class="brand" href="?ed=simplified">
-        <span class="brand-ico">🎮</span>
-        <span id="ui-siteName">中文教学工具库</span>
-      </a>
-      <div class="edition-switch">
-        <button id="ed-simple">简体版</button>
-        <button id="ed-trad">繁体版</button>
-      </div>
-    </div>
-  </header>
+  <!-- 简体 / 繁体 切换（右上角悬浮胶囊，不挡主视觉） -->
+  <div class="ed-float" id="ed-float">
+    <button id="ed-simple">简体版</button>
+    <button id="ed-trad">繁体版</button>
+  </div>
 
   <!-- 主视觉 -->
   <section class="hero">
     <div class="hero-brand">Chinese with Dora</div>
-    <h1 class="headline"><span class="hl" id="ui-heroTitle">挑一个工具，输几个词，就能上课</span></h1>
+    <h1 class="headline" id="ui-heroTitle">挑一个工具，输几个词，就能上课</h1>
     <p class="subtitle" id="ui-heroText"></p>
     <div class="hero-stats">
       <div class="stat"><b id="stat-total">0</b><span id="ui-statTools"></span></div>
@@ -55,26 +64,37 @@
       <input id="search" type="text" placeholder="" />
     </div>
     <div class="ed-hint" id="ui-edHint"></div>
-    <div class="filters">
-      <div class="filter-row">
-        <span class="filter-label" id="lb-purpose"></span>
-        <span class="chips" id="f-purpose"></span>
+
+    <div class="filters-wrap">
+      <button class="filter-toggle" id="filterToggle" aria-expanded="false">
+        <span class="ft-ico">⚙️</span>
+        <span id="ft-label">筛选</span>
+        <span class="filter-badge" id="filterBadge" hidden>0</span>
+        <span class="ft-car" id="ft-car">▾</span>
+      </button>
+      <div class="filters-panel" id="filtersPanel" hidden>
+        <div class="filters">
+          <div class="filter-row">
+            <span class="filter-label" id="lb-purpose"></span>
+            <span class="chips" id="f-purpose"></span>
+          </div>
+          <div class="filter-row">
+            <span class="filter-label" id="lb-script"></span>
+            <span class="chips" id="f-script"></span>
+          </div>
+          <div class="filter-row">
+            <span class="filter-label" id="lb-lang"></span>
+            <span class="chips" id="f-lang"></span>
+          </div>
+          <div class="filter-row">
+            <span class="filter-label" id="lb-roman"></span>
+            <span class="chips" id="f-roman"></span>
+          </div>
+        </div>
+        <div class="share-row">
+          <button class="chip ghost" id="copy-link">复制本页链接</button>
+        </div>
       </div>
-      <div class="filter-row">
-        <span class="filter-label" id="lb-script"></span>
-        <span class="chips" id="f-script"></span>
-      </div>
-      <div class="filter-row">
-        <span class="filter-label" id="lb-lang"></span>
-        <span class="chips" id="f-lang"></span>
-      </div>
-      <div class="filter-row">
-        <span class="filter-label" id="lb-roman"></span>
-        <span class="chips" id="f-roman"></span>
-      </div>
-    </div>
-    <div class="share-row">
-      <button class="chip ghost" id="copy-link">复制本页链接</button>
     </div>
   </section>
 
@@ -175,7 +195,7 @@
     }
 
     // 糖果色（用于筛选药丸）
-    const CANDY = ['#bfe3ff', '#ffd1a6', '#c7f0d2', '#e4d6ff', '#ffd6e8', '#ffe27a', '#c9f0ff'];
+    const CANDY = ['#EAF7FF', '#FFF1E6', '#E6FDF3', '#F1EAFE', '#FFE9F0', '#FFF6DE', '#E8FBFF'];
 
     function renderFilterRow(elId, opts, cur, key) {
       const el = document.getElementById(elId);
@@ -280,8 +300,8 @@
     function applyI18N() {
       const Uu = U();
       document.title = Uu.siteName + ' · ' + Uu.tagline;
-      document.getElementById('ui-siteName').textContent = Uu.siteName;
-      document.getElementById('ui-heroTitle').textContent = Uu.heroTitle;
+      document.getElementById('ui-heroTitle').innerHTML =
+        Uu.heroTitle.replace(/(就能上[课課])$/, '<span class="hl">$1</span>');
       document.getElementById('ui-heroText').textContent = Uu.heroText;
       document.getElementById('ui-statTools').textContent = Uu.statTools;
       document.getElementById('ui-statGen').textContent = Uu.statGen;
@@ -298,12 +318,13 @@
       document.getElementById('m-download').textContent = Uu.download;
       document.getElementById('m-close').textContent = Uu.close;
       document.getElementById('copy-link').textContent = Uu.copyLink;
+      document.getElementById('ft-label').textContent = Uu.filterToggle;
       searchEl.placeholder = Uu.search;
       document.getElementById('ed-simple').classList.toggle('active', edition === 'simplified');
       document.getElementById('ed-trad').classList.toggle('active', edition === 'traditional');
     }
 
-    function renderAll() { applyI18N(); renderFilters(); render(); renderStats(); }
+    function renderAll() { applyI18N(); renderFilters(); updateFilterBadge(); render(); renderStats(); }
 
     // ---------- 版本切换 ----------
     function setEdition(ed) {
@@ -389,10 +410,43 @@
       document.body.removeChild(ta);
     }
 
+    // ---------- 筛选折叠 ----------
+    const ftBtn = document.getElementById('filterToggle');
+    const ftPanel = document.getElementById('filtersPanel');
+    const ftBadge = document.getElementById('filterBadge');
+    const ftCar = document.getElementById('ft-car');
+    function activeFilterCount() {
+      let n = 0;
+      if (S.purpose !== 'all') n++;
+      if (S.script !== 'all') n++;
+      if (S.lang !== 'all') n++;
+      if (S.roman !== 'all') n++;
+      return n;
+    }
+    function updateFilterBadge() {
+      const n = activeFilterCount();
+      if (n > 0) { ftBadge.hidden = false; ftBadge.textContent = n; }
+      else { ftBadge.hidden = true; }
+    }
+    function setFilterOpen(open) {
+      ftPanel.hidden = !open;
+      ftBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      ftCar.textContent = open ? '▴' : '▾';
+      ftBtn.classList.toggle('open', open);
+    }
+    ftBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      setFilterOpen(ftPanel.hidden);
+    });
+    document.addEventListener('click', e => {
+      if (!ftPanel.hidden && !document.querySelector('.filters-wrap').contains(e.target)) setFilterOpen(false);
+    });
+
     // ---------- 启动 ----------
     searchEl.value = S.q;
     updateURL();
     renderAll();
+    if (activeFilterCount() > 0) setFilterOpen(true);
   </script>
 </body>
 </html>
