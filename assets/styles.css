@@ -1,11 +1,12 @@
 /* =====================================================
-   设计系统「果冻实验室」· 令牌
-   主色：深邃靛蓝 #1F2E80 / 多巴胺蓝 #4D6EF7
-   渐变动作：#7F56D9 → #E056FD
-   元气暖橙：#FF5C00 → #FF9E00
-   薄荷青绿：#00DF89 → #3AF072
-   游戏红/粉：#FF4B72 → #FF7E9F
-   背景：淡紫粉 #E8EAFF / 淡蓝 #EAF7FF→#F2F4F7 / 卡片乳白
+   设计系统「果冻实验室」· 令牌（以 Visual Style Guide 图为准）
+   品牌主色（文字/导航）：深邃靛蓝 #1F2E80
+   渐变蓝/紫（核心切换按钮）：#4D6EF7 → #7F56D9
+   元气暖橙（高亮）：#FF5C00 → #FFB800
+   主見澱色（主视觉点缀）：#FFA8BE → #FFB900
+   课堂工具绿：#00DF89 → #3AF072 / 游戏红粉：#FF4B72 → #FF7E9F
+   背景波浪：#E8EAFF / #EAF7FF；形状：24-36px 大圆角、无边框、柔和阴影
+   规则：任何颜色渐变不得掉白（彩色对彩色）
    ===================================================== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,8 +19,10 @@
   --pink: #FF4B72;            /* 游戏红粉：成品 / 强调 */
   --pink-deep: #E8395F;
   --orange: #FF7A00;          /* 元气暖橙：数据 / 高亮词 */
-  --grad-action: linear-gradient(135deg, #7F56D9, #E056FD); /* 紫→桃紫：繁体按钮 / 渐变点缀 */
-  --grad-orange: linear-gradient(135deg, #FF5C00, #FF9E00);  /* 元气暖橙 */
+  --grad-action: linear-gradient(135deg, #7F56D9, #E056FD); /* 紫→桃紫：繁体按钮 */
+  --grad-bp: linear-gradient(135deg, #4D6EF7, #7F56D9);     /* 渐变蓝/紫：核心切换按钮 */
+  --grad-orange: linear-gradient(135deg, #FF5C00, #FFB800); /* 元气暖橙：高亮 */
+  --grad-mo: linear-gradient(135deg, #FFA8BE, #FFB900);     /* 主見澱色：主视觉点缀 */
   --bg-base: #F2F4F7;
   --card: #FFFFFF;
   --card-soft: #F8F9FC;
@@ -50,7 +53,7 @@ body {
 .deco .d1 { width: 70px; top: 14%; left: 5%; animation: float 9s ease-in-out infinite; }
 .deco .d2 { width: 90px; top: 24%; right: 6%; animation: float 11s ease-in-out infinite reverse; }
 .deco .d3 { width: 60px; bottom: 18%; left: 8%; animation: float 10s ease-in-out infinite; }
-.deco .d4 { top: 40%; right: 12%; font-size: 26px; color: #FF9E00; }
+.deco .d4 { top: 40%; right: 12%; font-size: 26px; color: #FFB800; }
 .deco .d5 { top: 70%; right: 22%; font-size: 20px; color: var(--brand); }
 .deco .d6 { bottom: 26%; right: 9%; font-size: 30px; }
 .deco .d7 { top: 12%; left: 46%; font-size: 22px; color: #FF7E9F; }
@@ -73,10 +76,10 @@ a { color: inherit; text-decoration: none; }
 }
 .ed-float button:hover { color: var(--brand); }
 .ed-float button.active {
-  background: var(--brand); color: #fff; font-weight: 600;
+  background: var(--grad-bp); color: #fff; font-weight: 600;
   box-shadow: 0 6px 14px rgba(77, 110, 247, .4);
 }
-/* 繁体按钮：紫→桃紫渐变（规范：繁体按钮/渐变点缀） */
+/* 繁体按钮：紫→桃紫渐变（规范：繁体按钮） */
 .ed-float button#ed-trad.active {
   background: var(--grad-action);
   box-shadow: 0 6px 14px rgba(127, 86, 217, .4);
@@ -92,9 +95,8 @@ a { color: inherit; text-decoration: none; }
   font-size: 14px; font-weight: 800; letter-spacing: 3px;
   color: var(--ink); margin-bottom: 12px;
   padding: 5px 16px; border-radius: 999px;
-  background: rgba(255, 255, 255, .72);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  background: var(--grad-mo);   /* 主見澱色：粉→琥珀金 */
+  box-shadow: 0 8px 18px rgba(255, 155, 90, .28);
 }
 .headline {
   font-size: 40px; font-weight: 900; letter-spacing: 1px; line-height: 1.3;
@@ -162,7 +164,7 @@ a { color: inherit; text-decoration: none; }
   border: none; cursor: pointer; font-family: inherit;
   padding: 12px 24px; border-radius: 999px;
   font-size: 14.5px; font-weight: 800; color: #fff;
-  background: var(--brand);
+  background: var(--grad-bp);
   box-shadow: 0 10px 22px rgba(77, 110, 247, .35);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   transition: transform .15s, box-shadow .15s;
