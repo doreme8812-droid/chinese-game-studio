@@ -2,7 +2,8 @@
    设计系统「果冻实验室」· 令牌
    主色：深邃靛蓝 #1F2E80 / 多巴胺蓝 #4D6EF7
    渐变动作：#7F56D9 → #E056FD
-   元气暖橙：#FF5C00 → #FF9E00
+   元气暖橙：#FF5C00 → #FFB800
+   新渐变蓝/紫（核心切换按钮）：#4D6EF7 → #7F56D9
    薄荷青绿：#00DF89 → #3AF072
    游戏红/粉：#FF4B72 → #FF7E9F
    背景：淡紫粉 #E8EAFF / 淡蓝 #EAF7FF→#F2F4F7 / 卡片乳白
@@ -19,7 +20,8 @@
   --pink-deep: #E8395F;
   --orange: #FF7A00;          /* 元气暖橙：数据 / 高亮词 */
   --grad-action: linear-gradient(135deg, #7F56D9, #E056FD);
-  --grad-orange: linear-gradient(135deg, #FF5C00, #FF9E00);
+  --grad-orange: linear-gradient(135deg, #FF5C00, #FFB800);
+  --grad-bp: linear-gradient(135deg, #4D6EF7, #7F56D9); /* 新渐变蓝/紫：核心切换按钮 */
   --bg-base: #F2F4F7;
   --card: #FFFFFF;
   --card-soft: #F8F9FC;
@@ -50,7 +52,7 @@ body {
 .deco .d1 { width: 70px; top: 14%; left: 5%; animation: float 9s ease-in-out infinite; }
 .deco .d2 { width: 90px; top: 24%; right: 6%; animation: float 11s ease-in-out infinite reverse; }
 .deco .d3 { width: 60px; bottom: 18%; left: 8%; animation: float 10s ease-in-out infinite; }
-.deco .d4 { top: 40%; right: 12%; font-size: 26px; color: #FF9E00; }
+.deco .d4 { top: 40%; right: 12%; font-size: 26px; color: #FFB800; }
 .deco .d5 { top: 70%; right: 22%; font-size: 20px; color: var(--brand); }
 .deco .d6 { bottom: 26%; right: 9%; font-size: 30px; }
 .deco .d7 { top: 12%; left: 46%; font-size: 22px; color: #FF7E9F; }
@@ -73,7 +75,7 @@ a { color: inherit; text-decoration: none; }
 }
 .ed-float button:hover { color: var(--brand); }
 .ed-float button.active {
-  background: var(--brand); color: #fff; font-weight: 600;
+  background: var(--grad-bp); color: #fff; font-weight: 600;
   box-shadow: 0 6px 14px rgba(77, 110, 247, .4);
 }
 
@@ -156,15 +158,18 @@ a { color: inherit; text-decoration: none; }
   display: inline-flex; align-items: center; gap: 8px;
   border: none; cursor: pointer; font-family: inherit;
   padding: 12px 24px; border-radius: 999px;
-  font-size: 14.5px; font-weight: 800; color: var(--ink);
-  background: rgba(255, 255, 255, .85);
-  box-shadow: var(--shadow-md);
+  font-size: 14.5px; font-weight: 800; color: #fff;
+  background: var(--grad-bp);
+  box-shadow: 0 10px 22px rgba(77, 110, 247, .35);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   transition: transform .15s, box-shadow .15s;
 }
 .filter-toggle:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .filter-toggle .ft-ico { font-size: 16px; }
-.filter-toggle .ft-car { font-size: 12px; color: var(--soft); }
+.filter-toggle .ft-car { font-size: 12px; color: rgba(255, 255, 255, .85); }
+.filter-toggle .filter-badge {
+  background: #fff; color: var(--brand);
+}
 .filter-badge {
   min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
   background: var(--brand); color: #fff; font-size: 12px; font-weight: 800;
